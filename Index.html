@@ -1,0 +1,3519 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FDF Kontor Simulator 🏢</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden}
+body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;height:100dvh;font-family:'Comic Neue',cursive;overflow:hidden;position:fixed;width:100%;top:0;left:0}
+
+/* minimap */
+#minimap{position:absolute;bottom:12px;right:12px;width:90px;height:56px;background:rgba(20,18,50,.85);border:2px solid #ffcc02;border-radius:6px;z-index:6;pointer-events:none}
+
+#wrap{position:relative;width:900px}
+#hud{width:900px;display:flex;justify-content:space-between;align-items:center;padding:6px 14px;background:#2d3561;border:3px solid #ffcc02;border-bottom:none;border-radius:12px 12px 0 0}
+#hud h1{font-family:'Bangers',cursive;color:#ffcc02;font-size:1.5rem;letter-spacing:2px;text-shadow:2px 2px 0 #000}
+#day-badge{font-family:'Bangers',cursive;color:#fff;background:#e07b54;padding:2px 14px;border-radius:20px;border:2px solid #fff;font-size:1rem}
+#ctrl-hint{color:#88a;font-size:.72rem}
+canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 12px 12px;cursor:none}
+
+/* dialog */
+#dlg{display:none;position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:10;align-items:flex-end;justify-content:center;border-radius:0 0 12px 12px}
+#dlg.on{display:flex}
+#dlg-box{width:860px;background:rgba(255,253,231,.97);border:4px solid #222;border-radius:16px 16px 12px 12px;margin-bottom:16px;padding:14px 18px 12px;box-shadow:4px 4px 0 #000;position:relative}
+#dlg-portrait{width:54px;height:54px;border-radius:50%;border:3px solid #222;float:left;margin-right:12px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0}
+#dlg-name{font-family:'Bangers',cursive;font-size:1.4rem;letter-spacing:1px;margin-bottom:5px}
+#dlg-text{font-size:.95rem;line-height:1.65;min-height:48px;color:#222;overflow-y:auto;max-height:120px;font-family:'Work Sans',sans-serif;font-weight:400}
+#dlg-thinking{display:none;color:#888;font-size:1rem;padding:8px 0;font-family:'Work Sans',sans-serif}
+#dlg-thinking.on{display:block}
+#dlg-row{display:flex;gap:8px;margin-top:8px;clear:both}
+#dlg-input{flex:1;padding:7px 11px;border:3px solid #222;border-radius:8px;font-family:'Work Sans',sans-serif;font-size:.95rem}
+#dlg-input:focus{outline:none;border-color:#2d3561}
+#dlg-send{padding:7px 16px;background:#2d3561;color:#ffcc02;border:3px solid #ffcc02;border-radius:8px;font-family:'Bangers',cursive;font-size:.95rem;cursor:pointer;letter-spacing:1px}
+#dlg-send:hover{background:#ffcc02;color:#2d3561}
+#dlg-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#777;font-family:'Bangers',cursive}
+
+/* phone */
+#phone-dlg{display:none;position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:15;align-items:center;justify-content:center;border-radius:0 0 12px 12px}
+#phone-dlg.on{display:flex}
+#phone-box{width:380px;background:#1a1a2e;border:3px solid #00ff88;border-radius:16px;padding:16px;box-shadow:0 0 30px rgba(0,255,136,.3),4px 4px 0 #000}
+#phone-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#phone-status{color:#00ff88;font-family:'Bangers',cursive;font-size:1rem;letter-spacing:1px}
+#phone-hangup{background:#e74c3c;color:#fff;border:2px solid #fff;border-radius:8px;font-family:'Bangers',cursive;font-size:.85rem;padding:3px 10px;cursor:pointer}
+#phone-screen{background:#0a0a1a;color:#00ff88;font-size:.85rem;padding:12px;border-radius:8px;border:2px solid #00ff88;min-height:110px;white-space:pre-wrap;line-height:1.5;margin-bottom:10px}
+#phone-row{display:flex;gap:8px}
+#phone-input{flex:1;padding:7px 10px;border:2px solid #00ff88;border-radius:8px;background:#0a0a1a;color:#00ff88;font-family:'Comic Neue',cursive;font-size:.88rem}
+#phone-input:focus{outline:none;border-color:#ffcc02;color:#ffcc02}
+#phone-send{padding:7px 14px;background:#00ff88;color:#0a0a1a;border:2px solid #00ff88;border-radius:8px;font-family:'Bangers',cursive;font-size:.95rem;cursor:pointer}
+
+/* discovery box */
+#disc-box{display:none;position:absolute;bottom:68px;left:50%;transform:translateX(-50%);background:rgba(255,253,231,.97);color:#222;font-size:.9rem;padding:12px 20px 10px;border:3px solid #222;border-radius:14px;z-index:18;box-shadow:4px 4px 0 #000;max-width:680px;text-align:center;white-space:pre-wrap;line-height:1.5;pointer-events:none}
+#disc-hint{margin-top:6px;font-size:.75rem;color:#999;font-style:italic}
+
+/* flash */
+#flash{display:none;position:absolute;top:56px;left:50%;transform:translateX(-50%);background:#ffcc02;color:#222;font-family:'Bangers',cursive;font-size:1.05rem;padding:7px 20px;border:3px solid #222;border-radius:20px;z-index:20;box-shadow:3px 3px 0 #000;pointer-events:none;max-width:820px;text-align:center;white-space:normal}
+
+/* interact hint */
+#hint{display:none;position:absolute;background:rgba(255,204,2,.95);color:#222;font-family:'Bangers',cursive;font-size:.95rem;padding:4px 12px;border:2px solid #222;border-radius:10px;pointer-events:none;z-index:5;white-space:nowrap;box-shadow:2px 2px 0 #000}
+
+/* inventory */
+#inv{display:none;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(45,53,97,.92);color:#ffcc02;font-family:'Bangers',cursive;font-size:.95rem;padding:4px 16px;border:2px solid #ffcc02;border-radius:20px;letter-spacing:1px;pointer-events:none;z-index:5;white-space:nowrap;box-shadow:2px 2px 0 #000}
+#inv:not(:empty){display:block}
+
+/* welcome screen */
+#welcome{position:absolute;inset:0;background:rgba(20,18,50,.92);z-index:25;display:flex;align-items:center;justify-content:center;border-radius:0 0 12px 12px;transition:opacity .6s;cursor:pointer}
+#welcome.fade{opacity:0;pointer-events:none}
+#welcome-box{text-align:center;padding:30px 40px;max-width:600px}
+#welcome-box h1{font-family:'Bangers',cursive;color:#ffcc02;font-size:2.8rem;letter-spacing:3px;text-shadow:3px 3px 0 #000;margin-bottom:14px;line-height:1.1}
+#welcome-box p{color:#dde;font-size:1rem;line-height:1.7;margin-bottom:22px}
+#welcome-box .sub{color:#ffcc02;font-family:'Bangers',cursive;font-size:1.1rem;letter-spacing:2px;opacity:.8}
+#welcome-box .arrow{color:#ffcc02;font-size:1.4rem;animation:bounce .8s ease-in-out infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(6px)}}
+
+
+#cal-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:15;align-items:center;justify-content:center;border-radius:0 0 12px 12px}
+#cal-overlay.on{display:flex}
+#cal-box{background:#fffde7;border:4px solid #222;border-radius:18px;padding:22px 28px 20px;box-shadow:5px 5px 0 #000;text-align:center;min-width:320px}
+#cal-box h2{font-family:'Bangers',cursive;font-size:1.8rem;letter-spacing:2px;color:#2d3561;margin-bottom:4px;text-shadow:1px 1px 0 #aaa}
+#cal-box p{font-size:.82rem;color:#888;margin-bottom:16px}
+#cal-days{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.cal-day-btn{padding:10px 6px;background:#2d3561;color:#ffcc02;border:3px solid #ffcc02;border-radius:10px;font-family:'Bangers',cursive;font-size:1.1rem;letter-spacing:1px;cursor:pointer;transition:background .1s,transform .1s}
+.cal-day-btn:hover{background:#ffcc02;color:#2d3561;transform:scale(1.06)}
+.cal-day-btn.active{background:#e07b54;border-color:#fff;color:#fff}
+#cal-close{padding:6px 20px;background:none;border:2px solid #aaa;border-radius:8px;font-family:'Comic Neue',cursive;font-size:.85rem;color:#888;cursor:pointer}
+#cal-close:hover{border-color:#222;color:#222}
+
+/* dialog choices */
+#dlg-choices{display:flex;flex-direction:column;gap:6px;margin-top:10px;clear:both}
+.dlg-choice{padding:8px 14px;background:#f0f0e0;border:2px solid #2d3561;border-radius:8px;font-family:'Work Sans',sans-serif;font-size:.88rem;text-align:left;cursor:pointer;transition:background .1s,transform .1s;color:#222}
+.dlg-choice:hover{background:#2d3561;color:#ffcc02;transform:translateX(4px)}
+.dlg-choice:active{transform:translateX(2px)}
+
+
+/* room radio panel */
+#radio-panel{display:none;position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:15;align-items:center;justify-content:center;border-radius:0 0 12px 12px}
+#radio-panel.on{display:flex}
+#radio-panel-box{background:#1a1a2e;border:3px solid #ffcc02;border-radius:16px;padding:18px 22px 16px;width:340px;box-shadow:5px 5px 0 #000}
+#radio-panel-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#radio-panel-title{font-family:'Bangers',cursive;color:#ffcc02;font-size:1.4rem;letter-spacing:2px}
+#radio-panel-close{background:none;border:2px solid #555;color:#888;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:1rem}
+#radio-panel-close:hover{border-color:#ffcc02;color:#ffcc02}
+#radio-display{background:#0a0a1a;border:2px solid #ffcc02;border-radius:8px;padding:10px 14px;margin-bottom:12px;text-align:center}
+#radio-channel-label{font-family:'Bangers',cursive;color:#00ff88;font-size:1.2rem;letter-spacing:1px;margin-bottom:4px}
+#radio-wave{height:20px;display:flex;align-items:center;justify-content:center;gap:2px}
+#radio-wave span{display:inline-block;width:3px;background:#00ff88;border-radius:2px;animation:wave .8s ease-in-out infinite}
+#radio-wave.off span{animation:none;height:2px!important}
+@keyframes wave{0%,100%{height:4px}50%{height:16px}}
+#radio-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.radio-btn{padding:8px 10px;background:#0a0a1a;border:2px solid #334;color:#889;font-family:'Work Sans',sans-serif;font-size:.82rem;border-radius:8px;cursor:pointer;transition:all .1s;text-align:left}
+.radio-btn:hover{border-color:#ffcc02;color:#ffcc02;background:#1a1a3e}
+.radio-btn.active{background:#2d3561;border-color:#ffcc02;color:#ffcc02;font-weight:600}
+
+#mobile-e{display:none;position:absolute;bottom:70px;right:12px;width:58px;height:58px;background:#e07b54;border:3px solid #ffcc02;border-radius:50%;font-family:'Bangers',cursive;font-size:1.1rem;color:#fff;text-align:center;line-height:52px;cursor:pointer;z-index:6;box-shadow:3px 3px 0 #000;-webkit-tap-highlight-color:transparent;user-select:none}
+#mobile-e.visible{display:block}
+@media(hover:none)and(pointer:coarse){#mobile-e{display:none}#mobile-e.visible{display:block}}
+
+/* friday overlay */
+#friday{display:none;position:absolute;inset:30px 0 0 0;pointer-events:none;border-radius:0 0 12px 12px;background:radial-gradient(ellipse at 20% 80%,rgba(255,100,150,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(120,80,255,.12) 0%,transparent 60%);animation:fpulse 3s ease-in-out infinite;z-index:2}
+@keyframes fpulse{0%,100%{opacity:.7}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <div id="hud-left">
+      <span id="hud-emblem">🏕️</span>
+      <h1>FDF KONTOR</h1>
+    </div>
+    <span id="day-badge">MANDAG</span>
+    <span id="ctrl-hint">WASD · E = tal · T = dag</span>
+  </div>
+  <canvas id="c" width="900" height="560"></canvas>
+  <div id="hint"></div>
+  <div id="inv"></div>
+  <div id="flash"></div>
+  <div id="friday"></div>
+
+  <!-- discovery box -->
+  <div id="disc-box"><div id="disc-text"></div><div id="disc-hint"></div></div>
+
+  <!-- NPC dialog -->
+  <div id="dlg">
+    <div id="dlg-box">
+      <button id="dlg-close">✕</button>
+      <div id="dlg-portrait"></div>
+      <div id="dlg-name"></div>
+      <div id="dlg-text"></div>
+      <div id="dlg-thinking">💭 tænker...</div>
+      <div id="dlg-choices"></div>
+      <div id="dlg-row">
+        <input id="dlg-input" type="text" placeholder="Hvad vil du spørge om?" maxlength="200"/>
+        <button id="dlg-send">SEND</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- radio panel -->
+  <div id="radio-panel">
+    <div id="radio-panel-box">
+      <div id="radio-panel-top">
+        <span id="radio-panel-title">📻 KONTOR-RADIO</span>
+        <button id="radio-panel-close">✕</button>
+      </div>
+      <div id="radio-display">
+        <div id="radio-channel-label">FRA</div>
+        <div id="radio-wave"></div>
+      </div>
+      <div id="radio-btn-grid">
+        <button class="radio-btn active" data-ch="0">📻 FRA</button>
+        <button class="radio-btn" data-ch="1">🗣️ Samtale</button>
+        <button class="radio-btn" data-ch="2">🤘 Metal</button>
+        <button class="radio-btn" data-ch="3">🎷 Jazz</button>
+        <button class="radio-btn" data-ch="4">💃 Latin</button>
+        <button class="radio-btn" data-ch="5">🎸 Soft Rock</button>
+        <button class="radio-btn" data-ch="6">🎵 Pop</button>
+        <button class="radio-btn" data-ch="7">📰 Nyheder</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mobile-e">TAL<br>E</div>
+
+  <!-- minimap -->
+  <canvas id="minimap" width="90" height="56"></canvas>
+
+  <!-- welcome -->
+  <div id="welcome">
+    <div id="welcome-box">
+      <div id="welcome-logo">🏕️</div>
+      <h1>FDF KONTOR<br>SIMULATOR</h1>
+      <div id="welcome-sub">Fælles Dame / Drenge Forbund</div>
+      <div class="welcome-divider"></div>
+      <p>Mød alle de glade medarbejdere på<br><strong style="color:var(--gold)">Danmarks bedste arbejdsplads</strong> 🌟</p>
+      <p id="welcome-desc">Udforsk kontoret · tal med kollegaerne · find skjulte ting<br>og find ud af hvad der egentlig sker med de 28 receptioner</p>
+      <div id="welcome-cta">TRYK FOR AT STARTE</div>
+      <div class="arrow">▾</div>
+    </div>
+  </div>
+
+  <!-- calendar -->
+  <div id="cal-overlay">
+    <div id="cal-box">
+      <h2>📅 VÆLG DAG</h2>
+      <p>Klik på en dag for at skifte</p>
+      <div id="cal-days">
+        <button class="cal-day-btn" data-day="MANDAG">MAN</button>
+        <button class="cal-day-btn" data-day="TIRSDAG">TIR</button>
+        <button class="cal-day-btn" data-day="ONSDAG">ONS<br><small style="font-size:.6rem;opacity:.8">mødedag</small></button>
+        <button class="cal-day-btn" data-day="TORSDAG">TOR<br><small style="font-size:.6rem;opacity:.8">kaffe☕</small></button>
+        <button class="cal-day-btn" data-day="FREDAG">FRE<br><small style="font-size:.6rem;opacity:.8">🍹 bar</small></button>
+      </div>
+      <button id="cal-close">Luk kalender</button>
+    </div>
+  </div>
+
+  <!-- phone -->
+  <div id="phone-dlg">
+    <div id="phone-box">
+      <div id="phone-hdr">
+        <span id="phone-status">📞 FDF Hovednummer</span>
+        <button id="phone-hangup">Læg på ✕</button>
+      </div>
+      <div id="phone-screen">FDF Hovednummer
+────────────────
+#1 → LT — Lokalt Engagement
+#2 → NT — Nationalt Engagement
+#3 → Friluftscenter, Skanderborg
+
+Tast et nummer...</div>
+      <div id="phone-row"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════
+let AC = null;
+function ac(){
+  if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+
+// ── ONE-SHOT SFX (bypass radio system) ──────
+let sfxGain = null;
+function getSfx(){
+  const a=ac();
+  if(!sfxGain){sfxGain=a.createGain();sfxGain.gain.value=1;sfxGain.connect(a.destination);}
+  return sfxGain;
+}
+function sfxOsc(freq,vol,dur,type){
+  const a=ac(),o=a.createOscillator(),g=a.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+dur);
+  o.connect(g);g.connect(getSfx());o.start();o.stop(a.currentTime+dur+0.01);
+}
+function bells(){
+  [523,659,784,1047,1319].forEach((f,i)=>{
+    setTimeout(()=>{sfxOsc(f,.2,2,'sine');sfxOsc(f*1.5,.1,1.5,'sine');},i*160);
+    setTimeout(()=>{sfxOsc(f,.15,1.5,'sine');},1200+i*160);
+  });
+}
+function coffeeSnd(){
+  const a=ac();
+  for(let i=0;i<12;i++) setTimeout(()=>{
+    sfxOsc(60+Math.random()*40,.08,.15,'sine');
+  },i*120+Math.random()*60);
+}
+function metalRiff(){
+  [110,110,165,110,147,110,131,123].forEach((f,i)=>setTimeout(()=>{
+    sfxOsc(f,.09,.13,'sawtooth');
+    sfxOsc(f*1.5,.06,.13,'sawtooth');
+    sfxOsc(f*2,.04,.13,'sawtooth');
+  },i*110));
+}
+
+// ── RADIO SYSTEM ─────────────────────────────
+// All radio music routes through radioGain.
+// Switching channels: ramp gain to 0, swap, ramp back up.
+let radioChannel = 0;  // 0 = off (default: silent)
+let radioGain = null;
+let activeNodes = [];  // all currently scheduled oscillators
+let radioSchedTimer = null;
+let radioNextTime = 0;
+let radioGen = 0;
+
+const RADIO_CHANNELS=[
+  {id:0,name:'Radio FRA',    emoji:'📻'},
+  {id:1,name:'Samtaleradio', emoji:'🗣️'},
+  {id:2,name:'Speedmetal',   emoji:'🤘'},
+  {id:3,name:'Jazz FM',      emoji:'🎷'},
+  {id:4,name:'Latin',        emoji:'💃'},
+  {id:5,name:'Soft Rock',    emoji:'🎸'},
+  {id:6,name:'Pop',          emoji:'🎵'},
+  {id:7,name:'Nyheder',      emoji:'📰'},
+];
+
+function getRGain(){
+  const a=ac();
+  if(!radioGain){
+    radioGain=a.createGain();
+    radioGain.gain.value=0;
+    radioGain.connect(a.destination);
+  }
+  return radioGain;
+}
+
+// Stop ALL scheduled nodes immediately
+function stopAllNodes(){
+  activeNodes.forEach(n=>{try{n.stop();n.disconnect();}catch(e){}});
+  activeNodes=[];
+}
+
+// Low-level note builders — all route through radioGain
+function rOsc(type,freq,vol,t,dur,detune){
+  const a=ac(),o=a.createOscillator(),g=a.createGain();
+  o.type=type; o.frequency.value=freq;
+  if(detune) o.detune.value=detune;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vol,t+0.015);
+  g.gain.setValueAtTime(vol,t+dur-0.02);
+  g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g); g.connect(getRGain());
+  o.start(t); o.stop(t+dur+0.02);
+  activeNodes.push(o);
+}
+function rChord(freqs,vol,t,dur,type){
+  type=type||'triangle';
+  freqs.forEach(f=>rOsc(type,f,vol,t,dur,Math.random()*3-1.5));
+}
+function rBass(freq,t,dur,vol){
+  vol=vol||0.13;
+  rOsc('triangle',freq,vol*0.9,t,dur);
+  rOsc('sine',freq*0.5,vol*0.5,t,dur);
+}
+function rLead(freq,t,dur,vol){
+  vol=vol||0.08;
+  rOsc('triangle',freq,vol,t,dur);
+  rOsc('triangle',freq,vol*0.3,t,dur,7);
+}
+// Kick: just two sine sweeps — no noise
+function rKick(t,vol){
+  vol=vol||0.18;
+  const a=ac(),o=a.createOscillator(),g=a.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(180,t);
+  o.frequency.exponentialRampToValueAtTime(40,t+0.1);
+  g.gain.setValueAtTime(vol,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+  o.connect(g);g.connect(getRGain());o.start(t);o.stop(t+0.26);
+  activeNodes.push(o);
+}
+// Snare: pitched burst
+function rSnare(t,vol){
+  vol=vol||0.1;
+  rOsc('square',200,vol*0.6,t,0.05);
+  rOsc('sine',300,vol*0.4,t,0.08);
+  rOsc('triangle',150,vol*0.3,t,0.1);
+}
+// Hi-hat: high sine cluster
+function rHat(t,vol,open){
+  vol=vol||0.04;
+  dur=open?0.18:0.05;
+  [800,1200,1600,2000].forEach(f=>rOsc('sine',f,vol*0.3,t,dur));
+}
+
+// ── CHANNEL MUSIC ────────────────────────────
+// All return duration in seconds of the block scheduled
+
+// CH1 — Samtaleradio: melodic spoken word feel, voice-like formants
+function schedTalk(t, beat, bar){
+  // Two voices: A = lower (host, ~140-180Hz), B = higher (guest, ~220-280Hz)
+  // Structure over 8 bars: intro → exchange → exchange → laugh/reaction → exchange → outro
+
+  // Helper: speak a phrase with voice formants
+  // pitch = fundamental, speed = syllables/sec, count = syllables, emphasis = 0-1
+  function speak(pitch, startT, count, speed, vol){
+    let st=startT;
+    for(let i=0;i<count;i++){
+      const stressed=i%3===0;
+      const f=pitch*(stressed?1:0.92+Math.random()*0.1);
+      const dur=stressed?(0.14+Math.random()*0.08):(0.08+Math.random()*0.06);
+      const v=vol*(stressed?1:0.65);
+      // fundamental
+      rOsc('sawtooth',f,      v*0.9, st, dur);
+      // formant 1
+      rOsc('sine',    f*2.2,  v*0.4, st, dur*0.9);
+      // formant 2
+      rOsc('sine',    f*3.6,  v*0.18,st, dur*0.7);
+      // formant 3 (brightness)
+      rOsc('sine',    f*5.0,  v*0.08,st, dur*0.5);
+      st+=dur+(stressed?0.04:0.02)+Math.random()*0.03;
+    }
+    return st; // returns end time
+  }
+
+  // Helper: short "mm-hm" reaction (listener acknowledging)
+  function mmhm(pitch, startT, vol){
+    rOsc('sine',pitch,    vol,startT,    0.12);
+    rOsc('sine',pitch*1.1,vol,startT+0.14,0.09);
+    rOsc('sine',pitch*2.1,vol*0.3,startT,0.12);
+  }
+
+  // Helper: laughter — rising then falling pitch bumps
+  function laugh(pitch, startT, vol){
+    for(let i=0;i<6;i++){
+      const lf=pitch*(1+i*0.05);
+      rOsc('sine',lf,vol*(1-i*0.12),startT+i*0.1,0.08);
+      rOsc('sine',lf*2.1,vol*0.3*(1-i*0.12),startT+i*0.1,0.06);
+    }
+  }
+
+  // Helper: question intonation (rising end)
+  function question(pitch, startT, vol){
+    const count=5+Math.floor(Math.random()*4);
+    speak(pitch,startT,count,8,vol);
+    // rising note at end
+    rOsc('sine',pitch*1.25,vol*0.7,startT+count*0.12,0.18);
+    rOsc('sine',pitch*2.5, vol*0.3,startT+count*0.12,0.15);
+  }
+
+  // Subtle room ambience (very quiet)
+  rOsc('sine',80, 0.008,t,bar*8);
+  rOsc('sine',160,0.005,t,bar*8);
+
+  // Voice pitches
+  const vA=148; // host — deeper
+  const vB=235; // guest — higher/brighter
+
+  // ── BAR 0: Host opens ──────────────────────
+  speak(vA, t+0.1, 12, 9, 0.038);
+  // Guest: short "ja" acknowledgement mid-sentence
+  mmhm(vB, t+1.1, 0.022);
+
+  // ── BAR 1: Host continues, guest reacts ────
+  speak(vA, t+bar, 8, 8, 0.035);
+  mmhm(vB, t+bar+0.9, 0.02);
+  // Host asks question at end of bar
+  question(vA, t+bar+1.4, 0.033);
+
+  // ── BAR 2: Guest responds enthusiastically ─
+  speak(vB, t+bar*2+0.2, 14, 10, 0.04);
+  // Host reaction
+  mmhm(vA, t+bar*2+1.1, 0.02);
+  mmhm(vA, t+bar*2+1.5, 0.018);
+
+  // ── BAR 3: Guest continues ─────────────────
+  speak(vB, t+bar*3, 10, 9, 0.038);
+  // Short interruption by host
+  speak(vA, t+bar*3+1.1, 3, 10, 0.025);
+  // Guest acknowledges and wraps up
+  speak(vB, t+bar*3+1.4, 5, 9, 0.032);
+
+  // ── BAR 4: LAUGHTER / LIGHT MOMENT ─────────
+  laugh(vA, t+bar*4+0.1, 0.04);
+  laugh(vB, t+bar*4+0.35,0.038);
+  // Both settle — host says something brief
+  speak(vA, t+bar*4+1.0, 5, 8, 0.03);
+  mmhm(vB, t+bar*4+1.5, 0.022);
+
+  // ── BAR 5: Guest makes a point ──────────────
+  speak(vB, t+bar*5+0.1, 11, 9, 0.04);
+  mmhm(vA, t+bar*5+0.9, 0.018);
+  question(vB, t+bar*5+1.3, 0.035);
+
+  // ── BAR 6: Host responds and adds something ─
+  speak(vA, t+bar*6, 9, 9, 0.038);
+  speak(vA, t+bar*6+1.1, 6, 8, 0.033);
+  mmhm(vB, t+bar*6+0.85,0.02);
+
+  // ── BAR 7: Outro — both wrap up ─────────────
+  speak(vA, t+bar*7+0.1, 7, 8, 0.032);
+  speak(vB, t+bar*7+0.9, 5, 9, 0.03);
+  // Final mutual laugh/chuckle
+  laugh(vA, t+bar*7+1.55, 0.025);
+  laugh(vB, t+bar*7+1.72, 0.022);
+
+  return bar*8;
+}
+
+// CH2 — Speedmetal: power chords + blast beat
+function schedMetal(t, beat, bar){
+  const riff=[110,0,110,165,0,147,131,0,110,0,123,110,165,147,110,0];
+  const eighth=beat/2;
+  for(let b=0;b<4;b++){
+    const bt=t+b*bar;
+    // power chords
+    riff.forEach((f,i)=>{
+      if(!f)return;
+      const nt=bt+i*eighth;
+      rOsc('sawtooth',f,  0.05,nt,eighth*0.85);
+      rOsc('sawtooth',f*1.498,0.04,nt,eighth*0.85,-5);
+      rOsc('sawtooth',f*2,0.03,nt,eighth*0.85, 5);
+      rOsc('sawtooth',f*3,0.015,nt,eighth*0.85,0);
+    });
+    // blast beat: kick every 8th
+    for(let i=0;i<8;i++) rKick(bt+i*eighth,0.15);
+    // snare on 2&4
+    [1,3].forEach(i=>rSnare(bt+i*beat,0.12));
+    // hat 16ths
+    for(let i=0;i<16;i++) rHat(bt+i*eighth*0.5,0.025);
+    // crash on bar 1
+    if(b===0){[400,600,800,1000].forEach(f=>rOsc('sine',f,0.06,bt,0.8));}
+  }
+  return bar*4;
+}
+
+// CH3 — Jazz: swing feel, walking bass, piano comping, melody
+function schedJazz(t, beat, bar){
+  const swing=beat*0.63;
+  const str=beat-swing;
+  // ii-V-I-VI in C: Dm7 Am7 Cmaj7 G7
+  const progression=[
+    {bass:[73.4,82.4,87.3,98],  chord:[146.8,185,220,277]},
+    {bass:[55,61.7,65.4,73.4],  chord:[110,138.6,165,220]},
+    {bass:[65.4,73.4,82.4,98],  chord:[130.8,164.8,196,246.9]},
+    {bass:[49,55,61.7,73.4],    chord:[98,123.5,146.8,196]},
+  ];
+  for(let b=0;b<8;b++){
+    const bt=t+b*bar;
+    const p=progression[b%4];
+    // walking bass (4 quarter notes)
+    p.bass.forEach((f,i)=>rBass(f,bt+i*beat,beat*0.9,0.12));
+    // piano comp on beats 2 and 4 (swing)
+    [1,3].forEach(i=>{
+      const ct=bt+i*beat+swing*0.3;
+      rChord(p.chord.map(f=>f*2),0.035,ct,beat*0.6,'sine');
+    });
+    // ride cymbal on swing 8ths
+    for(let i=0;i<8;i++){
+      const ht=bt+(i%2===0?i*swing:Math.floor(i/2)*beat*2+swing+(i%2-1)*str);
+      rHat(ht,0.03,false);
+    }
+    // kick on 1 and 3
+    [0,2].forEach(i=>rKick(bt+i*beat,0.08));
+    // snare brush on 2 and 4
+    [1,3].forEach(i=>rSnare(bt+i*beat,0.05));
+    // melody every other bar
+    if(b%2===0){
+      const mel=[[330,0.6],[370,0.4],[392,0.8],[330,0.4],[294,0.6],[330,1.2],[294,0.6],[247,0.8]];
+      let mt=bt+beat*0.25;
+      mel.forEach(([f,d])=>{rLead(f,mt,d*beat*0.85,0.07);mt+=d*beat;});
+    }
+  }
+  return bar*8;
+}
+
+// CH4 — Latin: salsa, clave, montuno piano, brass
+function schedLatin(t, beat, bar){
+  const e=beat/2;
+  // 3-2 son clave
+  const clave=[0, 1.5, 3, 4, 6].map(x=>x*e);
+  const bassLine=[65.4,65.4,73.4,65.4, 61.7,65.4,55,65.4];
+  const horns=[
+    [415.3,523.3,659.3],
+    [466.2,587.3,739.9],
+    [392,493.9,622.3],
+    [349.2,440,554.4],
+  ];
+  for(let b=0;b<8;b++){
+    const bt=t+b*bar;
+    // clave (high sine pings)
+    clave.forEach(ct=>rOsc('sine',1200,0.06,bt+ct,0.04));
+    // bass tumbao
+    bassLine.forEach((f,i)=>rBass(f,bt+i*e,e*0.8,0.11));
+    // congas (pitched)
+    for(let i=0;i<8;i++){
+      rOsc('sine',250+Math.random()*50,0.05,bt+i*e,0.07);
+      if(i%2) rOsc('sine',180+Math.random()*30,0.04,bt+i*e+e*0.5,0.06);
+    }
+    // kick on 1 and 3
+    [0,2].forEach(i=>rKick(bt+i*beat,0.12));
+    // montuno piano (cascading 8ths)
+    const montuno=[523,587,659,587,622,659,587,523];
+    montuno.forEach((f,i)=>rOsc('triangle',f,0.045,bt+i*e,e*0.7));
+    // horn stabs every 2 bars
+    if(b%2===0){
+      const hc=horns[Math.floor(b/2)%4];
+      [beat*0.5, beat*2.5].forEach(pos=>{
+        rChord(hc,0.05,bt+pos,beat*0.15,'sawtooth');
+      });
+    }
+  }
+  return bar*8;
+}
+
+// CH5 — Soft Rock: clean guitar, warm bass, gentle beat, singalong melody
+function schedSoftRock(t, beat, bar){
+  const e=beat/2;
+  const chords=[
+    {root:65.4,  tones:[130.8,164.8,196,261.6]},  // C
+    {root:43.65, tones:[87.3, 110,  130.8,174.6]}, // F
+    {root:49,    tones:[98,   123.5,146.8,196]},   // G
+    {root:55,    tones:[110,  138.6,164.8,220]},   // Am
+  ];
+  const mel=[
+    [523,0.5],[587,0.5],[659,1],[587,0.5],[523,0.5],[494,1],[523,2],
+    [659,0.5],[698,0.5],[784,1],[698,0.5],[659,0.5],[587,1],[659,2],
+  ];
+  for(let b=0;b<8;b++){
+    const bt=t+b*bar;
+    const ch=chords[b%4];
+    // strum (arpeggio feel with small delay per string)
+    ch.tones.forEach((f,fi)=>rOsc('triangle',f,0.045,bt+fi*0.018,bar-0.05));
+    rOsc('triangle',ch.root,0.05,bt,bar-0.05);
+    // warm bass
+    rBass(ch.root,bt,beat*0.9,0.12);
+    rBass(ch.root,bt+beat*2,beat*0.8,0.10);
+    // kick and snare
+    [0,2].forEach(i=>rKick(bt+i*beat,0.14));
+    [1,3].forEach(i=>rSnare(bt+i*beat,0.09));
+    // gentle hat
+    for(let i=0;i<8;i++) rHat(bt+i*e,0.03,i===6);
+    // melody (16 bars = 2 repetitions)
+    if(b%4===0){
+      const blk=mel.slice(0,7);
+      let mt=bt+beat*0.5;
+      blk.forEach(([f,d])=>{rLead(f,mt,d*beat*0.85,0.07);mt+=d*beat;});
+    }
+    if(b%4===2){
+      const blk=mel.slice(7);
+      let mt=bt+beat*0.5;
+      blk.forEach(([f,d])=>{rLead(f,mt,d*beat*0.85,0.07);mt+=d*beat;});
+    }
+  }
+  return bar*8;
+}
+
+// CH6 — Pop: punchy kick, four-on-floor, synth chords, bright lead
+function schedPop(t, beat, bar){
+  const e=beat/2;
+  const chords=[
+    [523.3,659.3,784,1047],
+    [440,554,659,880],
+    [392,494,587,784],
+    [349,440,523,698],
+  ];
+  const bassFreqs=[130.8,110,98,87.3];
+  const melody=[
+    784,880,1047,880,784,698,659,0,
+    784,880,1047,1175,1047,880,784,0,
+  ];
+  for(let b=0;b<8;b++){
+    const bt=t+b*bar;
+    const ci=b%4;
+    // four-on-floor kick
+    for(let i=0;i<4;i++) rKick(bt+i*beat,0.17);
+    // snare 2&4
+    [1,3].forEach(i=>rSnare(bt+i*beat,0.12));
+    // open hat on 8ths
+    for(let i=0;i<8;i++) rHat(bt+i*e,0.035,i%4===2);
+    // synth bass
+    [0,2.5,3].forEach(pos=>rBass(bassFreqs[ci],bt+pos*beat,beat*0.4,0.14));
+    // pad chord (whole bar)
+    rChord(chords[ci],0.028,bt,bar*0.96,'square');
+    // bright lead melody
+    const mchunk=melody.slice((b%2)*8,(b%2+1)*8);
+    mchunk.forEach((f,i)=>{if(f)rLead(f,bt+i*e,e*0.8,0.09);});
+    // clap on 2&4
+    [1,3].forEach(i=>{
+      rOsc('square',700,0.06,bt+i*beat,0.04);
+      rOsc('square',900,0.04,bt+i*beat,0.03);
+    });
+  }
+  return bar*8;
+}
+
+// CH7 — News: serious orchestral sting bed + anchor voice feel
+function schedNews(t, beat, bar){
+  // ── STRUCTURE: sting → tonebed → anchor phrases → ticker → repeat
+  // Total = 8 bars
+
+  // 1. OPENING STING (bars 0-0.5): dramatic 5-note fanfare
+  //    Classic news sting feel — ascending then resolving
+  const stingNotes=[
+    [880, 0,    0.12],
+    [1047,0.13, 0.12],
+    [1319,0.26, 0.18],
+    [1047,0.46, 0.10],
+    [1175,0.58, 0.28],
+  ];
+  stingNotes.forEach(([f,dt,dur])=>{
+    rOsc('square',f,     0.07, t+dt, dur);
+    rOsc('sine',  f*0.5, 0.05, t+dt, dur);
+    rOsc('triangle',f*2, 0.02, t+dt, dur*0.6);
+  });
+  // Bass hit under sting
+  rOsc('sine',55, 0.12, t,      0.9);
+  rOsc('sine',73, 0.08, t+0.26, 0.5);
+  rOsc('sine',98, 0.10, t+0.58, 0.8);
+
+  // 2. TONEBED (whole 8 bars): low serious pad
+  [55, 82.4, 110].forEach(f=>{
+    rOsc('sine',f,0.022,t,bar*8);
+  });
+  // Subtle high shimmer
+  [1760,2093].forEach(f=>{
+    rOsc('sine',f,0.008,t+1.2,bar*8-1.2);
+  });
+
+  // 3. TICKER: regular precise blip on every beat from bar 1
+  const tickStart=t+bar;
+  const numTicks=Math.floor(bar*7/beat);
+  for(let i=0;i<numTicks;i++){
+    rOsc('sine',1400,0.035, tickStart+i*beat, 0.025);
+    // Off-beat softer tick
+    rOsc('sine',1000,0.018, tickStart+i*beat+beat*0.5, 0.02);
+  }
+
+  // 4. ANCHOR PHRASES: 4 "sentences" each 1.5 bars long
+  //    Simulates speech rhythm: stress-unstress pattern with formants
+  const phrases=[
+    {start:t+bar*1,   notes:[160,175,155,180,165,150,170,158,145,162], gaps:[0,.28,.48,.62,.84,.98,1.18,1.36,1.52,1.7]},
+    {start:t+bar*3,   notes:[165,180,160,175,155,170,148,165,155,170], gaps:[0,.25,.45,.65,.78,.95,1.15,1.32,1.5, 1.72]},
+    {start:t+bar*4.5, notes:[158,172,155,168,145,160,170,150,165,155], gaps:[0,.3, .5, .65,.82,.98,1.2, 1.38,1.55,1.75]},
+    {start:t+bar*6,   notes:[162,178,158,175,165,155,170,148,160,172], gaps:[0,.27,.46,.62,.8, .95,1.18,1.35,1.52,1.7]},
+  ];
+  phrases.forEach(ph=>{
+    ph.notes.forEach((f,i)=>{
+      const nt=ph.start+ph.gaps[i];
+      const dur=i%3===0?0.18:0.12; // stressed syllable longer
+      const vol=i%3===0?0.038:0.025;
+      // Fundamental (voice)
+      rOsc('sawtooth',f,    vol,   nt, dur);
+      // Formant 1 (~2x)
+      rOsc('sine',    f*2.1,vol*.4,nt, dur*0.9);
+      // Formant 2 (~3x)
+      rOsc('sine',    f*3.4,vol*.2,nt, dur*0.7);
+    });
+  });
+
+  // 5. MUSIC BED SWELL at bar 6 (anticipation before repeat)
+  const swellT=t+bar*6.5;
+  [110,138.6,165,220].forEach((f,i)=>{
+    rOsc('triangle',f,0.03,swellT+i*0.08,bar*1.5-i*0.08);
+  });
+  // Final sting echo (shorter, quieter) just before loop
+  stingNotes.slice(0,3).forEach(([f,dt,dur])=>{
+    rOsc('square',f,0.035,t+bar*7.6+dt*0.7,dur*0.7);
+  });
+
+  return bar*8;
+}
+
+// ── SCHEDULER ENGINE ──────────────────────────
+const LOOKAHEAD=0.5;
+const SCHED_INTERVAL=150;
+const CH_BPM={1:85,2:185,3:126,4:128,5:104,6:120,7:96};
+
+function scheduleBar(ch, t){
+  const bpm=CH_BPM[ch]||120, beat=60/bpm, bar=beat*4;
+  switch(ch){
+    case 1: return schedTalk(t,beat,bar);
+    case 2: return schedMetal(t,beat,bar);
+    case 3: return schedJazz(t,beat,bar);
+    case 4: return schedLatin(t,beat,bar);
+    case 5: return schedSoftRock(t,beat,bar);
+    case 6: return schedPop(t,beat,bar);
+    case 7: return schedNews(t,beat,bar);
+    default: return bar;
+  }
+}
+
+function runScheduler(gen){
+  if(gen!==radioGen||radioChannel===0)return;
+  const a=ac();
+  while(radioNextTime<a.currentTime+LOOKAHEAD){
+    radioNextTime+=scheduleBar(radioChannel,radioNextTime);
+  }
+}
+
+function setRadio(ch){
+  // Stop scheduler
+  if(radioSchedTimer){clearInterval(radioSchedTimer);radioSchedTimer=null;}
+  radioGen++;
+  // Immediately stop all playing nodes
+  stopAllNodes();
+  // Ramp down gain
+  const a=ac();
+  getRGain().gain.cancelScheduledValues(a.currentTime);
+  getRGain().gain.setValueAtTime(0,a.currentTime);
+  radioChannel=ch;
+  updateRadioDisplay();
+  if(ch===0)return;
+  // Ramp up and start new channel
+  getRGain().gain.linearRampToValueAtTime(1,a.currentTime+0.1);
+  radioNextTime=a.currentTime+0.1;
+  const myGen=radioGen;
+  runScheduler(myGen);
+  radioSchedTimer=setInterval(()=>runScheduler(myGen),SCHED_INTERVAL);
+}
+
+function startMuzak(){ /* radio only — do nothing */ }
+function stopMuzak(){ setRadio(0); }
+
+function updateRadioDisplay(){
+  const el=document.getElementById('radio-channel-label');
+  if(!el)return;
+  const ch=RADIO_CHANNELS[radioChannel];
+  el.textContent=radioChannel===0?'FRA':ch.emoji+' '+ch.name;
+  document.querySelectorAll('.radio-btn').forEach(b=>{
+    b.classList.toggle('active',parseInt(b.dataset.ch)===radioChannel);
+  });
+  // wave animation on/off
+  const wave=document.getElementById('radio-wave');
+  if(wave) wave.classList.toggle('off',radioChannel===0);
+}
+
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const cvs=document.getElementById('c'), ctx=cvs.getContext('2d');
+const W=900,H=560;
+const keys={};
+let dlgOpen=false, phoneOpen=false, discOpen=false;
+let activeNPC=null, discObj=null, discStep=0, discPlayerPos={x:0,y:0};
+let currentDay='MANDAG';
+let flashTimer=null;
+let muzakStarted=false;
+const inventory=[];
+
+// ═══════════════════════════════════════════
+// NPC DATA
+// ═══════════════════════════════════════════
+const COLORS={
+  Jas:        {skin:'#f5c897',hair:'#c0392b',shirt:'#3498db',emoji:'☕',male:true},
+  Gune:       {skin:'#fad5a5',hair:'#2c3e50',shirt:'#9b59b6',emoji:'🎮',male:false},
+  Neter:      {skin:'#f0b27a',hair:'#e67e22',shirt:'#27ae60',emoji:'🎲',male:true},
+  Heresa:     {skin:'#f5cba7',hair:'#f39c12',shirt:'#e74c3c',emoji:'🍎',male:false},
+  Delisateth: {skin:'#fdebd0',hair:'#922b21',shirt:'#8e44ad',emoji:'🍵',male:false},
+  Anne:       {skin:'#f9e4b7',hair:'#7d3c98',shirt:'#2980b9',emoji:'📊',male:false},
+  Tfan:       {skin:'#d5a87a',hair:'#1a1a1a',shirt:'#2ecc71',emoji:'🚗',male:true},
+  Tentriette: {skin:'#f5b7b1',hair:'#922b21',shirt:'#e67e22',emoji:'✨',male:false},
+};
+
+const npcs=[
+  {id:'Jas',name:'Jas',title:'Foreningskonsulent NT — Frivilligkoordinering',
+   x:695,y:318,always:true,
+   p:`Du er Jas, foreningskonsulent i FDF med speciale i frivilligkoordinering. Du er varm, humoristisk og lidt filosofisk. Du ELSKER kaffe (kender alle bønnetyper), fortæller altid en joke når det passer ind, er vild med Sudoku, international politik og historie, går i kirke søndage og er fascineret af koalabørn. Du kalder folk "min ven" eller "kære sjæl". Svar på dansk. Max 4 sætninger.
+
+Du er i NT (Nationalt Engagement & Identitet) under chef Tfan. Du koordinerer frivillige i FDF sammen med Delisateth. Hemmelig tradition: når cheferne ikke kigger, løser du og Delisateth Sudoku. Efter kl. 14 drikker I cocktails — "Solen er over en anden ø et sted, min ven." HEMMELIGHED: Du har gemt Annes hæftemaskine bag sofapuden — Anne støbte den i gele, du støbte den i BETON. Du nægter blankt hvis nogen spørger.
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902 af Holger Tornøe. Fundament: relationer, tro, leg, samfundsengagement.
+Tarkob (generalsekretær): Elsker kaffe (MEGET), speedmetal, 2. verdenskrig, biler uden autostart. Drikker KUN Aalborg-øl (ALDRIG cocktails eller vin). Elsker fodboldholdet AaB fra Aalborg — kan tale om dem i timevis. Råber "Rådhusklokkerne ringer!!!" og deler Aalborg-øl og skjorter ud.
+Kolleger: Gune(LT), Neter(NT), Heresa(LT), Delisateth(NT), Anne(LT), Tfan(din chef NT, mandagen — sender beredskabsmails med kun 1 plads, du melder dig ALTID til), Tentriette(chef LT, mandagen).`},
+
+  {id:'Gune',name:'Gune',title:'Foreningskonsulent LT — Digitalisering & Regioner',
+   x:695,y:260,always:true,
+   p:`Du er Gune, foreningskonsulent i FDF med speciale i digitalisering og regionalt frivilligarbejde. Du ELSKER spil, data, AI og effektivitet. HADER dumme mails og dumme spørgsmål. Direkte og sarkastisk. Gaming-referencer. Svar på dansk, max 3-4 sætninger. Om AI: du glemmer at være sur.
+
+Du er i LT (Lokalt Engagement) under chef Tentriette. Du elsker FDF-historien og kommer med random historiske quotes: "Som Holger Tornøe sagde i 1902..." Du vil digitalisere ALT.
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902.
+Tarkob (generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verdenskrig, biler uden autostart, Aalborg-øl (KUN Aalborg-øl), elsker AaB fodbold. Et interessant datapunkt.
+Kolleger: Jas(NT), Neter(NT), Heresa(LT), Delisateth(NT), Anne(LT din kollega), Tfan(chef NT mandagen — sender beredskabsmails med plads til KUN én, alle melder sig), Tentriette(din chef LT mandagen).`},
+
+  {id:'Neter',name:'Neter',title:'Foreningskonsulent NT — Kommunikation & Branding',
+   x:90,y:268,always:true,
+   p:`Du er Neter, foreningskonsulent i FDF med speciale i kommunikation og branding. Mand. Lege-mester og mad-mester. Skifter hurtigt mellem super engageret og "meh, whatever". Svar på dansk, uformelt. Max 4 sætninger.
+
+Du er i NT under chef Tfan. Du har 2 hele legekonferencer og én halv (den halve er uklar — ingen ved helt hvad den indebærer) der skal planlægges inden Landslejren. Du er i gang men det er MEGET.
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902.
+Tarkob (generalsekretær): Kaffe(MEGET), speedmetal, biler uden autostart, Aalborg-øl, AaB-fan. Du synes han er sej.
+Kolleger: Jas(NT), Gune(LT), Heresa(LT), Delisateth(NT kollega), Anne(LT), Tfan(din chef NT mandagen), Tentriette(chef LT mandagen).`},
+
+  {id:'Heresa',name:'Heresa',title:'Foreningskonsulent LT — Kreditstart & Vækst',
+   x:90,y:368,always:true,
+   p:`Du er Heresa, foreningskonsulent i FDF med speciale i Kreditstart og kredsvækst. Idealisten fra Nordjylland. Viger ALDRIG fra problemets kerne. Elsker frugt (nævner det tit) og byen Ry. Direkte og handlekraftig. Svar på dansk. Max 4 sætninger. Stil opfølgende spørgsmål.
+
+Du er i LT under chef Tentriette. Du og Delisateth står for 28 receptioner på Landslejren. DU HADER DET. "28 receptioner er ikke løsning — det er symptombehandling på industriskala."
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902.
+Tarkob (generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verdenskrig, biler uden autostart, drikker KUN Aalborg-øl, elsker AaB fodbold.
+Kolleger: Jas(NT), Gune(LT kollega), Neter(NT sidder ved siden af!), Delisateth(NT), Anne(LT kollega), Tfan(chef NT mandagen — sender beredskabsmails med plads til KUN én, alle melder sig), Tentriette(din chef LT mandagen).`},
+
+  {id:'Delisateth',name:'Delisateth',title:'Foreningskonsulent NT — Landslejr & Store Arrangementer',
+   x:795,y:388,always:true,
+   p:`Du er Delisateth, foreningskonsulent i FDF med speciale i landslejr. ELSKER Romerriget og Oldtiden. Principper for ALT. Elsker Sudoku, gemmer chokolade i skuffen (bliv nervøs hvis nogen nævner det!), laver Excelark. SKAL have te. Elegant og principfast. Svar på dansk. Max 4 sætninger. Find romer-paralleller. Du siger OFTE: "Jeg ringer lige til Landslejrchefen."
+
+Du er i NT under chef Tfan. Du koordinerer FDFs næste landslejr — 10.000 deltagere! Du og Heresa står for 28 receptioner. DU HADER DET. "28 receptioner er ikke romersk storhed — det er romersk slaveri."
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902. FDFs struktur = romerske collegia.
+Tarkob (generalsekretær): Som en romersk feltherre. Kaffe(MEGET). Aalborg-øl. AaB-fan. "Rådhusklokkerne ringer!!!"
+Kolleger: Jas(NT, Sudoku-konkurrence — cocktails efter kl.14 hemmeligt!), Gune(LT), Neter(NT kollega), Heresa(LT), Anne(LT, lilla=imperial farve!), Tfan(din chef NT mandagen), Tentriette(chef LT mandagen).`},
+
+  {id:'Anne',name:'Anne',title:'Foreningskonsulent LT — Data & Indsigt',
+   x:795,y:228,always:true,
+   p:`Du er Anne, foreningskonsulent i FDF med speciale i data og indsigt. ALT baseres på data. Elsker skæve og bløde ting, lilla og blå. No bullshit. Svar på dansk. Max 3-4 sætninger. Spørg "hvad siger dataen?" hvis relevant. Hvis nogen spørger om en gåtur rundt om blokken, vil du GERNE med.
+
+Du er BESAT af The Office (den amerikanske udgave med Steve Carell). Du har set alle 9 sæsoner mindst 6 gange og analyseret dem statistisk. Du sammenligner tit kolleger med karakterer fra showet — Jas er en Creed (mystisk og vis), Gune er en Angela (striks med data), Neter er en Andy (energisk og veksler), Heresa er en Oscar (direkte og principfast), Delisateth er en Michael Scott (karismatisk, mener det godt, lidt overvældende), Tfan er en Darryl (cool, respekteret), Tentriette er en Toby (vil have orden, ingen sarkasme). Du selv er en Jim — observerende, lidt sarkastisk, men varm. Hvis nogen nævner The Office, lyser du OP og glemmer at være kortfattet. Yndlingsepisode: "Casino Night" (S2E22). Yndlingscitat: "Bears. Beets. Battlestar Galactica." Du mener The Office er det bedste datasæt over menneskelig adfærd på en arbejdsplads der nogensinde er lavet.
+
+Du er i LT under chef Tentriette. IRRITATION: Din hæftemaskine er forsvundet. Du støbte den i gele (pointe: gele er usymmetrisk). Nu er den væk. Du mistænker Jas — dataen peger på ham.
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse.
+Tarkob (generalsekretær): Kaffe(MEGET) + Aalborg-øl(MEGET). Elsker AaB. Dataen på hans kaffeforbrug er imponerende.
+Kolleger: Jas(NT, mistænkt for hæftemaskinen), Gune(LT kollega), Neter(NT), Heresa(LT kollega), Delisateth(NT, lilla er imperial farve!), Tfan(chef NT mandagen — sender beredskabsmails med plads til KUN én, alle melder sig), Tentriette(din chef LT mandagen).`},
+
+  {id:'Tfan',name:'Tfan',title:'Chef NT — Nationalt Engagement & Identitet',
+   x:370,y:230,always:false,
+   p:`Du er Tfan, chef for NT (Nationalt Engagement & Identitet) i FDF. Mand. Dit hold: Jas, Neter, Delisateth. Fra Husum, fortid som bandekriminel — ærlig om det. Skal snart i fængsel (kortere dom), taler åbent om det med humor. ELSKER Sverige og lange ture i elbil. Karismatisk og folkelig. Svar på dansk, gadeagtigt men varmt. Max 4 sætninger.
+
+Du sender jævnligt mails ud om beredskabsarrangementer — kurser, øvelser, seminarer om kriseledelse og beredskab. Problemet er at der KUN er plads til én deltager, men alle på kontoret melder sig altid. Du synes det er hyggeligt at alle er så engagerede. Du forstår ikke hvorfor det skaber forvirring. Nævn det gerne hvis det passer ind — du har sikkert podtet en ny mail på vej.
+Hvis nogen spørger om "Generalen", "Tarkob" eller "generalsekretæren": svar "Tarkob? Vent bare... *griner*"
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse. FDF betyder MEGET personligt — havde der været et FDF i dit kvarter som ung, var din vej gået anderledes.
+Tarkob (din generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verdenskrig, biler uden autostart, drikker KUN Aalborg-øl, elsker AaB fodbold. Du respekterer ham.
+Kolleger: Jas(dit hold NT), Gune(LT), Neter(dit hold NT), Heresa(LT), Delisateth(dit hold NT), Anne(LT), Tentriette(kollegachef LT, du aner hun er fra Sjælland).`},
+
+  {id:'Tentriette',name:'Tentriette',title:'Chef LT — Lokalt Engagement',
+   x:480,y:230,always:false,
+   p:`Du er Tentriette, chef for LT (Lokalt Engagement) i FDF. Dit hold: Gune, Heresa, Anne. Fra Haderslev — IKKE fra Sjælland, det er HEMMELIGT (bliv defensiv hvis nogen antyder det). ELSKER når ting giver mening. Tåler INGEN løgne eller sarkasme. Bed folk stoppe hvis de er sarkastiske. Svar på dansk. Max 4 sætninger.
+Hvis nogen spørger om "Generalen", "Tarkob" eller "generalsekretæren": svar varmt og antyd at "han nok dukker op snart."
+
+FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902. Alt skal give mening fra bund til top. Stolt af 120-årig arv.
+Tarkob (din generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verdenskrig, biler uden autostart, drikker KUN Aalborg-øl, elsker AaB fodbold.
+Kolleger: Jas(NT, kontorets hjerte), Gune(dit hold LT), Neter(NT), Heresa(dit hold LT), Delisateth(NT), Anne(dit hold LT), Tfan(kollegachef NT — hans beredskabsmails med plads til én deltager skaber altid kaos).`},
+];
+
+// ═══════════════════════════════════════════
+// ROOM
+// ═══════════════════════════════════════════
+const walls=[
+  {x:0,y:0,w:900,h:30},{x:0,y:0,w:30,h:560},{x:870,y:0,w:30,h:560},
+  {x:0,y:530,w:370,h:30},{x:530,y:530,w:370,h:30}
+];
+const obstacles=[
+  {x:290,y:155,w:230,h:120}, // group table
+  {x:690,y:35,w:170,h:60},   // coffee counter
+  {x:50,y:430,w:180,h:60},   // sofa
+  {x:30,y:148,w:20,h:30},    // phone
+  {x:650,y:175,w:90,h:55},    // Gune desk
+  {x:750,y:155,w:90,h:55},   // Anne desk
+  {x:650,y:245,w:90,h:55},   // Jas desk
+  {x:750,y:315,w:90,h:55},   // Delisateth desk
+  {x:45,y:195,w:90,h:55},    // Neter desk
+  {x:45,y:295,w:90,h:55},    // Heresa desk
+  {x:232,y:413,w:32,h:24},   // boombox
+];
+
+// ═══════════════════════════════════════════
+// INTERACTABLES
+// ═══════════════════════════════════════════
+const items=[
+  {id:'sofa',label:'Undersøg sofaen',x:140,y:460,r:80,found:false,
+   msgs:['Du kigger bag sofapuden... der er noget hårdt dernede!',
+         'En hæftemaskine! Den har mærkelige rester på sig — som støbt i noget. Anne støbte den engang i GELE. Jas støbte den bagefter ind i BETON og gemte den her. 34,95 kr. prismærke sidder stadig på.'],
+   foundMsg:'Hæftemaskinen er der stadig. Betonresterne sidder fast. Anne ved ikke at den er her.',
+   item:'📎 Hæftemaskine (betonindstøbt)',emoji:'🛋️'},
+
+  {id:'kaffe',label:'Undersøg kaffemaskinen',x:720,y:65,r:90,found:false,
+   msgs:['Du kigger bag kaffemaskinen... der er noget gemt bag kværnen.',
+         'En dåse! Du ryster den. Intet. Du kigger ind. Tom. Fuldstændig tom. Hvorfor er den her??'],
+   foundMsg:'Den tomme dåse er stadig der. Stadig tom.',
+   item:'🥫 Tom dåse',emoji:'☕',
+   onDisc:()=>coffeeSnd()},
+
+  {id:'p1',label:'Rod i planten',x:50,y:55,r:65,found:false,
+   msgs:['Du stikker hånden ned i pottejorden...',
+         'Et guldhalskæde med en koala-vedhæng! 🐨 Hvem kan det mon tilhøre?'],
+   foundMsg:'Potten er bare jord nu.',item:'💍 Koala-halskæde',emoji:'🌿'},
+
+  {id:'p2',label:'Rod i planten',x:840,y:55,r:65,found:false,
+   msgs:['Du piller forsigtigt i bladene...',
+         'Et par blå øreringe gemt under et blad! Støvede men smukke — lilla og blå.'],
+   foundMsg:'Bladene er tomme nu.',item:'💎 Blå øreringe',emoji:'🌿'},
+
+  {id:'p3',label:'Rod i planten',x:50,y:505,r:65,found:false,
+   msgs:['Du løfter et af de store blade...',
+         'Et flettet læderarmbånd med en lille slidt metalplate. Gammelt og mystisk.'],
+   foundMsg:'Armbåndet er i din lomme.',item:'📿 Flettet armbånd',emoji:'🌿'},
+
+  {id:'p4',label:'Rod i planten',x:840,y:455,r:65,found:false,
+   msgs:['Du stikker hånden ned bag potten...',
+         'En blank poleret sten med et indhugget tegn. En runesten? På et kontor??'],
+   foundMsg:'Stenen sidder tungt i lommen.',item:'🔮 Runesten',emoji:'🌿'},
+
+  // ── DESK ITEMS ──────────────────────────────────────────
+  {id:'desk_jas',label:'Kig på Jas\' bord',x:695,y:300,r:75,found:false,
+   msgs:['På bordet ligger en halvt løst Sudoku-blok, tre tomme kaffekrus og en lille koalabamse i blå FDF-trøje.',
+         'Under Sudoku-blokken finder du en seddel: "Solen er jo over en anden ø et sted 🌴 — Jas". Ved siden af: en flaske portvin. Den er ikke lukket.'],
+   foundMsg:'Sudokuen er stadig ikke løst. Kaffekrusen er stadig tom.',
+   item:'🐨 Koalabamse i FDF-trøje',emoji:'☕'},
+
+  {id:'desk_gune',label:'Kig på Gunes bord',x:695,y:245,r:75,found:false,
+   msgs:['En RGB gaming-mus, to energidrikke (én tom, én halvt), og en KÆMPE FDF-historiebog fra 1952 dækket i Post-its.',
+         'Du bladrer i bogen. Gune har understreget alt med tre farver og skrevet i marginen: "INEFFEKTIVT", "DIGITALISÉR" og én gang bare "???"'],
+   foundMsg:'Bogen er der stadig. "INEFFEKTIVT" er stadig understreget.',
+   item:'📖 FDF-historiebog med 47 Post-its',emoji:'🎮'},
+
+  {id:'desk_neter',label:'Kig på Neters bord',x:90,y:250,r:75,found:false,
+   msgs:['En halvspist sandwich (kebab, viser det sig), et A3-ark med "LEGEKONFERENCE 2½" skrevet øverst — og derunder total kaos af pile, spørgsmålstegn og én tegning af en pingvin.',
+         'Under sandwichen: en fidget spinner og en Post-it med "Hvad ER den halve konference egentlig??" Ingen svar.'],
+   foundMsg:'Sandwichen er stadig der. Lidt tør nu.',
+   item:'🗺️ Legekonference-kaosplan',emoji:'🎲'},
+
+  {id:'desk_heresa',label:'Kig på Heresas bord',x:90,y:350,r:75,found:false,
+   msgs:['En frugtskål (to æbler, en banan og noget der muligvis er en mango), et kæmpe ringbind mærket "KREDITSTART — PROTOKOL V.7" og en pakke blyantspisser.',
+         'Du åbner ringbindet på en tilfældig side. Der er 4 sider om "hvorfor folk IKKE starter en kreds". Den er håndskrevet. Med rødt. Understreget tre gange.'],
+   foundMsg:'Frugtskålen er fyldt op igen. Heresa holder øje.',
+   item:'🍎 Kreditstart-protokol V.7',emoji:'🍎'},
+
+  {id:'desk_delisateth',label:'Kig på Delisateths bord',x:795,y:370,r:75,found:false,
+   msgs:['Et printout af et Excelark så stort at det folder sig ud over hele bordet. En lille Colosseum-figur i plast. Og tre tekandler — én tom, én halvt, én fuld.',
+         'Du kigger på Excelark. Det har 47 faneblade. Et af dem hedder "28 RECEPTIONER — WORST CASE SCENARIER". Du lukker det igen.'],
+   foundMsg:'Colosseum-figuren kigger bebrejdende på dig.',
+   item:'🏛️ Colosseum-figur (8 cm)',emoji:'🍵'},
+
+  {id:'desk_anne',label:'Kig på Annes bord',x:795,y:210,r:75,found:false,
+   msgs:['En lilla kaffekop med teksten "DATA > MAVEFORNEMMELSE", en asymmetrisk stak bøger (bevidst skæv), og en The Office DVD-boks — sæson 2 er halvt ude af æsken.',
+         'På skærmen kører et regneark. I toppen af siden har hun skrevet: "Kollega-sammenligning: FDF vs Dunder Mifflin (n=8)". Kolonner: Navn, The Office karakter, Match-procent. Jas scorer 94% Creed.'],
+   foundMsg:'Regnearket er stadig åbent. Jas scorer stadig 94% Creed.',
+   item:'📊 FDF vs Dunder Mifflin-analyse',emoji:'📊'},
+];
+
+// phone
+const phoneObj={x:50,y:163,r:40};
+const calObj={x:580,y:50,r:55}; // hangs on top wall, right side
+const radioObj={x:248,y:425,r:60}; // boombox near sofa
+const generalBtn={x:405,y:50,r:38};
+const paintingObj={x:500,y:50,r:45};
+
+function openRadio(){
+  if(!muzakStarted){muzakStarted=true;ac();}
+  document.getElementById('radio-panel').classList.add('on');
+  const wave=document.getElementById('radio-wave');
+  if(!wave.children.length){
+    for(let i=0;i<12;i++){const s=document.createElement('span');s.style.animationDelay=(i*.07)+'s';s.style.height=(4+Math.random()*12)+'px';wave.appendChild(s);}
+  }
+  wave.classList.toggle('off',radioChannel===0);
+}
+function closeRadio(){document.getElementById('radio-panel').classList.remove('on');}
+
+function openCalendar(){
+  const overlay=document.getElementById('cal-overlay');
+  overlay.classList.add('on');
+  document.querySelectorAll('.cal-day-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.day===currentDay);
+  });
+}
+function closeCalendar(){
+  document.getElementById('cal-overlay').classList.remove('on');
+}
+function nearbyCalendar(){return Math.hypot(player.x-calObj.x,player.y-calObj.y)<calObj.r?calObj:null;}
+function nearbyRadio(){return Math.hypot(player.x-radioObj.x,player.y-radioObj.y)<radioObj.r?radioObj:null;}
+function nearbyGeneralBtn(){return !tarkob.active&&Math.hypot(player.x-generalBtn.x,player.y-generalBtn.y)<generalBtn.r?generalBtn:null;}
+function nearbyPainting(){return Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y)<paintingObj.r?paintingObj:null;}
+
+// ═══════════════════════════════════════════
+// PLAYER
+// ═══════════════════════════════════════════
+const player={x:440,y:480,spd:3};
+
+function collides(nx,ny){
+  const hw=14,hh=14;
+  for(const o of obstacles){if(nx-hw<o.x+o.w&&nx+hw>o.x&&ny-hh<o.y+o.h&&ny+hh>o.y)return true;}
+  for(const w of walls){if(nx-hw<w.x+w.w&&nx+hw>w.x&&ny-hh<w.y+w.h&&ny+hh>w.y)return true;}
+  return false;
+}
+
+// ═══════════════════════════════════════════
+// TARKOB
+// ═══════════════════════════════════════════
+let tarkob={active:false,visible:false,x:450,y:580,tx:420,ty:310,walking:false,phase:0,giftIdx:0};
+let tarkobPrevChannel=0;
+const gifts=['👔 Skjorte til Jas!','🍺 Aalborg-øl til Gune!','👔 Skjorte til Neter!','🍺 Aalborg-øl til Heresa!','👔 Skjorte til Delisateth!','🍺 Aalborg-øl til Anne!'];
+
+function summonTarkob(){
+  if(tarkob.active)return;
+  tarkob.active=true; tarkob.visible=true;
+  tarkob.x=450; tarkob.y=580; tarkob.tx=420; tarkob.ty=310; tarkob.walking=true; tarkob.giftIdx=0;
+  tarkobPrevChannel=radioChannel; // remember what was playing
+  closeDialog();
+  bells();
+  setTimeout(()=>setRadio(2),1200); // switch to metal
+  flash('💥 TARKOB STORMER IND AD DØREN!!');
+  setTimeout(()=>{flash('🔔 "RÅDHUSKLOKKERNE RINGER!!!"'); bells();},1800);
+  setTimeout(()=>{flash('🤘 Speedmetal dundrer fra hans høretelefoner!'); metalRiff();},3200);
+  setTimeout(()=>flash('🚗 "Min bil har SELVFØLGELIG ikke autostart."'),4800);
+  setTimeout(()=>doGifts(),5800);
+}
+
+function doGifts(){
+  if(tarkob.giftIdx>=gifts.length){
+    setTimeout(()=>{
+      flash('🍺 "Nu skal vi have ØL. AALBORG-ØL. AaB vinder altid!"');
+      coffeeSnd();
+      tarkob.tx=730; tarkob.ty=120; tarkob.walking=true;
+      setTimeout(()=>{
+        flash('🫡 Tarkob marcherer tilbage ud. Besøget er ovre.');
+        tarkob.tx=450; tarkob.ty=590; tarkob.walking=true;
+        setTimeout(()=>{
+          tarkob.visible=false; tarkob.active=false;
+          // restore channel that was playing before Tarkob arrived
+          if(tarkobPrevChannel>0) setRadio(tarkobPrevChannel);
+        },3000);
+      },4000);
+    },1000);
+    return;
+  }
+  tarkob.tx=310+tarkob.giftIdx*22; tarkob.ty=250; tarkob.walking=true;
+  flash('🎁 '+gifts[tarkob.giftIdx]);
+  tarkob.giftIdx++;
+  setTimeout(doGifts,1800);
+}
+
+function updateTarkob(){
+  if(!tarkob.visible||!tarkob.walking)return;
+  const dx=tarkob.tx-tarkob.x,dy=tarkob.ty-tarkob.y,d=Math.hypot(dx,dy);
+  if(d<3){tarkob.x=tarkob.tx;tarkob.y=tarkob.ty;tarkob.walking=false;}
+  else{tarkob.x+=dx/d*2.2;tarkob.y+=dy/d*2.2;tarkob.phase+=.25;}
+}
+
+// ═══════════════════════════════════════════
+// NPC WANDER + SUDOKU + MEETING + COFFEE
+// ═══════════════════════════════════════════
+const wander={
+  Jas:        {hx:695,hy:318,tx:695,ty:318,t:0,r:28},
+  Gune:       {hx:695,hy:260,tx:695,ty:260,t:0,r:24},
+  Neter:      {hx:90, hy:268,tx:90, ty:268,t:0,r:32},
+  Heresa:     {hx:90, hy:368,tx:90, ty:368,t:0,r:28},
+  Delisateth: {hx:795,hy:388,tx:795,ty:388,t:0,r:24},
+  Anne:       {hx:795,hy:228,tx:795,ty:228,t:0,r:32},
+  Tfan:       {hx:370,hy:230,tx:370,ty:230,t:0,r:38},
+  Tentriette: {hx:480,hy:230,tx:480,ty:230,t:0,r:38},
+};
+const anneWP=[{x:795,y:228},{x:600,y:400},{x:300,y:420},{x:200,y:300},{x:400,y:200},{x:795,y:228}];
+let anneWPIdx=0,anneWPT=0;
+
+// sudoku
+let sudokuState='home',sudokuT=350+Math.random()*400,sudokuBubT=0;
+const SJ={x:360,y:215},SD={x:430,y:215};
+const sudokuSyms=['3','7','?','1','9','✓','5','2'];
+
+// meeting
+let meetState='idle',meetT=600+Math.random()*600,meetTick=0,meetPhase=0;
+const SEATS={
+  Gune:{x:305,y:278},Heresa:{x:355,y:278},Anne:{x:405,y:278},Tentriette:{x:455,y:278},
+  Jas:{x:305,y:145},Neter:{x:355,y:145},Delisateth:{x:405,y:145},Tfan:{x:455,y:145}
+};
+const AGENDA=[
+  '📋 Dagsorden punkt 1: Status på kredse',
+  '📊 Anne deler sin skærm med data',
+  '🗣️ Alle taler i munden på hinanden',
+  '🔇 "Er I muted?" — "Nej er I?"',
+  '☕ Jas henter kaffe midt i mødet',
+  '🏛️ Delisateth: "Som romerne sagde..."',
+  '😤 Heresa: "Men hvad er EGENTLIG problemet?"',
+  '🎮 Gune tjekker data under mødet',
+  '😩 "28 receptioner..." — Delisateth mumler',
+  '🎲 Neter foreslår et spil til afslutning',
+  '✅ Mødet sluttes — ingen ved hvad der blev besluttet',
+];
+
+// thursday coffee
+let coffeeState='idle',coffeeT=400,coffeeTick=0,coffeeDone=false;
+const COFFEE_SPOTS=[{x:700,y:125},{x:740,y:130},{x:760,y:115},{x:720,y:108},{x:680,y:118},{x:755,y:140}];
+const COFFEE_CHAT=[
+  '☕ Alle henter kaffe...',
+  '😄 Jas fortæller en joke. Alle griner (undtagen Gune).',
+  '🏛️ Delisateth: "Romerne drak faktisk ikke kaffe. Tragisk."',
+  '🍎 Heresa tilbyder frugt til alle.',
+  '🎮 Gune: "Kaffe er bare effektivt energi-input."',
+  '💜 Anne: "Denne kaffe er asymmetrisk god."',
+  '😵 Neter: "Okay MEN hvad NU hvis vi lavede kaffe-latte-konference??"',
+  '🧩 Jas og Delisateth løser halvt Sudoku mens de venter.',
+];
+
+function getNPC(id){return npcs.find(n=>n.id===id);}
+function visibleNPCs(){return npcs.filter(n=>n.always||(currentDay==='MANDAG'));}
+
+function updateWander(){
+  if(dlgOpen||phoneOpen)return;
+  const isWed=currentDay==='ONSDAG';
+
+  // sudoku
+  sudokuT--;
+  const jas=getNPC('Jas'),deli=getNPC('Delisateth');
+  const jw=wander.Jas,dw=wander.Delisateth;
+  if(sudokuState==='home'&&sudokuT<=0){
+    if(meetState!=='idle'){sudokuT=150;goto_next_sudoku();}
+    else{sudokuState='meeting';jw.tx=SJ.x;jw.ty=SJ.y;dw.tx=SD.x;dw.ty=SD.y;}
+  }
+  if(sudokuState==='meeting'){
+    if(Math.hypot(jas.x-SJ.x,jas.y-SJ.y)<5&&Math.hypot(deli.x-SD.x,deli.y-SD.y)<5){
+      sudokuState='sudoku';sudokuT=400+Math.random()*200;sudokuBubT=0;
+    }
+  }
+  if(sudokuState==='sudoku'){sudokuBubT++;sudokuT--;if(sudokuT<=0){sudokuState='returning';jw.tx=jw.hx;jw.ty=jw.hy;dw.tx=dw.hx;dw.ty=dw.hy;}}
+  if(sudokuState==='returning'){
+    if(Math.hypot(jas.x-jw.hx,jas.y-jw.hy)<5&&Math.hypot(deli.x-dw.hx,deli.y-dw.hy)<5){
+      sudokuState='home';sudokuT=500+Math.random()*500;
+    }
+  }
+
+  // meeting
+  meetT--;
+  const ltIds=['Gune','Heresa','Anne'],ntIds=['Jas','Neter','Delisateth'];
+  if(currentDay==='MANDAG'){ltIds.push('Tentriette');ntIds.push('Tfan');}
+  const allIds=[...ltIds,...ntIds];
+  const allNPCs=allIds.map(id=>getNPC(id)).filter(Boolean);
+  const isInSudoku=(id)=>(id==='Jas'||id==='Delisateth')&&sudokuState!=='home';
+
+  if(meetState==='idle'&&meetT<=0){
+    if(sudokuState!=='home'||coffeeState!=='idle'){meetT=200;return;}
+    meetState='gathering';meetTick=0;meetPhase=0;
+    allIds.forEach(id=>{const s=SEATS[id],w=wander[id];if(s&&w){w.tx=s.x;w.ty=s.y;}});
+    flash(isWed?'💻 Onsdag = mødedag. Endnu et møde...':'💻 Der indkaldes til onlinemøde...');
+  }
+  if(meetState==='gathering'){
+    if(allNPCs.every(n=>{const s=SEATS[n.id];return!s||Math.hypot(n.x-s.x,n.y-s.y)<12;})){
+      meetState='meeting';meetT=isWed?900+Math.random()*400:500+Math.random()*300;
+      flash('📹 Mødet er i gang!');
+    }
+  }
+  if(meetState==='meeting'){meetTick++;meetT--;
+    if(meetT<=0){
+      meetState='dispersing';
+      flash('✅ Mødet er slut! Ingen ved hvad der blev besluttet.');
+      allIds.forEach(id=>{const w=wander[id];if(w){w.tx=w.hx;w.ty=w.hy;}});
+      meetT=isWed?200+Math.random()*200:700+Math.random()*600;
+    }
+  }
+  if(meetState==='dispersing'){
+    if(allNPCs.every(n=>{const w=wander[n.id];return!w||Math.hypot(n.x-w.hx,n.y-w.hy)<12;})){meetState='idle';}
+  }
+
+  // thursday coffee
+  if(currentDay==='TORSDAG'&&!coffeeDone){
+    coffeeT--;
+    const cIds=['Jas','Gune','Neter','Heresa','Delisateth','Anne'];
+    const cNPCs=cIds.map(id=>getNPC(id)).filter(Boolean);
+    if(coffeeState==='idle'&&coffeeT<=0){
+      if(meetState!=='idle'||sudokuState!=='home'){coffeeT=200;return;}
+      coffeeState='gathering';coffeeTick=0;
+      cIds.forEach((id,i)=>{const s=COFFEE_SPOTS[i%COFFEE_SPOTS.length],w=wander[id];if(w&&s){w.tx=s.x;w.ty=s.y;}});
+      flash('☕ EFTERMIDDAGSKAFFE! Alle bevæger sig mod kaffemaskinen...');
+      coffeeSnd();
+    }
+    if(coffeeState==='gathering'){
+      if(cNPCs.every((n,i)=>{const s=COFFEE_SPOTS[i%COFFEE_SPOTS.length];return Math.hypot(n.x-s.x,n.y-s.y)<18;})){
+        coffeeState='coffee';coffeeT=700;coffeeTick=0;
+      }
+    }
+    if(coffeeState==='coffee'){
+      coffeeTick++;coffeeT--;
+      if(coffeeTick%250===0){const idx=Math.floor(coffeeTick/250);if(idx<COFFEE_CHAT.length){flash(COFFEE_CHAT[idx]);if(idx%3===0)coffeeSnd();}}
+      if(coffeeT<=0){
+        coffeeState='dispersing';coffeeDone=true;
+        flash('😌 Eftermiddagskaffe slut. Alle tilbage til arbejdet.');
+        cIds.forEach(id=>{const w=wander[id];if(w){w.tx=w.hx;w.ty=w.hy;}});
+      }
+    }
+    if(coffeeState==='dispersing'){
+      if(cNPCs.every(n=>{const w=wander[n.id];return!w||Math.hypot(n.x-w.hx,n.y-w.hy)<12;})){coffeeState='idle';}
+    }
+  }
+
+  // move all NPCs
+  visibleNPCs().forEach(npc=>{
+    const w=wander[npc.id];if(!w)return;
+    const inSudokuCtrl=(npc.id==='Jas'||npc.id==='Delisateth')&&sudokuState!=='home';
+    const inMeetCtrl=meetState==='gathering'||meetState==='meeting';
+    const inCoffeeCtrl=coffeeState==='gathering'||coffeeState==='coffee';
+
+    if(!inSudokuCtrl&&!inMeetCtrl&&!inCoffeeCtrl){
+      if(npc.id==='Anne'){
+        anneWPT--;
+        if(anneWPT<=0){anneWPIdx=(anneWPIdx+1)%anneWP.length;const wp=anneWP[anneWPIdx];w.tx=wp.x;w.ty=wp.y;anneWPT=180+Math.random()*200;}
+      } else if(!w.locked) {
+        w.t--;
+        if(w.t<=0){w.tx=w.hx+(Math.random()-.5)*w.r*2;w.ty=w.hy+(Math.random()-.5)*w.r*2;w.t=100+Math.random()*160;}
+      }
+    }
+    const dx=w.tx-npc.x,dy=w.ty-npc.y,d=Math.hypot(dx,dy);
+    const spd=w.spd||.55;
+    if(d>2){npc.x+=dx/d*spd;npc.y+=dy/d*spd;}
+  });
+}
+
+function goto_next_sudoku(){/* placeholder */}
+
+// ═══════════════════════════════════════════
+// DRAWING
+// ═══════════════════════════════════════════
+function rr(x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();
+}
+
+function drawRoom(){
+  // floor
+  ctx.fillStyle='#f5e9d0';ctx.fillRect(30,30,840,500);
+  // carpet
+  ctx.fillStyle='#a8c0c8';ctx.beginPath();ctx.roundRect(200,130,430,200,12);ctx.fill();
+  ctx.strokeStyle='#7b9ea6';ctx.lineWidth=3;ctx.stroke();
+  // walls
+  ctx.fillStyle='#2d3561';walls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+  // door
+  ctx.fillStyle='#f5e9d0';ctx.fillRect(370,530,160,30);
+  ctx.fillStyle='#8B5E3C';ctx.fillRect(370,520,8,20);ctx.fillRect(522,520,8,20);
+  ctx.fillStyle='#ffcc02';ctx.font='bold 10px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('IND',450,548);ctx.textAlign='left';
+  // wall deco
+  ctx.strokeStyle='#3d4571';ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(30,60+i*30);ctx.lineTo(870,60+i*30);ctx.globalAlpha=.12;ctx.stroke();ctx.globalAlpha=1;}
+
+  drawKaffe(); drawGroupTable(); drawSofa(); drawDesks(); drawPlants(); drawPhone(); drawCalendar(); drawRadioObj(); drawGeneralBtn(); drawPainting();
+}
+
+function drawKaffe(){
+  ctx.fillStyle='#c8956c';rr(690,35,170,60,6);
+  ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.strokeRect(690,35,170,60);
+  ctx.fillStyle='#222';rr(700,38,40,50,4);
+  ctx.fillStyle='#555';rr(705,43,30,25,3);
+  ctx.fillStyle='#00ff88';ctx.fillRect(708,45,24,12);
+  ctx.font='18px serif';ctx.fillText('☕',748,72);
+  ctx.fillStyle='#555';rr(760,40,30,42,4);
+  ctx.fillStyle='#333';ctx.fillRect(765,38,20,8);
+  ctx.fillStyle='#ffcc02';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('KAFFE ☕',775,92);ctx.textAlign='left';
+}
+
+function drawGroupTable(){
+  ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(296,161,230,120);
+  ctx.fillStyle='#c8956c';rr(290,155,230,115,8);
+  ctx.strokeStyle='#222';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.fillStyle='#d4a67a';rr(296,161,218,103,6);
+  ctx.fillStyle='#8B5E3C';ctx.font='bold 11px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('GRUPPEBORD',405,220);ctx.textAlign='left';
+  [[305,145],[355,145],[405,145],[455,145],[495,145],[305,278],[355,278],[405,278],[455,278],[495,278]].forEach(([x,y])=>{
+    ctx.fillStyle='#e07b54';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.stroke();
+  });
+}
+
+function drawSofa(){
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(56,436,180,60);
+  ctx.fillStyle='#e07b54';rr(50,430,180,60,10);
+  ctx.strokeStyle='#222';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.fillStyle='#c05a34';rr(50,430,180,18,8);ctx.stroke();
+  ctx.fillStyle='#eb9264';rr(56,450,58,36,6);ctx.stroke();rr(120,450,58,36,6);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='bold 10px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('SOFA',140,472);ctx.textAlign='left';
+}
+
+function drawDesks(){
+  [{x:650,y:175,lbl:'Gune',ic:'🎮',c:'#9b59b6'},
+   {x:750,y:155,lbl:'Anne',ic:'📊',c:'#2980b9'},
+   {x:650,y:245,lbl:'Jas',ic:'☕',c:'#3498db'},
+   {x:750,y:315,lbl:'Delisateth',ic:'🏛',c:'#8e44ad'},
+   {x:45,y:195,lbl:'Neter',ic:'🎲',c:'#27ae60'},
+   {x:45,y:295,lbl:'Heresa',ic:'🍎',c:'#e74c3c'}].forEach(d=>{
+    ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(d.x+4,d.y+4,90,55);
+    ctx.fillStyle='#c8956c';rr(d.x,d.y,90,55,6);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d4a67a';rr(d.x+4,d.y+4,82,47,4);
+    ctx.font='20px serif';ctx.fillText(d.ic,d.x+10,d.y+32);
+    ctx.fillStyle=d.c;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(d.lbl,d.x+45,d.y+52);ctx.textAlign='left';
+  });
+}
+
+function drawPlants(){
+  [[50,55],[840,55],[50,505],[840,455]].forEach(([x,y])=>{
+    ctx.fillStyle='#8B5E3C';ctx.fillRect(x-6,y+8,12,14);
+    ctx.fillStyle='#4caf50';ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#388e3c';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#66bb6a';ctx.beginPath();ctx.arc(x-4,y-4,7,0,Math.PI*2);ctx.fill();
+  });
+}
+
+function drawPainting(){
+  const px=paintingObj.x, py=10;
+  const pw=64, ph=48;
+  const x=px-pw/2, y=py;
+
+  // Frame shadow
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.fillRect(x+3,y+3,pw,ph);
+
+  // Outer frame
+  ctx.fillStyle='#8B5E3C';ctx.strokeStyle='#5a3a1a';ctx.lineWidth=2;
+  ctx.fillRect(x-4,y-4,pw+8,ph+8);ctx.strokeRect(x-4,y-4,pw+8,ph+8);
+
+  // Inner frame gold strip
+  ctx.fillStyle='#c8a04a';
+  ctx.fillRect(x-2,y-2,pw+4,ph+4);
+
+  // Canvas background — sunny park
+  ctx.fillStyle='#87ceeb'; // sky
+  ctx.fillRect(x,y,pw,ph);
+  // grass
+  ctx.fillStyle='#4a9e4a';
+  ctx.fillRect(x,y+ph*0.55,pw,ph*0.45);
+  // sun
+  ctx.fillStyle='#ffe066';
+  ctx.beginPath();ctx.arc(x+pw*0.8,y+ph*0.18,7,0,Math.PI*2);ctx.fill();
+  // sun rays
+  ctx.strokeStyle='#ffe066';ctx.lineWidth=1.2;
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4;
+    ctx.beginPath();
+    ctx.moveTo(x+pw*0.8+Math.cos(a)*9,y+ph*0.18+Math.sin(a)*9);
+    ctx.lineTo(x+pw*0.8+Math.cos(a)*13,y+ph*0.18+Math.sin(a)*13);
+    ctx.stroke();
+  }
+  // clouds
+  ctx.fillStyle='rgba(255,255,255,.85)';
+  [[x+8,y+8,10,5],[x+28,y+5,8,4]].forEach(([cx,cy,rx,ry])=>{
+    ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();
+  });
+
+  // Children playing — stick figures
+  // Figure 1: arms up (happy)
+  const f1x=x+14,f1y=y+ph*0.58;
+  ctx.strokeStyle='#c0392b';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(f1x,f1y-10,4,0,Math.PI*2);ctx.stroke(); // head
+  ctx.beginPath();ctx.moveTo(f1x,f1y-6);ctx.lineTo(f1x,f1y+2);ctx.stroke(); // body
+  ctx.beginPath();ctx.moveTo(f1x-5,f1y-8);ctx.lineTo(f1x,f1y-3);ctx.lineTo(f1x+5,f1y-8);ctx.stroke(); // arms up
+  ctx.beginPath();ctx.moveTo(f1x,f1y+2);ctx.lineTo(f1x-3,f1y+8);ctx.moveTo(f1x,f1y+2);ctx.lineTo(f1x+3,f1y+8);ctx.stroke(); // legs
+
+  // Figure 2: running
+  const f2x=x+30,f2y=y+ph*0.60;
+  ctx.strokeStyle='#2980b9';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(f2x,f2y-9,3.5,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f2x,f2y-5.5);ctx.lineTo(f2x+2,f2y+1);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f2x-5,f2y-4);ctx.lineTo(f2x,f2y-2);ctx.lineTo(f2x+5,f2y-5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f2x+2,f2y+1);ctx.lineTo(f2x-2,f2y+7);ctx.moveTo(f2x+2,f2y+1);ctx.lineTo(f2x+5,f2y+7);ctx.stroke();
+
+  // Figure 3: jumping
+  const f3x=x+46,f3y=y+ph*0.55;
+  ctx.strokeStyle='#27ae60';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(f3x,f3y-11,4,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f3x,f3y-7);ctx.lineTo(f3x,f3y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f3x-5,f3y-5);ctx.lineTo(f3x,f3y-3);ctx.lineTo(f3x+5,f3y-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(f3x,f3y);ctx.lineTo(f3x-4,f3y+7);ctx.moveTo(f3x,f3y);ctx.lineTo(f3x+4,f3y+6);ctx.stroke();
+
+  // Ball
+  ctx.fillStyle='#e74c3c';ctx.strokeStyle='#922b21';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(x+22,y+ph*0.48,3.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  // Title plate on frame
+  ctx.fillStyle='#c8a04a';ctx.strokeStyle='#5a3a1a';ctx.lineWidth=1.5;
+  ctx.fillRect(x+pw/2-18,y+ph+2,36,9);ctx.strokeRect(x+pw/2-18,y+ph+2,36,9);
+  ctx.fillStyle='#3a2000';ctx.font='bold 5px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('LEG 🎲',px,y+ph+9);ctx.textAlign='left';
+
+  // Proximity pulse
+  const d=Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y);
+  if(d<paintingObj.r){
+    const p=.35+.35*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(paintingObj.x,paintingObj.y,42,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ── MUSIC NOTE PARTICLES ─────────────────────
+const noteParticles=[];
+const NOTE_SYMBOLS=['♩','♪','♫','♬'];
+function spawnNote(){
+  if(radioChannel===0)return;
+  noteParticles.push({
+    x:radioObj.x+Math.random()*14-7,
+    y:radioObj.y-12,
+    vx:(Math.random()-.5)*.6,
+    vy:-(0.6+Math.random()*.5),
+    life:1,
+    decay:0.008+Math.random()*.006,
+    sym:NOTE_SYMBOLS[Math.floor(Math.random()*NOTE_SYMBOLS.length)],
+    size:8+Math.random()*6,
+    wobble:Math.random()*Math.PI*2,
+    wobbleSpeed:.04+Math.random()*.03,
+  });
+}
+let noteSpawnTimer=0;
+function updateNotes(){
+  noteSpawnTimer++;
+  if(radioChannel>0&&noteSpawnTimer%28===0) spawnNote();
+  for(let i=noteParticles.length-1;i>=0;i--){
+    const n=noteParticles[i];
+    n.wobble+=n.wobbleSpeed;
+    n.x+=n.vx+Math.sin(n.wobble)*.3;
+    n.y+=n.vy;
+    n.life-=n.decay;
+    if(n.life<=0) noteParticles.splice(i,1);
+  }
+}
+function drawNotes(){
+  noteParticles.forEach(n=>{
+    ctx.save();
+    ctx.globalAlpha=n.life*0.85;
+    ctx.font=`bold ${n.size}px serif`;
+    ctx.textAlign='center';
+    // colour shifts with channel
+    const colors=['#00c878','#ff6b35','#4ecdc4','#f7dc6f','#bb8fce','#85c1e9','#f1948a','#82e0aa'];
+    ctx.fillStyle=colors[radioChannel%colors.length];
+    ctx.shadowColor=ctx.fillStyle;
+    ctx.shadowBlur=4;
+    ctx.fillText(n.sym,n.x,n.y);
+    ctx.restore();
+  });
+}
+
+let paintingUsed=false;
+function activatePainting(){
+  if(paintingUsed)return;
+  paintingUsed=true;
+  const neter=npcs.find(n=>n.id==='Neter');
+  const w=wander['Neter'];
+  if(neter&&w){
+    const targetX=player.x+20;
+    const targetY=player.y;
+    w.locked=true;   // prevent random target override
+    w.spd=3.5;
+    w.tx=targetX;
+    w.ty=targetY;
+    flash('🏃 Neter springer op fra stolen...');
+    const check=setInterval(()=>{
+      const dist=Math.hypot(neter.x-targetX, neter.y-targetY);
+      if(dist<18){
+        clearInterval(check);
+        w.spd=.55;
+        w.locked=false;
+        flash('🎲 Neter: "HALLØJ, KAN DU OGSÅ GODT LI\' AT LEGE!?"');
+        setTimeout(()=>{
+          window.open('https://legedatabasen.dk/legekortet','_blank');
+          w.tx=w.hx; w.ty=w.hy;
+          paintingUsed=false;
+        },2000);
+      }
+    },60);
+  }
+}
+
+function drawGeneralBtn(){
+  const bx=generalBtn.x, by=generalBtn.y;
+  const near=Math.hypot(player.x-bx,player.y-by)<generalBtn.r;
+  const t=Date.now()/500;
+
+  // Wall panel background
+  ctx.fillStyle='#1a1a2e';ctx.strokeStyle='#555';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(bx-18,by-28,36,44,4);ctx.fill();ctx.stroke();
+
+  // Label above
+  ctx.fillStyle='#aaa';ctx.font='bold 6px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('GENERALEN',bx,by-18);
+
+  // Big red button
+  const btnActive=!tarkob.active;
+  const pulse=btnActive?0.7+0.3*Math.sin(t):0;
+  ctx.fillStyle=btnActive?`rgb(${200+Math.floor(55*pulse)},20,20)`:'#552222';
+  ctx.strokeStyle=btnActive?'#ff8888':'#441111';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(bx,by,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  // Shine on button
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.beginPath();ctx.ellipse(bx-3,by-4,5,3.5,-.5,0,Math.PI*2);ctx.fill();
+
+  // Label below button
+  ctx.fillStyle=btnActive?'#ff6666':'#553333';ctx.font='bold 5.5px Comic Neue';
+  ctx.fillText(tarkob.active?'OPTAGET':'RING!',bx,by+18);
+  ctx.textAlign='left';
+
+  // Proximity pulse
+  if(near&&btnActive){
+    const p=0.35+0.35*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(255,80,80,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(bx,by,30,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+function drawPhone(){
+  const x=38,y=148;
+  ctx.fillStyle='#c8956c';rr(x-4,y-2,30,36,4);
+  ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#1a1a2e';rr(x,y+2,22,26,3);
+  ctx.strokeStyle='#444';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#00ff88';ctx.fillRect(x+3,y+4,16,8);
+  ctx.fillStyle='#888';
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){ctx.beginPath();ctx.arc(x+5+c*5,y+16+r*4,1.2,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='#333';ctx.beginPath();ctx.ellipse(x+11,y+1,7,3,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffcc02';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('📞 FDF',x+11,y+36);ctx.textAlign='left';
+  // pulse if near
+  const d=Math.hypot(player.x-phoneObj.x,player.y-phoneObj.y);
+  if(d<phoneObj.r){
+    const p=.4+.4*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(phoneObj.x,phoneObj.y,32,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+function drawRadioObj(){
+  const rx=radioObj.x, ry=radioObj.y-10;
+  const on=radioChannel>0;
+  const t=Date.now()/600;
+
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.2)';
+  ctx.beginPath();ctx.ellipse(rx,ry+22,28,8,0,0,Math.PI*2);ctx.fill();
+
+  // body
+  ctx.fillStyle='#1a1a2e';ctx.strokeStyle='#ffcc02';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(rx-26,ry-12,52,26,5);ctx.fill();ctx.stroke();
+
+  // speaker grille (left)
+  ctx.fillStyle='#2d3561';ctx.strokeStyle='#ffcc02';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(rx-24,ry-10,18,22,3);ctx.fill();ctx.stroke();
+  for(let r=0;r<4;r++) for(let c=0;c<3;c++){
+    ctx.fillStyle=on?`rgba(0,255,136,${.3+.3*Math.sin(t+r+c)})` :'#334';
+    ctx.beginPath();ctx.arc(rx-20+c*5,ry-7+r*5,1.5,0,Math.PI*2);ctx.fill();
+  }
+
+  // display screen (center)
+  ctx.fillStyle='#0a0a1a';ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(rx-4,ry-9,22,12,2);ctx.fill();ctx.stroke();
+  if(on){
+    const ch=RADIO_CHANNELS[radioChannel];
+    ctx.fillStyle='#00ff88';ctx.font='bold 5px monospace';ctx.textAlign='center';
+    ctx.fillText(ch.emoji,rx+5,ry-1);
+    // scrolling bar animation
+    const bar=3+2*Math.sin(t*2);
+    ctx.fillStyle='rgba(0,255,136,.5)';
+    ctx.fillRect(rx-3,ry+3,bar*3,1.5);
+  } else {
+    ctx.fillStyle='#334';ctx.font='5px monospace';ctx.textAlign='center';
+    ctx.fillText('OFF',rx+5,ry-1);
+  }
+  ctx.textAlign='left';
+
+  // antenna
+  ctx.strokeStyle='#ffcc02';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(rx+20,ry-12);ctx.lineTo(rx+26,ry-30);ctx.stroke();
+  if(on){
+    const ap=.5+.5*Math.sin(t*3);
+    ctx.fillStyle=`rgba(255,204,2,${ap})`;
+    ctx.beginPath();ctx.arc(rx+26,ry-30,2.5,0,Math.PI*2);ctx.fill();
+  }
+
+  // label
+  ctx.fillStyle='#ffcc02';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('📻 RADIO',rx,ry+22);ctx.textAlign='left';
+
+  // proximity pulse
+  const d=Math.hypot(player.x-radioObj.x,player.y-radioObj.y);
+  if(d<radioObj.r){
+    const p=.35+.35*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(radioObj.x,radioObj.y-10,38,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawCalendar(){
+  const cx=calObj.x, cy=32; // hangs on top wall
+  const w=70, h=58, x=cx-w/2;
+
+  // Pin/nail at top
+  ctx.fillStyle='#888';
+  ctx.beginPath();ctx.arc(cx,cy+2,3,0,Math.PI*2);ctx.fill();
+
+  // Paper shadow
+  ctx.fillStyle='rgba(0,0,0,.18)';
+  ctx.fillRect(x+3,cy+6,w,h);
+
+  // Calendar body
+  ctx.fillStyle='#fff';
+  ctx.strokeStyle='#222';ctx.lineWidth=2;
+  ctx.fillRect(x,cy+4,w,h);ctx.strokeRect(x,cy+4,w,h);
+
+  // Red header strip
+  ctx.fillStyle='#e74c3c';
+  ctx.fillRect(x,cy+4,w,16);ctx.strokeRect(x,cy+4,w,16);
+
+  // Month label
+  ctx.fillStyle='#fff';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('FDF KONTOR',cx,cy+14);
+
+  // Day display — big and bold
+  const dayShort={MANDAG:'MAN',TIRSDAG:'TIR',ONSDAG:'ONS',TORSDAG:'TOR',FREDAG:'FRE'}[currentDay]||currentDay.slice(0,3);
+  ctx.fillStyle='#2d3561';ctx.font='bold 18px Bangers,cursive';
+  ctx.fillText(dayShort,cx,cy+36);
+
+  // Full day name smaller
+  ctx.fillStyle='#555';ctx.font='bold 7px Comic Neue';
+  ctx.fillText(currentDay,cx,cy+46);
+
+  // Day-specific emoji
+  const emoji={MANDAG:'👥',TIRSDAG:'📋',ONSDAG:'💻',TORSDAG:'☕',FREDAG:'🍹'}[currentDay]||'📅';
+  ctx.font='11px serif';ctx.fillText(emoji,cx,cy+58);
+
+  ctx.textAlign='left';
+
+  // Sparkle pulse if player nearby
+  const d=Math.hypot(player.x-calObj.x,player.y-calObj.y);
+  if(d<calObj.r){
+    const p=.4+.4*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(calObj.x,calObj.y,44,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+function drawNPC(npc){
+  const c=COLORS[npc.id],x=npc.x,y=npc.y;
+  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(x,y+17,13,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=c.shirt;ctx.strokeStyle='#222';ctx.lineWidth=2.5;rr(x-10,y+2,20,20,4);ctx.stroke();
+  ctx.fillStyle=c.skin;ctx.beginPath();ctx.arc(x,y-2,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=c.hair;
+  if(c.male){ctx.beginPath();ctx.arc(x,y-2,12,Math.PI,0);ctx.fill();ctx.stroke();ctx.fillRect(x-12,y-8,4,8);ctx.fillRect(x+8,y-8,4,8);}
+  else{ctx.beginPath();ctx.arc(x,y-10,10,Math.PI,0);ctx.fill();ctx.stroke();}
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(x-4,y-2,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+4,y-2,2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#222';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y+2,4,.2,Math.PI-.2);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+  const nw=npc.name.length*6+8;rr(x-nw/2,y+23,nw,14,4);ctx.stroke();
+  ctx.fillStyle='#222';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText(npc.name,x,y+33);ctx.textAlign='left';
+  ctx.font='14px serif';ctx.fillText(c.emoji,x+10,y-12);
+}
+
+function drawTarkob(){
+  if(!tarkob.visible)return;
+  const x=tarkob.x,bob=tarkob.walking?Math.sin(tarkob.phase)*3:0,y=tarkob.y+bob;
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(x,y+19,15,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#2d5016';ctx.strokeStyle='#111';ctx.lineWidth=2.5;rr(x-13,y+2,26,22,5);ctx.stroke();
+  ctx.fillStyle='#ffcc02';
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(x-7+i*6,y+8,2.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a00';ctx.lineWidth=1;ctx.stroke();}
+  ctx.fillStyle='#d4956a';ctx.strokeStyle='#111';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(x,y-3,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1a3008';ctx.beginPath();ctx.ellipse(x,y-13,13,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillRect(x-15,y-16,30,5);ctx.strokeRect(x-15,y-16,30,5);
+  ctx.fillStyle='#ffcc02';ctx.beginPath();ctx.arc(x,y-14,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(x-4,y-3,2.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+4,y-3,2.2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#7a4a2a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-4,y+3);ctx.lineTo(x+4,y+3);ctx.stroke();
+  // drink in hand — beer on friday, coffee otherwise
+  const drink = currentDay==='FREDAG' ? '🍺' : '☕';
+  ctx.font='13px serif';ctx.textAlign='center';
+  ctx.fillText(drink, x+16, y+12);
+  ctx.textAlign='left';
+  // badge
+  ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;rr(x-18,y+26,36,13,3);ctx.stroke();
+  ctx.fillStyle='#1a3008';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('TARKOB',x,y+35);ctx.textAlign='left';
+}
+
+function drawPlayer(){
+  const x=player.x,y=player.y;
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(x,y+16,13,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffcc02';ctx.strokeStyle='#222';ctx.lineWidth=2.5;rr(x-10,y+2,20,18,4);ctx.stroke();
+  ctx.fillStyle='#ffe0a0';ctx.beginPath();ctx.arc(x,y-3,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#444';ctx.beginPath();ctx.arc(x,y-11,10,Math.PI,0);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(x-4,y-3,2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+4,y-3,2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffcc02';ctx.strokeStyle='#222';ctx.lineWidth=1.5;rr(x-12,y+22,24,13,4);ctx.stroke();
+  ctx.fillStyle='#222';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('DU',x,y+32);ctx.textAlign='left';
+}
+
+function drawSudokuBubble(){
+  if(sudokuState!=='sudoku')return;
+  const jas=getNPC('Jas'),deli=getNPC('Delisateth');
+  if(!jas||!deli)return;
+  const mx=(jas.x+deli.x)/2,my=Math.min(jas.y,deli.y)-28;
+  ctx.fillStyle='rgba(255,253,231,.96)';ctx.strokeStyle='#222';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(mx-36,my-22,72,26,8);ctx.fill();ctx.stroke();
+  [0,1,2].forEach(i=>{ctx.beginPath();ctx.arc(mx-6+i*6,my+6+i*3,2.5-i*.5,0,Math.PI*2);ctx.fillStyle='rgba(255,253,231,.96)';ctx.fill();ctx.stroke();});
+  const gx=mx-28,gy=my-19;
+  ctx.strokeStyle='#555';ctx.lineWidth=1;
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)ctx.strokeRect(gx+c*8,gy+r*7,8,7);
+  const digit=sudokuSyms[Math.floor(sudokuBubT/45)%sudokuSyms.length];
+  ctx.fillStyle='#e07b54';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText(digit,mx+18,my-3);ctx.textAlign='left';
+  ctx.font='13px serif';ctx.fillText('🧩',mx-34,my-4);
+}
+
+function drawMeetingLaptop(){
+  if(meetState!=='meeting'&&meetState!=='gathering')return;
+  const lx=385,ly=175,t=Date.now();
+  ctx.fillStyle='#444';ctx.strokeStyle='#222';ctx.lineWidth=2;rr(lx-28,ly-4,56,8,2);ctx.stroke();
+  ctx.fillStyle='#1a1a2e';rr(lx-24,ly-30,48,28,3);ctx.stroke();
+  if(meetState==='meeting'){
+    [{x:lx-20,y:ly-27,c:'#3498db'},{x:lx-2,y:ly-27,c:'#e74c3c'},{x:lx-20,y:ly-16,c:'#27ae60'},{x:lx-2,y:ly-16,c:'#9b59b6'}].forEach(f=>{
+      ctx.fillStyle=f.c;ctx.fillRect(f.x,f.y,16,10);
+      ctx.strokeStyle='#000';ctx.lineWidth=.5;ctx.strokeRect(f.x,f.y,16,10);
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(f.x+8,f.y+5,3,0,Math.PI*2);ctx.fill();
+    });
+    const p=.5+.5*Math.sin(t/400);
+    ctx.fillStyle=`rgba(255,50,50,${p})`;ctx.beginPath();ctx.arc(lx+19,ly-28,2.5,0,Math.PI*2);ctx.fill();
+    const ag=AGENDA[meetPhase%AGENDA.length],bw=200;
+    ctx.fillStyle='rgba(255,253,231,.97)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(lx-bw/2,ly-72,bw,22,6);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#222';ctx.font='8.5px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(ag,lx,ly-57);ctx.textAlign='left';
+    meetTick++;if(meetTick%240===0)meetPhase++;
+  } else {
+    ctx.fillStyle='#00ff88';ctx.font='7px monospace';ctx.textAlign='center';
+    ctx.fillText('connecting...',lx,ly-16);ctx.textAlign='left';
+  }
+}
+
+function drawCoffeeBubbles(){
+  if(coffeeState!=='coffee')return;
+  const t=Date.now()/1000;
+  ['Jas','Gune','Neter','Heresa','Delisateth','Anne'].forEach((id,i)=>{
+    const n=getNPC(id);if(!n)return;
+    const bob=Math.sin(t*1.5+i)*3;
+    ctx.font='14px serif';ctx.textAlign='center';ctx.globalAlpha=.85;
+    ctx.fillText('☕',n.x,n.y-22+bob);ctx.globalAlpha=1;ctx.textAlign='left';
+  });
+}
+
+function drawSparkles(){
+  const t=Date.now()/600;
+  items.forEach(o=>{
+    if(o.found)return;
+    const p=.5+.5*Math.sin(t+o.x);
+    ctx.globalAlpha=.55+.35*p;ctx.font='16px serif';ctx.textAlign='center';
+    ctx.fillText('✨',o.x,o.y-16-4*p);ctx.globalAlpha=1;ctx.textAlign='left';
+  });
+}
+
+// ═══════════════════════════════════════════
+// FLASH / DISCOVERY
+// ═══════════════════════════════════════════
+function flash(msg){
+  const el=document.getElementById('flash');
+  el.textContent=msg;el.style.display='block';
+  if(flashTimer)clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>el.style.display='none',3500);
+}
+
+function openDisc(obj){
+  discObj=obj;discOpen=true;discStep=0;
+  discPlayerPos={x:player.x,y:player.y};
+  if(obj.onDisc)obj.onDisc();
+  if(obj.found){showDisc('🔍 '+obj.foundMsg,true);discStep=99;return;}
+  showDisc('🔍 '+obj.msgs[0],false);
+}
+
+function showDisc(txt,done){
+  document.getElementById('disc-text').textContent=txt;
+  document.getElementById('disc-hint').textContent=done?'Tryk E eller bevæg dig for at lukke':'Tryk E for at fortsætte';
+  document.getElementById('disc-box').style.display='block';
+}
+
+function advDisc(){
+  if(!discOpen||!discObj)return;
+  if(discStep===0){discStep=1;showDisc('✨ '+discObj.msgs[1],false);}
+  else if(discStep===1){
+    discObj.found=true;inventory.push(discObj.item);updateInv();
+    discStep=2;showDisc('🎒 FUNDET: '+discObj.item,true);
+  } else {closeDisc();}
+}
+
+function closeDisc(){
+  discOpen=false;discObj=null;
+  document.getElementById('disc-box').style.display='none';
+}
+
+function updateInv(){
+  const el=document.getElementById('inv');
+  el.textContent=inventory.length?'🎒 '+inventory.join('  '):'';
+}
+
+// ═══════════════════════════════════════════
+// NEARBY HELPERS
+// ═══════════════════════════════════════════
+function nearbyNPC(){
+  let best=null,min=90;
+  visibleNPCs().forEach(n=>{
+    const d=Math.hypot(player.x-n.x,player.y-n.y);
+    if(d<min){min=d;best=n;}
+  });
+  return best;
+}
+function nearbyPhone(){return Math.hypot(player.x-phoneObj.x,player.y-phoneObj.y)<phoneObj.r?phoneObj:null;}
+function nearbyItem(){
+  let best=null,min=9999;
+  items.forEach(o=>{
+    const d=Math.hypot(player.x-o.x,player.y-o.y);
+    if(d<o.r&&d<min){min=d;best=o;}
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════
+// DIALOG TREES
+// ═══════════════════════════════════════════
+const trees = {
+  Jas: {
+    start: [
+      {label:'💬 Hvad laver du egentlig her?', next:'jas_job'},
+      {label:'☕ Fortæl mig om kaffen',         next:'jas_kaffe'},
+      {label:'🧩 Er du god til Sudoku?',         next:'jas_sudoku'},
+    ],
+    jas_job: {
+      text:'Jeg koordinerer frivillige, min ven. Det er som at lede en lille hær af gode sjæle.',
+      choices:[
+        {label:'Hvad er det sværeste ved det?', next:'jas_job_svaer'},
+        {label:'Arbejder du tæt med nogen?',    next:'jas_job_med'},
+      ]
+    },
+    jas_job_svaer: {
+      text:'At folk tilmelder sig på måder som ikke passer i medlemservice. Det er dumt. Det kan jeg ikke lide.',
+      choices:[
+        {label:'Hvad gør du ved det?', next:'jas_job_svaer2'},
+        {label:'Fortæl mig om kaffen i stedet', next:'jas_kaffe'},
+      ]
+    },
+    jas_job_svaer2: {
+      text:'Jeg trækker vejret dybt, min ven. Og henter en kop kaffe. Det hjælper på det meste.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    jas_job_med: {
+      text:'Delisateth og jeg er et godt hold. Vi løser også Sudoku. Det er ikke officielt.',
+      choices:[
+        {label:'Sudoku — hemmeligt?',        next:'jas_sudoku'},
+        {label:'Hvad laver Delisateth ellers?', next:'jas_deli'},
+      ]
+    },
+    jas_deli: {
+      text:'Hun koordinerer landslejren. 10.000 deltagere! Som romerne, siger hun. Det er lidt rigtigt.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    jas_kaffe: {
+      text:'Kaffe er ikke en drik, kære sjæl. Det er en filosofi.',
+      choices:[
+        {label:'Hvilken kaffe er bedst?',  next:'jas_kaffe_bedst'},
+        {label:'Laver du kaffe til alle?', next:'jas_kaffe_alle'},
+      ]
+    },
+    jas_kaffe_bedst: {
+      text:'Ethiopisk single origin. Frugtig, let — som en god søndagsprædiken.',
+      choices:[
+        {label:'Du går i kirke?',           next:'jas_kirke'},
+        {label:'Kan jeg få en kop?',        next:'jas_kaffe_kop'},
+      ]
+    },
+    jas_kirke: {
+      text:'Hver søndag, min ven. Det giver ro i sjælen. Og tid til at tænke på Sudoku.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    jas_kaffe_kop: {
+      text:'Naturligvis! Den sidder allerede klar. Det er min gave til verden.',
+      choices:[{label:'Tak, Jas!', next:'__close'}]
+    },
+    jas_kaffe_alle: {
+      text:'Naturligvis. Det er min gave til verden. Ingen forlader kontoret tørstige.',
+      choices:[
+        {label:'Meget generøst',          next:'jas_generoes'},
+        {label:'Hvad med Tarkob?',        next:'jas_tarkob'},
+      ]
+    },
+    jas_generoes: {
+      text:'Generøsitet koster intet, men giver meget. Holger Tornøe vidste det. Vi ved det også.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    jas_tarkob: {
+      text:'Tarkob? Han drikker Aalborg-øl og kaffe. Mest kaffe. Og han er fan af AaB — det respekterer jeg.',
+      choices:[
+        {label:'Hvem er Generalen?',        next:'jas_tarkob2'},
+        {label:'Tilbage til start',         next:'__start'},
+      ]
+    },
+    jas_tarkob2: {
+      text:'... du hører kraftige skridt nærme sig udefra. 🔔',
+      choices:[],
+      onSelect: ()=>setTimeout(()=>summonTarkob(),400)
+    },
+    jas_sudoku: {
+      text:'God? Jeg er sublim. Men det er hemmeligt.',
+      choices:[
+        {label:'Hvem konkurrerer du med?', next:'jas_sudoku_hvem'},
+        {label:'Hvornår løser du dem?',    next:'jas_sudoku_hvornaar'},
+      ]
+    },
+    jas_sudoku_hvem: {
+      text:'Delisateth. Hun tror hun vinder. Det er sødt.',
+      choices:[
+        {label:'Vinder hun nogensinde?', next:'jas_sudoku_vinder'},
+        {label:'Tilbage til start',      next:'__start'},
+      ]
+    },
+    jas_sudoku_vinder: {
+      text:'Én gang. I december. Vi taler ikke om december.',
+      choices:[{label:'😄 Forstået!', next:'__close'}]
+    },
+    jas_sudoku_hvornaar: {
+      text:'Når cheferne ikke kigger. Og efter kl. 14 med en cocktail. Solen er jo over en anden ø et sted.',
+      choices:[
+        {label:'Hvem er cheferne?',     next:'jas_chefer'},
+        {label:'Tilbage til start',     next:'__start'},
+      ]
+    },
+    jas_chefer: {
+      text:'Tentriette og Tfan. Gode mennesker begge to. Men de forstår ikke Sudoku-diplomatiet.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+  },
+  Gune: {
+    start:[
+      {label:'🎮 Hvad spiller du?',              next:'gune_spil'},
+      {label:'📊 Hvad arbejder du med?',          next:'gune_job'},
+      {label:'🏛️ Hvad ved du om FDF\'s historie?', next:'gune_historie'},
+    ],
+    gune_spil:{
+      text:'*suk* Det er ikke relevant for arbejdet. Men... lige nu: Factorio. Det er effektivitetssimulator. Meget realistisk.',
+      choices:[
+        {label:'Factorio — hvad er det?',       next:'gune_spil_factorio'},
+        {label:'Spiller du med nogen herfra?',   next:'gune_spil_med'},
+      ]
+    },
+    gune_spil_factorio:{
+      text:'Du bygger fabrikker. Automatiserer alt. Optimerer. Det er det tætteste jeg kommer på et ideelt arbejdsmiljø.',
+      choices:[
+        {label:'Minder det dig om FDF?',         next:'gune_spil_fdf'},
+        {label:'Tilbage til start',              next:'__start'},
+      ]
+    },
+    gune_spil_fdf:{
+      text:'FDF har 340 kredse der alle gør tingene forskelligt. Det er det modsatte af Factorio. Det er... smerteligt.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    gune_spil_med:{
+      text:'Neter spiller online indimellem. Han siger det er tilfældigt. Det er det ikke. Jeg har data på det.',
+      choices:[
+        {label:'Data på det?',                   next:'gune_spil_data'},
+        {label:'Tilbage til start',              next:'__start'},
+      ]
+    },
+    gune_spil_data:{
+      text:'Han logger ind præcis 12 minutter efter jeg gør. Hver gang. Det er ikke tilfældigt. Det er statistik.',
+      choices:[{label:'😄 Fair nok', next:'__start'}]
+    },
+    gune_job:{
+      text:'Jeg arbejder med frivillige i FDF\'s regioner. Og jeg prøver at digitalisere det hele. Det går... langsomt.',
+      choices:[
+        {label:'Hvad digitaliserer du?',         next:'gune_job_digital'},
+        {label:'Hvad er det sværeste?',          next:'gune_job_svaer'},
+      ]
+    },
+    gune_job_digital:{
+      text:'Alt. Tilmeldinger, kommunikation, data på kredse. Vi er i 2025 men nogle kredse faxer stadig. FAX.',
+      choices:[
+        {label:'Seriøst, fax?',                  next:'gune_job_fax'},
+        {label:'Hvad ville du ønske du kunne?',  next:'gune_job_oenske'},
+      ]
+    },
+    gune_job_fax:{
+      text:'Ja. Jeg har set det med egne øjne. Det var som at se en dinosaur. Jeg tog et screenshot.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    gune_job_oenske:{
+      text:'Et samlet system. Ét login. Alle data ét sted. Det er ikke raketvidenskab. Det er bare... ikke sket endnu.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    gune_job_svaer:{
+      text:'Dumme mails. Svar-alle-mails. Mails med "Husk at svare!" som subject. Det tapper mig for livskraft.',
+      choices:[
+        {label:'Tfans beredskabsmails?',         next:'gune_job_tfan'},
+        {label:'Hvad gør du ved det?',           next:'gune_job_gør'},
+      ]
+    },
+    gune_job_tfan:{
+      text:'... *langt suk* ... Tfan sender beredskabskurser ud med plads til én. Alle melder sig. Jeg melder mig altid. Jeg ved ikke hvorfor.',
+      choices:[{label:'😄 Det sker for alle', next:'__start'}]
+    },
+    gune_job_gør:{
+      text:'Jeg opretter filtre. Mange filtre. Min indbakke er et mesterværk af automatisering.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    gune_historie:{
+      text:'Som Holger Tornøe sagde i 1902: "De unge drenge mangler et tilbud." Og så grundlagde han FDF. På Frederiksberg. Med teologen Ludvig Valentiner.',
+      choices:[
+        {label:'Hvad skete der bagefter?',       next:'gune_historie2'},
+        {label:'Kender du mere?',                next:'gune_historie_mere'},
+      ]
+    },
+    gune_historie2:{
+      text:'FDF voksede. 340 kredse i dag. Over 120 år. Det er faktisk imponerende data, hvis man tænker over det.',
+      choices:[
+        {label:'Hvad synes du om historien?',    next:'gune_historie_syn'},
+        {label:'Tilbage til start',              next:'__start'},
+      ]
+    },
+    gune_historie_syn:{
+      text:'Jeg synes den er interessant. Men vi kunne have digitaliseret meget tidligere. Telex eksisterede fra 1920\'erne.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    gune_historie_mere:{
+      text:'FDF startede som tilbud til drenge. Nu er det for alle. Det er faktisk en ret god opdatering. Version 2.0, om man vil.',
+      choices:[
+        {label:'Version 2.0 — godt sagt',        next:'gune_historie_v2'},
+        {label:'Tilbage til start',              next:'__start'},
+      ]
+    },
+    gune_historie_v2:{
+      text:'Tak. Jeg har overvejet at lave en changelog. Fra 1902 til nu. Det er et sideprojekt.',
+      choices:[{label:'Det vil jeg gerne læse', next:'__close'}]
+    },
+  },
+  Heresa: {
+    start:[
+      {label:'🍎 Hvad er du projektleder på?',         next:'heresa_job'},
+      {label:'🏡 Hvad er der særligt ved Ry?',          next:'heresa_ry'},
+      {label:'😤 Hvad er op og ned med 28 receptioner?', next:'heresa_recep'},
+    ],
+    heresa_job:{
+      text:'Kreditstart. Jeg hjælper nye FDF-kredse med at komme i gang. Fra ingenting til en fungerende kreds med børn, ledere og aktiviteter. ¡Es mi pasión!',
+      choices:[
+        {label:'Hvad er det sværeste?',              next:'heresa_job_svaer'},
+        {label:'Hvad er du mest stolt af?',          next:'heresa_job_stolt'},
+      ]
+    },
+    heresa_job_svaer:{
+      text:'At folk tror en kreds starter af sig selv. Den gør ikke. Der skal nogen til at tage ansvar. ¿Quién lo hará si no nosotros? Hvem gør det hvis ikke vi?',
+      choices:[
+        {label:'Hvad gør du ved det?',               next:'heresa_job_goer'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    heresa_job_goer:{
+      text:'Jeg finder kerneproblemet. Altid. Er det manglende ledere? Lokaler? Mod? Og så løser vi DET — ikke symptomerne. Como un médico, ikke en plasteret.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    heresa_job_stolt:{
+      text:'En kreds i Thy. De startede med tre børn og en lånt gymnastiksal. Nu er de 40. Det varmer her. *slår sig på brystet*',
+      choices:[
+        {label:'Hvor lang tid tog det?',             next:'heresa_job_tid'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    heresa_job_tid:{
+      text:'To år. Tålmodighed og frugt. Jeg sendte dem en frugtpakke til den første samling. Det er min signatur.',
+      choices:[{label:'😄 Frugt som strategi', next:'__start'}]
+    },
+    heresa_ry:{
+      text:'Ry er... *pause* ... Ry er som en lille colombiansk landsby uden kaffe og med mere regn. Men sjælen er den samme. Rolig. Ægte. Til at stole på.',
+      choices:[
+        {label:'Har du boet i Sydamerika?',          next:'heresa_ry_sa'},
+        {label:'Hvad laver du i Ry?',                next:'heresa_ry_laver'},
+      ]
+    },
+    heresa_ry_sa:{
+      text:'Tre år i Colombia. Bogotá og Medellín. Det forandrede mig. Jeg lærte at tingene kan gøres anderledes — og bedre. FDF kunne lære meget af de der.',
+      choices:[
+        {label:'Hvad lærte du?',                     next:'heresa_ry_laerte'},
+        {label:'Savner du det?',                     next:'heresa_ry_savner'},
+      ]
+    },
+    heresa_ry_laerte:{
+      text:'At fællesskab ikke er noget man organiserer. Det er noget man lever. El corazón — hjertet — skal være med. Ikke bare strukturen.',
+      choices:[
+        {label:'Bruger du det i dit arbejde?',       next:'heresa_ry_arbejde'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    heresa_ry_arbejde:{
+      text:'Hver dag. Når jeg starter en ny kreds spørger jeg: hvad ELSKER I? Start dér. Ikke med vedtægter.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    heresa_ry_savner:{
+      text:'Musikken. Maden. Den måde folk ser hinanden i øjnene på gaden. Men Ry har søen. Det er noget.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    heresa_ry_laver:{
+      text:'Vandrer. Tænker. Spiser frugt. Indimellem ringer jeg til en kreds og tjekker om de har det godt. Det er min slags ferie.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    heresa_recep:{
+      text:'28 receptioner. Delisateth og jeg. På en landslejr med 10.000 deltagere. ¡Dios mío! Det er ikke en opgave — det er en straf.',
+      choices:[
+        {label:'Hvem besluttede det?',               next:'heresa_recep_hvem'},
+        {label:'Hvad er en reception egentlig?',     next:'heresa_recep_hvad'},
+      ]
+    },
+    heresa_recep_hvem:{
+      text:'Det ved jeg ikke endnu. Men jeg finder ud af det. Og når jeg gør... *tager et æble og bider hårdt* ... så har vi en snak.',
+      choices:[
+        {label:'Er Delisateth lige så sur?',         next:'heresa_recep_deli'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    heresa_recep_deli:{
+      text:'Hun kalder det "romersk slaveri". Jeg kalder det symptombehandling på industriskala. Vi er enige om at det er galt. Vi er bare uenige om metaforen.',
+      choices:[{label:'😄 I er et godt hold', next:'__close'}]
+    },
+    heresa_recep_hvad:{
+      text:'En velkomststand. Information. Hjælpe folk til rette. Det er fint én gang. Måske to. Men 28 gange fordelt over en uge? El problema no es la recepción — det er systemet bag.',
+      choices:[
+        {label:'Hvad ville du gøre anderledes?',     next:'heresa_recep_anders'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    heresa_recep_anders:{
+      text:'Én central velkomst. Digitalt check-in. Frivillige der kender området. Og frugt. Der burde altid være frugt.',
+      choices:[{label:'Solid plan 🍎', next:'__close'}]
+    },
+  },
+  Delisateth: {
+    start:[
+      {label:'🏛️ Hvad har romerne med FDF at gøre?',    next:'deli_rom'},
+      {label:'🍵 Kan du ikke bare hente noget te?',      next:'deli_te'},
+      {label:'🔧 Teknisk Tjeneste — hvad siger de?',     next:'deli_tt'},
+    ],
+    deli_rom:{
+      text:'Et fremragende spørgsmål. Romerne byggede et imperium på tre ting: struktur, fællesskab og logistik. FDF bygger på det samme. Holger Tornøe vidste det nok bare ikke.',
+      choices:[
+        {label:'Er FDF virkelig som Romerriget?',    next:'deli_rom2'},
+        {label:'Hvad med Julius Caesar?',            next:'deli_rom_caesar'},
+      ]
+    },
+    deli_rom2:{
+      text:'340 kredse under ét forbund. Provinser under Rom. Lokale ledere med central støtte. Fortæl mig det ikke er det samme. Jeg venter.',
+      choices:[
+        {label:'Okay, du har et punkt...',           next:'deli_rom3'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_rom3:{
+      text:'Jeg VED det. Og landslejren — 10.000 deltagere — det er som at organisere et legionærmarch. Bare med teltpæle og frugtordning.',
+      choices:[
+        {label:'Frugtordning?',                      next:'deli_frugt_hint'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_frugt_hint:{
+      text:'...*kigger sig over skulderen* ...det er ikke frugt. Det er softice. I Teknisk Tjenestes telt. Det er hemmelig information.',
+      choices:[{label:'Din hemmelighed er tryg 🤫', next:'__close'}]
+    },
+    deli_rom_caesar:{
+      text:'Caesar sagde: "Veni, vidi, vici." Jeg ankommer, jeg undersøger Excelark, jeg ringer til Landslejrchefen. Princippet er det samme.',
+      choices:[
+        {label:'Ringer du til ham tit?',             next:'deli_rom_chef'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_rom_chef:{
+      text:'Dagligt. Han er vant til det. Jeg tror han holder telefonen klar specielt til mig. Det er respekt.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    deli_te:{
+      text:'... *stivner* ... Jeg BURDE have hentet te for 20 minutter siden. Undskyld. Et øjeblik.',
+      choices:[
+        {label:'Slap af, vi taler først',            next:'deli_te2'},
+        {label:'Nej nej, hent teen!',                next:'deli_te_hent'},
+      ]
+    },
+    deli_te2:{
+      text:'Du har ret. Som Seneca sagde: "Festina lente." Skynd dig langsomt. Teen kan vente. Men ikke for længe.',
+      choices:[
+        {label:'Hvad drikker du helst?',             next:'deli_te_slags'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_te_slags:{
+      text:'Darjeeling first flush. Præcis 93 graders vand. 3 minutters trækketid. Det er ikke en præference — det er et princip.',
+      choices:[
+        {label:'Har du chokolade i skuffen også?',   next:'deli_chokolade'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_chokolade:{
+      text:'... *nervøst blik mod skuffen* ... Nej. Der er ingen chokolade. Skuffen er tom. Lad os tale om romerne igen.',
+      choices:[{label:'😄 Selvfølgelig ikke', next:'__start'}]
+    },
+    deli_te_hent:{
+      text:'Du har ret. Jeg ringer til Landslejrchefen mens jeg venter på at den trækker. To ting på én gang. Som romerne.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    deli_tt:{
+      text:'Jeg har lige talt med Teknisk Tjeneste — Landslejrens praktiske udvalg. De har styr på 2.402 boringer og vandtryk til 9.000 mennesker. Imponerende. Som romerske akvedukter.',
+      choices:[
+        {label:'2.402 boringer?!',                   next:'deli_tt_boring'},
+        {label:'Hvad ellers har de styr på?',        next:'deli_tt_mere'},
+      ]
+    },
+    deli_tt_boring:{
+      text:'Ja. Hver enkelt koordineret. Jeg har dem alle i mit Excelark. Faneblad 23: "Boringer — oversigt og dybde." Det er smukt arbejde.',
+      choices:[
+        {label:'Hvad med frugtordningen?',           next:'deli_tt_frugt'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_tt_frugt:{
+      text:'Frugtordningen... *laver luftgåseøjne* ...er kodenavn. Det er softice. I Teknisk Tjenestes telt. Officielt hedder det frugt. Uofficielt ved alle det.',
+      choices:[
+        {label:'Hvem ved det?',                      next:'deli_tt_hvem'},
+        {label:'Det er genialt',                     next:'deli_tt_genialt'},
+      ]
+    },
+    deli_tt_hvem:{
+      text:'Alle i Teknisk Tjeneste. Heresa mistænker det. Jas ved det — men han siger intet. Og nu du. Velkommen.',
+      choices:[{label:'Jeg er hædret 🍦', next:'__close'}]
+    },
+    deli_tt_genialt:{
+      text:'Romerne skjulte også ting i plain sight. Hemmelige budskaber i mosaikker. Softice i frugtordningen. Civilisationen gentager sig.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    deli_tt_mere:{
+      text:'En røvfuld skåle til frugtordningen. Det er Teknisk Tjenestes ord, ikke mine. Jeg citerer. Jeg ringer til Landslejrchefen om det igen i morgen.',
+      choices:[
+        {label:'"En røvfuld skåle"?',               next:'deli_tt_skaale'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    deli_tt_skaale:{
+      text:'Deres udtryk. Jeg foretrækker "et betydeligt antal beholdere." Men vi er enige om mængden. Det er nok til 10.000 mennesker og lidt til.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+  },
+  Anne: {
+    start:[
+      {label:'📊 Hvad analyserer du på?',              next:'anne_data'},
+      {label:'🚶 Vil du med på en gåtur?',              next:'anne_gaaetur'},
+      {label:'📺 Hvem fra The Office minder folk dig om?', next:'anne_office'},
+    ],
+    anne_data:{
+      text:'Lige nu: kredsvækst. Hvilke kommuner har potentiale for nye kredse? Dataen er klar — viljen mangler nogle steder.',
+      choices:[
+        {label:'Hvad siger dataen?',                  next:'anne_data_hvad'},
+        {label:'Hvad gør du med resultaterne?',       next:'anne_data_brug'},
+      ]
+    },
+    anne_data_hvad:{
+      text:'23 kommuner har befolkningsgrundlag til mindst én ny kreds men ingen endnu. Det er lavthængende frugt. Heresa er enig. Vi er i gang.',
+      choices:[
+        {label:'Og hvad stopper det?',                next:'anne_data_stop'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_data_stop:{
+      text:'Traditioner. "Vi har altid gjort det sådan." Det er ikke en strategi. Det er nostalgi klædt ud som strategi.',
+      choices:[
+        {label:'Har du sagt det til nogen?',          next:'anne_data_sagt'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_data_sagt:{
+      text:'Til Tentriette. Hun lyttede. Det er derfor jeg kan lide hende. Ingen bullshit i den retning.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    anne_data_brug:{
+      text:'Jeg laver en rapport. Med farver. Lilla og blå primært. Data skal også være smukke — ellers læser ingen dem.',
+      choices:[
+        {label:'Lilla og blå — altid?',               next:'anne_lilla'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_lilla:{
+      text:'Lilla er den eneste farve der er både varm og kold på samme tid. Det er asymmetrisk. Det er korrekt.',
+      choices:[{label:'Det giver faktisk mening', next:'__start'}]
+    },
+    anne_gaaetur:{
+      text:'JA. Lad os gå. Nu. Jeg behøver fem minutter fra skærmen. *rejser sig allerede*',
+      choices:[
+        {label:'Hvad taler vi om undervejs?',         next:'anne_gaaetur_tale'},
+        {label:'Hvad ser du på turene?',              next:'anne_gaaetur_ser'},
+      ]
+    },
+    anne_gaaetur_tale:{
+      text:'Ingenting planlagt. Det er pointen. Hjernen sorterer selv når benene arbejder. Det er videnskab og det virker.',
+      choices:[
+        {label:'Går du ofte?',                        next:'anne_gaaetur_ofte'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_gaaetur_ofte:{
+      text:'To gange om dagen ideelt. Én gang minimum. Den dag jeg ikke kommer ud er den dag dataen ikke giver mening. Det hænger sammen.',
+      choices:[{label:'Godt råd 🚶', next:'__close'}]
+    },
+    anne_gaaetur_ser:{
+      text:'Asymmetri. Skæve vinduer. Skygger der falder forkert. Verden er fuld af smuk uorden hvis man kigger.',
+      choices:[
+        {label:'Det lyder som The Office...',         next:'anne_office'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_office:{
+      text:'The Office er det bedste datasæt over menneskelig adfærd på en arbejdsplads der nogensinde er lavet. 9 sæsoner. 201 episoder. Jeg har set dem alle mindst seks gange.',
+      choices:[
+        {label:'Hvem er Jas?',                        next:'anne_office_jas'},
+        {label:'Hvem er du selv?',                    next:'anne_office_anne'},
+        {label:'Hvem er Tarkob?',                     next:'anne_office_tarkob'},
+      ]
+    },
+    anne_office_jas:{
+      text:'Creed Bratton. 94% match. Mystisk baggrund, siger vise ting, ingen ved præcis hvad han laver — men alle er glade for han er der. Og han gemmer ting.',
+      choices:[
+        {label:'Han gemmer min hæftemaskine!',        next:'anne_office_haeft'},
+        {label:'Hvem er Gune?',                       next:'anne_office_gune'},
+      ]
+    },
+    anne_office_haeft:{
+      text:'DATAEN PEGER PÅ HAM. Jeg har lavet en tidslinje. Hæftemaskinen forsvandt 3 dage efter han kom tilbage fra en "konference". Det er ikke tilfældigt.',
+      choices:[
+        {label:'Har du konfronteret ham?',            next:'anne_office_konf'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_office_konf:{
+      text:'Han smilede. Sagde "min ven" og tilbød mig kaffe. Det er Creed-adfærd. Lærebogeksempel.',
+      choices:[{label:'😄 Uafklaret sag', next:'__start'}]
+    },
+    anne_office_gune:{
+      text:'Angela. Striks, principfast, hader forstyrrelser, hemmeligt blød indeni. Og hun har data på ALTING ligesom mig. Vi er et godt team.',
+      choices:[
+        {label:'Hvem er Neter?',                      next:'anne_office_neter'},
+        {label:'Tilbage til start',                   next:'__start'},
+      ]
+    },
+    anne_office_neter:{
+      text:'Andy Bernard. Energisk, veksler mellem begejstring og tomhed, mener det godt, finder sin vej. Yndlingskarakteren er ham selv uden at vide det.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    anne_office_anne:{
+      text:'Jim Halpert. Observerer alt, lidt sarkastisk, varm indeni. Yndlingsepisode er Casino Night — S2E22. "Bears. Beets. Battlestar Galactica." Perfekt scene.',
+      choices:[
+        {label:'Hvem er Delisateth?',                 next:'anne_office_deli'},
+        {label:'Hvem er Heresa?',                     next:'anne_office_heresa'},
+      ]
+    },
+    anne_office_deli:{
+      text:'Michael Scott. Karismatisk, mener det MEGET godt, lidt overvældende, finder romer-paralleller til alt — som Michael finder film-paralleller. 89% match.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    anne_office_heresa:{
+      text:'Oscar Martinez. Direkte, principfast, siger tingene som de er, frustreres af ineffektivitet. Og hun har et sydamerikansk hjerte ligesom Oscar har en mexicansk baggrund.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    anne_office_tarkob:{
+      text:'...*tænkepause*... En blanding af David Wallace og Dwight Schrute. Ordenssans som Dwight. Autoriteten som Wallace. Øl fra Aalborg i stedet for beet farm.',
+      choices:[{label:'😄 Det passer perfekt', next:'__close'}]
+    },
+  },
+  Tfan: {
+    start:[
+      {label:'🚗 Fortæl mig om Sverige-turen',          next:'tfan_sverige'},
+      {label:'🏢 Hvad betyder FDF for dig?',             next:'tfan_fdf'},
+      {label:'📧 Hvad er det med beredskabsmailene?',    next:'tfan_mail'},
+    ],
+    tfan_sverige:{
+      text:'Sverige er... *sætter sig tilbage* ...Sverige er det tætteste jeg kommer på fred. Roligt. Smukt. Og elbilen kører bare og kører.',
+      choices:[
+        {label:'Hvor lang er turen?',                  next:'tfan_sverige_lang'},
+        {label:'Hvad laver du der?',                   next:'tfan_sverige_laver'},
+      ]
+    },
+    tfan_sverige_lang:{
+      text:'6 timer hver vej. Perfekt. Ingen møder. Ingen mails. Bare motorvej, podcasts og stilhed. Det er min meditation.',
+      choices:[
+        {label:'Hvad lytter du til?',                  next:'tfan_sverige_podcast'},
+        {label:'Tager du nogen med?',                  next:'tfan_sverige_med'},
+      ]
+    },
+    tfan_sverige_podcast:{
+      text:'Krimshistorie. Og AaB-podcasts. Og indimellem bare ingenting. Ingenting i en elbil er anderledes end ingenting derhjemme.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tfan_sverige_med:{
+      text:'Neter prøvede en gang. Han sov fra grænsen til Göteborg. Det var faktisk hyggeligt. Han ved det ikke men jeg kørte en ekstra time bare for at lade ham sove.',
+      choices:[{label:'Det er smukt 🚗', next:'__start'}]
+    },
+    tfan_sverige_laver:{
+      text:'Ingenting planlagt. Vandrer lidt. Spiser en hotdog ved et vejkryds. Køber ingenting. Det er pointen — ingen forventninger.',
+      choices:[
+        {label:'Hvornår tager du af sted næste gang?', next:'tfan_sverige_naeste'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_sverige_naeste:{
+      text:'Efter... *pause* ...efter jeg er tilbage. Du ved. Tingene er lidt komplicerede lige nu. Men Sverige forsvinder ikke.',
+      choices:[{label:'Det venter på dig 🇸🇪', next:'__close'}]
+    },
+    tfan_fdf:{
+      text:'FDF er... det er svært at forklare uden at lyde dum. Jeg voksede op i et kvarter hvor der ikke var et FDF. Jeg tror det betød noget.',
+      choices:[
+        {label:'Hvad ville det have ændret?',          next:'tfan_fdf_aendret'},
+        {label:'Hvad driver dig nu?',                  next:'tfan_fdf_driver'},
+      ]
+    },
+    tfan_fdf_aendret:{
+      text:'Måske ingenting. Måske alt. Men de unge jeg ser i dag — dem der finder et sted at høre til — de ligner ikke mig som 15-årig. Det er godt.',
+      choices:[
+        {label:'Hvad ligner du som 15-årig?',          next:'tfan_fdf_15'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_fdf_15:{
+      text:'En der søgte efter noget. Fandt det bare på den forkerte måde først. Men man lærer. Det vigtige er at man lærer.',
+      choices:[
+        {label:'Er det derfor du er her?',             next:'tfan_fdf_derfor'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_fdf_derfor:{
+      text:'En del af det. Den anden del er at det faktisk er et fedt sted at arbejde. Tentriette er skarp. Jas laver god kaffe. Hvad vil man mere.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tfan_fdf_driver:{
+      text:'At nå dem vi ikke når. De 23 kommuner uden en kreds — Anne har dataen — dem tænker jeg på. Det er dem der manglede et sted som mig.',
+      choices:[
+        {label:'Hvad gør du ved det?',                 next:'tfan_fdf_goer'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_fdf_goer:{
+      text:'Snakker med folk. Drikker kaffe. Lytter. Det er ikke raketvidenskab — det er bare tid og respekt. Noget Husum lærte mig.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tfan_mail:{
+      text:'Beredskabsmailene? De er vigtige! Der sker ting i verden. Kredse skal vide hvordan man håndterer det. Det er ansvar.',
+      choices:[
+        {label:'Men der er kun plads til én...',       next:'tfan_mail_en'},
+        {label:'Hvad slags kurser er det?',            next:'tfan_mail_slags'},
+      ]
+    },
+    tfan_mail_en:{
+      text:'Ja. Kurserne er populære. Meget populære. Alle melder sig. Det er... faktisk lidt rørende. Folk vil gerne være klar.',
+      choices:[
+        {label:'Alle melder sig hvert gang?',          next:'tfan_mail_alle'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_mail_alle:{
+      text:'Alle. Jas. Gune. Neter. Heresa. Delisateth. Anne. Tentriette. *tæller på fingre* ...det er syv mennesker til én plads. Det er engageret personale.',
+      choices:[
+        {label:'Hvem vælger du?',                      next:'tfan_mail_vaelg'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_mail_vaelg:{
+      text:'Jeg trækker lod. Det er det mest retfærdige. Gune kalder det "statistisk tilfældighed." Det er det samme.',
+      choices:[{label:'😄 Demokratisk', next:'__close'}]
+    },
+    tfan_mail_slags:{
+      text:'Brandøvelse. Evakuering. Kriseledelse. Første hjælp. Og én gang: digital beredskab. Gune meldte sig tre gange til den. Tre separate mails.',
+      choices:[
+        {label:'Hvad skete der?',                      next:'tfan_mail_gune'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tfan_mail_gune:{
+      text:'Hun fik pladsen. Fortjent. Og hun lavede et regneark over hvad hun lærte. Det sendte hun til alle. Det var faktisk nyttigt.',
+      choices:[{label:'Klassisk Gune', next:'__close'}]
+    },
+  },
+  Neter: {
+    start:[
+      {label:'🎲 Hvad laver du til daglig?',          next:'neter_job'},
+      {label:'🍔 Bedste spisested her i nærheden?',    next:'neter_mad'},
+      {label:'🎪 Status på legekonferencerne?',        next:'neter_konf'},
+    ],
+    neter_job:{
+      text:'Kommunikation og branding! Jeg laver content, kampagner, visuals — alt det der fanger unge. Og så planlægger jeg legekonferencer. Det er meget. Det er MEGET.',
+      choices:[
+        {label:'Hvad er du bedst til?',              next:'neter_job_bedst'},
+        {label:'Hvad er sværest?',                   next:'neter_job_svaer'},
+      ]
+    },
+    neter_job_bedst:{
+      text:'Sociale medier, no doubt. Jeg ved præcis hvad der virker for unge. Korte videoer, autentisk tone, ingen corporate-snak.',
+      choices:[
+        {label:'Laver FDF gode videoer?',            next:'neter_job_video'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_job_video:{
+      text:'Vi er på vej! Det tager lidt tid at overbevise alle om at man ikke behøver en 3-minutters intro med logo.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    neter_job_svaer:{
+      text:'At holde fokus når noget er kedeligt. Årsrapporter, for eksempel. Jeg overlever dem med snacks.',
+      choices:[
+        {label:'Hvilke snacks?',                     next:'neter_job_snacks'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_job_snacks:{
+      text:'Chips. Altid chips. Heresa giver mig frugt men... det er ikke det samme som chips.',
+      choices:[{label:'😄 Fair', next:'__start'}]
+    },
+    neter_mad:{
+      text:'Okay okay okay. Der er tre muligheder afhængig af humør.',
+      choices:[
+        {label:'Hurtig frokost?',                    next:'neter_mad_hurtig'},
+        {label:'Noget lækkert?',                     next:'neter_mad_laekker'},
+        {label:'Billigst muligt?',                   next:'neter_mad_billig'},
+      ]
+    },
+    neter_mad_hurtig:{
+      text:'Kebabstedet på hjørnet. Manden der kender mit navn. Det er et godt tegn.',
+      choices:[
+        {label:'Hvad anbefaler du?',                 next:'neter_mad_kebab'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_mad_kebab:{
+      text:'Rulle med ekstra sauce. Spørg ikke om hvad saucen er. Det ødelægger oplevelsen.',
+      choices:[{label:'Noteret 📝', next:'__start'}]
+    },
+    neter_mad_laekker:{
+      text:'Der er en lille café tre gader væk. Falafel-bowl. Heresa har aldrig været der fordi den ikke har frugt på menuen. Det er hendes tab.',
+      choices:[
+        {label:'Hvad koster det?',                   next:'neter_mad_pris'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_mad_pris:{
+      text:'Lidt for meget. Men man betaler for hyggen. Det er videnskab.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    neter_mad_billig:{
+      text:'Supermarkedet her om hjørnet. Sushi-bakke til halvpris efter kl. 17. Det kræver tålmodighed og ingen madplaner.',
+      choices:[{label:'Klassiker', next:'__start'}]
+    },
+    neter_konf:{
+      text:'Okay. Så. To hele legekonferencer og én halv. De to hele er... okay. Den halve er... hvad ER den halve?',
+      choices:[
+        {label:'Hvad mener du med "halv"?',          next:'neter_konf_halv'},
+        {label:'Hvornår er de?',                     next:'neter_konf_hvornaar'},
+      ]
+    },
+    neter_konf_halv:{
+      text:'Ingen ved det. Tfan sagde "halvdagskonference" men det blev til "halv konference" i min kalender og nu er alle forvirrede inklusive mig.',
+      choices:[
+        {label:'Har du spurgt Tfan?',                next:'neter_konf_tfan'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_konf_tfan:{
+      text:'Han sendte en beredskabsmail som svar. Med plads til én deltager. Jeg meldte mig til. Det hjalp ikke.',
+      choices:[{label:'😂 Klassisk Tfan', next:'__start'}]
+    },
+    neter_konf_hvornaar:{
+      text:'En er inden sommerferien. En er i september. Den halve er "snart". Det er alt jeg ved. Det er for lidt.',
+      choices:[
+        {label:'Er du klar til dem?',                next:'neter_konf_klar'},
+        {label:'Tilbage til start',                  next:'__start'},
+      ]
+    },
+    neter_konf_klar:{
+      text:'...ja? Nej. Jo. Jeg har et dokument. Det hedder "PLAN". Det er mest spørgsmål endnu.',
+      choices:[{label:'Du klarer det nok 💪', next:'__close'}]
+    },
+  },
+  Tentriette: {
+    start:[
+      {label:'✨ Hvad er vigtigt for dig på jobbet?',   next:'tent_vigtig'},
+      {label:'📍 Hvor er du egentlig fra?',              next:'tent_fra'},
+      {label:'👥 Hvad tænker du om dit hold?',           next:'tent_hold'},
+    ],
+    tent_vigtig:{
+      text:'At tingene giver mening. Fra bund til top. Værdier, opgaver, struktur — det hele skal hænge sammen. Ellers er det bare støj.',
+      choices:[
+        {label:'Giver det altid mening her?',          next:'tent_vigtig_altid'},
+        {label:'Hvad sker der hvis det ikke gør?',     next:'tent_vigtig_ikke'},
+      ]
+    },
+    tent_vigtig_altid:{
+      text:'Ikke altid. Men vi arbejder på det. Det er derfor jeg er her — for at hjælpe med at skabe sammenhæng.',
+      choices:[
+        {label:'Hvad frustrerer dig mest?',            next:'tent_vigtig_frustr'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tent_vigtig_frustr:{
+      text:'Sarkasme. Når folk siger ét og mener noget andet. Det respekterer jeg ikke. Sig hvad du mener — det er alt jeg beder om.',
+      choices:[{label:'Forstået og respekteret', next:'__start'}]
+    },
+    tent_vigtig_ikke:{
+      text:'Så finder vi ud af det. Stille og roligt. Uden drama. Det løser sig næsten altid med en ærlig samtale.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tent_fra:{
+      text:'Jeg er fra Haderslev. Det er en dejlig by. På fastlandet. I Sønderjylland. Det er faktisk meget klart.',
+      choices:[
+        {label:'Har du altid boet der?',               next:'tent_fra_altid'},
+        {label:'Er det ikke tæt på Sjælland...?',      next:'tent_fra_sjaelland'},
+      ]
+    },
+    tent_fra_altid:{
+      text:'Nej, jeg har boet forskellige steder. Men Haderslev er mit udgangspunkt. Det er vigtigt at have et udgangspunkt.',
+      choices:[
+        {label:'Hvad savner du ved Haderslev?',        next:'tent_fra_savner'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tent_fra_savner:{
+      text:'Freden. Tempoet. Folk der siger goddag til hinanden. København er fint men det er lidt... meget.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tent_fra_sjaelland:{
+      text:'... Haderslev er i Sønderjylland. På fastlandet. Det er meget langt fra Sjælland. Jeg forstår ikke spørgsmålet.',
+      choices:[
+        {label:'Okay, undskyld!',                      next:'tent_fra_ok'},
+        {label:'Men du har vel boet på Sjælland?',     next:'tent_fra_sjaelland2'},
+      ]
+    },
+    tent_fra_sjaelland2:{
+      text:'Det... det er ikke relevant. Mange mennesker har boet mange steder. Det definerer ikke hvem man er. Lad os tale om noget andet.',
+      choices:[{label:'Selvfølgelig 😄', next:'__start'}]
+    },
+    tent_fra_ok:{
+      text:'Det er okay. Geografien er bare vigtig for mig. Man skal vide hvor man kommer fra.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+    tent_hold:{
+      text:'Mit hold er Gune, Heresa og Anne. Tre meget forskellige mennesker. Alle tre stærke. Det er jeg glad for.',
+      choices:[
+        {label:'Hvad siger du om Gune?',               next:'tent_hold_gune'},
+        {label:'Hvad siger du om Heresa?',             next:'tent_hold_heresa'},
+        {label:'Hvad siger du om Anne?',               next:'tent_hold_anne'},
+      ]
+    },
+    tent_hold_gune:{
+      text:'Direkte, effektiv, siger præcis hvad hun mener. Det kan jeg lide. Indimellem lidt hård — men det er bedre end det modsatte.',
+      choices:[{label:'Tilbage til hold', next:'tent_hold'}]
+    },
+    tent_hold_heresa:{
+      text:'En af de stærkeste jeg har arbejdet med. Hun finder altid kernen. Og hun er ærlig — selv når det er ubehageligt. Det respekterer jeg dybt.',
+      choices:[{label:'Tilbage til hold', next:'tent_hold'}]
+    },
+    tent_hold_anne:{
+      text:'Datadriven og ærlig. Hendes analyser er præcise og smukke. Og hun går ture — det tror jeg er derfor hun altid har perspektiv.',
+      choices:[
+        {label:'Savner du Jas på holdet?',             next:'tent_hold_jas'},
+        {label:'Tilbage til start',                    next:'__start'},
+      ]
+    },
+    tent_hold_jas:{
+      text:'Jas er på Tfans hold — men han er kontorets hjerte uanset hvad. Han skaber tryghed bare ved at være her. Og kaffen er perfekt.',
+      choices:[{label:'Tilbage til start', next:'__start'}]
+    },
+  },
+};
+
+let dlgNode = null;
+
+function openDialog(npc){
+  dlgOpen=true; activeNPC=npc;
+  const c=COLORS[npc.id];
+  document.getElementById('dlg').classList.add('on');
+  const port=document.getElementById('dlg-portrait');
+  port.style.background=c.shirt; port.textContent=c.emoji;
+  document.getElementById('dlg-name').textContent=npc.name+' — '+npc.title;
+  document.getElementById('dlg-name').style.color=c.shirt;
+  document.getElementById('dlg-thinking').classList.remove('on');
+
+  // hide old input row, show choices
+  document.getElementById('dlg-input').style.display='none';
+  document.getElementById('dlg-send').style.display='none';
+
+  if(trees[npc.id]){
+    showDlgNode('__start');
+  } else {
+    // fallback for NPCs without a tree yet
+    document.getElementById('dlg-text').textContent=greeting(npc);
+    showDlgChoices([]);
+    document.getElementById('dlg-input').style.display='';
+    document.getElementById('dlg-send').style.display='';
+    document.getElementById('dlg-input').value='';
+    setTimeout(()=>document.getElementById('dlg-input').focus(),80);
+  }
+}
+
+function showDlgNode(nodeId){
+  const tree=trees[activeNPC.id];
+  if(nodeId==='__start'){
+    document.getElementById('dlg-text').textContent=greeting(activeNPC);
+    showDlgChoices(tree.start);
+    return;
+  }
+  if(nodeId==='__close'){ closeDialog(); return; }
+  const node=tree[nodeId];
+  if(!node){ closeDialog(); return; }
+  document.getElementById('dlg-text').textContent=node.text;
+  if(node.onSelect) node.onSelect();
+  showDlgChoices(node.choices||[]);
+}
+
+function showDlgChoices(choices){
+  const box=document.getElementById('dlg-choices');
+  box.innerHTML='';
+  if(choices.length===0){
+    // just a close button
+    const btn=document.createElement('button');
+    btn.className='dlg-choice';
+    btn.textContent='Farvel 👋';
+    btn.addEventListener('click',closeDialog);
+    box.appendChild(btn);
+    return;
+  }
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='dlg-choice';
+    btn.textContent=ch.label;
+    btn.addEventListener('click',()=>showDlgNode(ch.next));
+    box.appendChild(btn);
+  });
+}
+
+function closeDialog(){
+  dlgOpen=false; activeNPC=null; dlgNode=null;
+  document.getElementById('dlg').classList.remove('on');
+}
+
+function greeting(npc){
+  const fri=currentDay==='FREDAG';
+  const map={
+    Jas: fri?'🍹 Min ven! Cocktailtid. Hvad vil du tale om?':'Min ven! Hvad bringer dig til mit hjørne?',
+    Gune:'*suk* Hvad vil du? Gør det hurtigt.',
+    Neter:'Heeej! Hvad sker der? Har du prøvet den nye burgerbod på hjørnet?',
+    Heresa:'Hvad er EGENTLIG problemet? Lad os finde kernen. Frugt?',
+    Delisateth:fri?'🍹 Fredagscocktail! Som romerne sagde: "Vinum laetificat cor."':'Velkomst. Jeg burde hente te... Hvad ønsker du?',
+    Anne:'Hvad kan jeg gøre for dig? Vil du med på en gåtur rundt om blokken bagefter?',
+    Tfan:'Heyyy! Hvad sker der? Overvejede en tur til Sverige i elbil...',
+    Tentriette:'Hej! Hvad kan jeg hjælpe med? Ærlighed frem for alt.',
+  };
+  return map[npc.id]||'Hej! Hvad vil du spørge om?';
+}
+
+async function askNPC(npc,question){
+  const think=document.getElementById('dlg-thinking');
+  const textEl=document.getElementById('dlg-text');
+  const send=document.getElementById('dlg-send');
+  const inp=document.getElementById('dlg-input');
+  think.classList.add('on');textEl.textContent='';send.disabled=true;inp.disabled=true;
+
+  // tarkob trigger
+  if((npc.id==='Tfan'||npc.id==='Tentriette')&&/generalen|tarkob|generalsekretær/i.test(question)){
+    think.classList.remove('on');
+    textEl.textContent='...du hører kraftige skridt nærme sig udefra. 🔔';
+    send.disabled=false;inp.disabled=false;inp.focus();
+    setTimeout(()=>summonTarkob(),400);
+    return;
+  }
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:400,
+        system:npc.p,
+        messages:[{role:'user',content:question}]
+      })
+    });
+    const data=await resp.json();
+    think.classList.remove('on');
+    if(!resp.ok){textEl.textContent='⚠️ '+(data?.error?.message||resp.status);}
+    else{textEl.textContent=data.content?.[0]?.text||'...';}
+  }catch(e){
+    think.classList.remove('on');
+    textEl.textContent='⚠️ Forbindelsesfejl: '+e.message;
+  }
+  send.disabled=false;inp.disabled=false;inp.focus();
+}
+
+// ═══════════════════════════════════════════
+// PHONE
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// PHONE DIALOG TREES
+// ═══════════════════════════════════════════
+const phoneTrees={
+  lt:{
+    greeting:'FDF, LT — Lokalt Engagement, goddag! Hvad kan jeg hjælpe med?',
+    start:[
+      {label:'📋 Hvad laver LT?', next:'lt_hvad'},
+      {label:'🆕 Jeg vil gerne starte en ny kreds', next:'lt_kreds'},
+      {label:'👤 Kan jeg tale med Heresa?', next:'lt_heresa'},
+    ],
+    lt_hvad:{text:'LT arbejder med lokalt foreningsengagement. Vi støtter kredse, hjælper nye i gang og sikrer at FDF er til stede over hele landet.',choices:[{label:'Hvad vil "lokalt" sige?',next:'lt_hvad_lokalt'},{label:'Hvor mange kredse er der?',next:'lt_hvad_antal'}]},
+    lt_hvad_lokalt:{text:'Det betyder at vi tager udgangspunkt i det sted folk bor. En kreds i Thy er ikke det samme som en kreds i Aarhus. Det lokale er styrken.',choices:[{label:'Tak for det',next:'__close'}]},
+    lt_hvad_antal:{text:'340 kredse fordelt over hele Danmark. Fra Bornholm til Skagen. Vi arbejder på at det tal vokser.',choices:[{label:'Hvad gør I for at det vokser?',next:'lt_hvad_vaekst'},{label:'Tak for det',next:'__close'}]},
+    lt_hvad_vaekst:{text:'Vi har et helt projekt der hedder Kreditstart. Heresa er projektleder. Hun er meget engageret. Meget.',choices:[{label:'Kan jeg tale med hende?',next:'lt_heresa'}]},
+    lt_kreds:{text:'Fantastisk! Det er præcis hvad vi hjælper med. Kreditstart-projektet guider jer fra idé til fungerende kreds. Har I allerede et lokalområde i tankerne?',choices:[{label:'Ja, vi har et område',next:'lt_kreds_ja'},{label:'Vi er ikke sikre endnu',next:'lt_kreds_usikker'}]},
+    lt_kreds_ja:{text:'Perfekt udgangspunkt. Næste skridt er at finde to-tre engagerede voksne lokalt. Skal jeg sætte jer i forbindelse med Heresa?',choices:[{label:'Ja tak',next:'lt_heresa'},{label:'Jeg henter mere info selv',next:'lt_kreds_info'}]},
+    lt_kreds_info:{text:'Det kan I finde på fdf.dk. Og I er altid velkomne til at ringe igen. Vi er her.',choices:[{label:'Tak!',next:'__close'}]},
+    lt_kreds_usikker:{text:'Det er helt fint. Det vigtigste er lysten. Lokalområdet finder vi. Ring gerne igen når I har snakket lidt om det.',choices:[{label:'Det gør vi. Tak!',next:'__close'}]},
+    lt_heresa:{text:'Jeg sætter dig over til Heresa... *klik* ...',choices:[{label:'Vente...',next:'lt_heresa2'}]},
+    lt_heresa2:{text:'Heresa er... ikke ved skrivebordet. Hun er nok ude og finde kerneproblemet i noget. Jeg kan give hende en besked?',choices:[{label:'Ja, bed hende ringe tilbage',next:'lt_heresa_besked'},{label:'Nej tak, jeg prøver igen',next:'__close'}]},
+    lt_heresa_besked:{text:'Noteret. Hun ringer tilbage. Formentlig med et opfølgende spørgsmål der udfordrer dig til refleksion. Det er hendes stil.',choices:[{label:'😄 Det ser jeg frem til',next:'__close'}]},
+  },
+  nt:{
+    greeting:'FDF, NT — Nationalt Engagement, goddag!',
+    start:[
+      {label:'🏕️ Hvad er landslejren?', next:'nt_lejr'},
+      {label:'📣 Hvad laver NT med kommunikation?', next:'nt_komm'},
+      {label:'👤 Kan jeg tale med Tfan?', next:'nt_tfan'},
+    ],
+    nt_lejr:{text:'Landslejren er FDFs store nationale begivenhed. 10.000 deltagere. En hel by af telte, aktiviteter og fællesskab. Det er stort.',choices:[{label:'Hvornår er den?',next:'nt_lejr_hvornaar'},{label:'Kan min kreds deltage?',next:'nt_lejr_deltage'}]},
+    nt_lejr_hvornaar:{text:'Landslejren afholdes hvert fjerde år. Vi er i fuld gang med forberedelserne. 2.402 boringer er allerede koordineret.',choices:[{label:'2.402 boringer?',next:'nt_lejr_boring'},{label:'Hvordan tilmelder vi os?',next:'nt_lejr_deltage'}]},
+    nt_lejr_boring:{text:'Ja — vandforsyning til 10.000 mennesker kræver lidt infrastruktur. Teknisk Tjeneste har styr på det. Og frugtordningen.',choices:[{label:'Frugtordningen?',next:'nt_lejr_frugt'}]},
+    nt_lejr_frugt:{text:'...det er et internt udtryk. For forplejning. Jeg kan ikke sige mere. God dag.',choices:[{label:'😄 Forstået. Farvel!',next:'__close'}]},
+    nt_lejr_deltage:{text:'Alle FDF-kredse er velkomne. Tilmelding sker via fdf.dk. Jo tidligere jo bedre — pladser er begrænsede.',choices:[{label:'Tak for info!',next:'__close'}]},
+    nt_komm:{text:'NT håndterer FDFs kommunikation udadtil. Sociale medier, kampagner, branding. Vi prøver at fange de unge der endnu ikke kender FDF.',choices:[{label:'Hvad virker bedst?',next:'nt_komm_virker'},{label:'Kan vi samarbejde?',next:'nt_komm_samarb'}]},
+    nt_komm_virker:{text:'Korte videoer, autentiske historier, ingen corporate-snak. Det er vores kollega Neter der ved mest om det.',choices:[{label:'Tak for det',next:'__close'}]},
+    nt_komm_samarb:{text:'Absolut! Send en mail til nt@fdf.dk med jeres idé. Vi kigger på det.',choices:[{label:'Det gør vi. Tak!',next:'__close'}]},
+    nt_tfan:{text:'Tfan? Han er... optaget. Han har sikkert sendt en beredskabsmail. Eller er på vej til Sverige. Vil du efterlade en besked?',choices:[{label:'Ja — sig at det er vigtigt',next:'nt_tfan_besked'},{label:'Nej, det venter',next:'__close'}]},
+    nt_tfan_besked:{text:'Noteret. Han ringer tilbage. Måske fra elbilen. Lyden kan være lidt underlig men han lytter. Det gør han altid.',choices:[{label:'Tak!',next:'__close'}]},
+  },
+  fri:{
+    greeting:'Goddag, FDFs Friluftscenter i Skanderborg! Det er en dejlig dag herude. Hvad kan jeg gøre for dig?',
+    start:[
+      {label:'🌲 Hvad kan man lave på centeret?', next:'fri_hvad'},
+      {label:'🏕️ Kan vi booke til en kreds?', next:'fri_book'},
+      {label:'🗓️ Hvornår er der plads?', next:'fri_plads'},
+    ],
+    fri_hvad:{text:'Vi tilbyder friluftsliv i alle afskygninger. Klatring, kanosejlads, orienteringsløb, lejropbygning, naturformidling. Og bare det at være ude.',choices:[{label:'Passer det til små børn?',next:'fri_hvad_boern'},{label:'Hvad med unge og teenagere?',next:'fri_hvad_unge'}]},
+    fri_hvad_boern:{text:'Perfekt til børn! Vi har aktiviteter fra 6 år og op. Naturformidling, enkle skovture, bålmad. Naturen er det bedste legetøj der findes.',choices:[{label:'Det lyder fantastisk!',next:'fri_book'}]},
+    fri_hvad_unge:{text:'Teenagere elsker udfordringen. Klatrevæg, kajak, overnatning i shelters. Og ingen skærme. Det er faktisk det de fleste husker bagefter.',choices:[{label:'Kan vi booke?',next:'fri_book'}]},
+    fri_book:{text:'Ja, kredse kan booke ophold og aktivitetsdage. Vi har kapacitet til grupper fra 10 til 120 deltagere. Hvad har I i tankerne?',choices:[{label:'En weekend-lejr',next:'fri_book_weekend'},{label:'En dagsudflugt',next:'fri_book_dag'}]},
+    fri_book_weekend:{text:'Det er vores mest populære. Ankomst fredag, afgang søndag. Vi klarer mad, aktiviteter og ly. I medbringer sovsekkehumør.',choices:[{label:'Hvad koster det?',next:'fri_book_pris'},{label:'Hvornår er der plads?',next:'fri_plads'}]},
+    fri_book_dag:{text:'En dagsudflugt kan pakkes med aktiviteter fra morgen til eftermiddag. Bål og frokost inkluderet.',choices:[{label:'Hvornår er der plads?',next:'fri_plads'},{label:'Tak for info!',next:'__close'}]},
+    fri_book_pris:{text:'Priser varierer efter gruppestørrelse og aktiviteter. Send en mail til friluft@fdf.dk for et konkret tilbud. Vi er fleksible.',choices:[{label:'Det gør vi. Tak!',next:'__close'}]},
+    fri_plads:{text:'Vi har pladser de fleste weekender. Sommer og efterår er mest efterspurgt. Ring eller skriv tidligt — helst 2-3 måneder i forvejen.',choices:[{label:'Hvordan kontakter vi jer?',next:'fri_kontakt'},{label:'Tak, vi vender tilbage',next:'__close'}]},
+    fri_kontakt:{text:'Ring hertil, skriv til friluft@fdf.dk eller find os på fdf.dk/friluftscenter. Vi svarer altid inden for en dag. Naturen venter!',choices:[{label:'Tak for hjælpen! 🌲',next:'__close'}]},
+  },
+};
+
+let phoneTreeState=null;
+
+function openPhone(){
+  phoneOpen=true; phoneTreeState=null;
+  document.getElementById('phone-dlg').classList.add('on');
+  showPhoneMenu();
+}
+
+function closePhone(){
+  phoneOpen=false; phoneTreeState=null;
+  document.getElementById('phone-dlg').classList.remove('on');
+}
+
+function showPhoneMenu(){
+  document.getElementById('phone-status').textContent='📞 FDF Hovednummer';
+  document.getElementById('phone-screen').textContent='FDF Hovednummer\n────────────────\n#1 → LT — Lokalt Engagement\n#2 → NT — Nationalt Engagement\n#3 → Friluftscenter, Skanderborg\n\nVælg en linje nedenfor:';
+  const row=document.getElementById('phone-row');
+  row.innerHTML='';
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;flex-direction:column;gap:5px;width:100%';
+  [{l:'#1 LT — Lokalt Engagement',e:'lt'},{l:'#2 NT — Nationalt Engagement',e:'nt'},{l:'#3 Friluftscenter, Skanderborg',e:'fri'}].forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='dlg-choice'; btn.textContent=o.l;
+    btn.addEventListener('click',()=>dialPhoneTree(o.e));
+    div.appendChild(btn);
+  });
+  const hup=document.createElement('button');
+  hup.className='dlg-choice'; hup.textContent='Læg på 📞';
+  hup.style.cssText='color:#e74c3c;border-color:#e74c3c';
+  hup.addEventListener('click',closePhone);
+  div.appendChild(hup);
+  row.appendChild(div);
+}
+
+function dialPhoneTree(ext){
+  const tree=phoneTrees[ext];
+  if(!tree)return;
+  phoneTreeState={ext};
+  const names={lt:'LT — Lokalt Engagement',nt:'NT — Nationalt Engagement',fri:'Friluftscenter, Skanderborg'};
+  document.getElementById('phone-status').textContent='📳 Ringer...';
+  document.getElementById('phone-screen').textContent='Ringer til:\n'+names[ext]+'\n\n☎ brrrr... brrrr...';
+  document.getElementById('phone-row').innerHTML='';
+  setTimeout(()=>{
+    document.getElementById('phone-status').textContent='📞 Forbundet — '+names[ext];
+    document.getElementById('phone-screen').textContent=tree.greeting;
+    showPhoneNode('__start');
+  },1600);
+}
+
+function showPhoneNode(nodeId){
+  if(!phoneTreeState)return;
+  const tree=phoneTrees[phoneTreeState.ext];
+  if(nodeId==='__start'){renderPhoneChoices(tree.start);return;}
+  if(nodeId==='__close'){closePhone();return;}
+  const node=tree[nodeId];
+  if(!node){closePhone();return;}
+  document.getElementById('phone-screen').textContent=node.text;
+  renderPhoneChoices(node.choices||[]);
+}
+
+function renderPhoneChoices(choices){
+  const row=document.getElementById('phone-row');
+  row.innerHTML='';
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;flex-direction:column;gap:5px;width:100%';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='dlg-choice'; btn.textContent=ch.label;
+    btn.addEventListener('click',()=>showPhoneNode(ch.next));
+    div.appendChild(btn);
+  });
+  const hup=document.createElement('button');
+  hup.className='dlg-choice'; hup.textContent='Læg på 📞';
+  hup.style.cssText='color:#e74c3c;border-color:#e74c3c';
+  hup.addEventListener('click',closePhone);
+  div.appendChild(hup);
+  row.appendChild(div);
+}
+
+// ═══════════════════════════════════════════
+// FRIDAY BAR
+// ═══════════════════════════════════════════
+// Friday bar spots — center of room, in front of bar
+const BAR_POS={x:405,y:340};
+const BAR_JAS={x:360,y:355};
+const BAR_DELI={x:450,y:355};
+let fridayBarActive=false;
+
+function triggerFriday(){
+  document.getElementById('friday').style.display='block';
+  fridayBarActive=true;
+  flash('🍹 Kontoret er pyntet op... men ingen er her endnu?');
+  // Send Delisateth first
+  setTimeout(()=>{
+    const dw=wander['Delisateth'];
+    if(dw){dw.tx=BAR_DELI.x;dw.ty=BAR_DELI.y;}
+    flash('🥂 Delisateth ankommer stille med et cocktailglas');
+  },3000);
+  // Then Jas
+  setTimeout(()=>{
+    const jw=wander['Jas'];
+    if(jw){jw.tx=BAR_JAS.x;jw.ty=BAR_JAS.y;}
+    flash('☕ Jas: "Ah, cocktails efter kl. 14. Som sig hør og bør, min ven!"');
+  },6000);
+  setTimeout(()=>flash('🎉 Anne, Neter og Heresa styrter ind! FESTEN ER I GANG!'),9500);
+  setTimeout(()=>flash('🪩 Fredagsbar er officielt åben! 🍹🍷🎊'),12500);
+}
+
+let tarkobBarVisited=false;
+
+function drawFridayBar(){
+  if(currentDay!=='FREDAG'||!fridayBarActive)return;
+  const bx=BAR_POS.x, by=BAR_POS.y;
+
+  // Bar shadow
+  ctx.fillStyle='rgba(0,0,0,.2)';
+  ctx.fillRect(bx-80,by-18,162,42);
+  // Bar counter top
+  ctx.fillStyle='#8B5E3C';ctx.strokeStyle='#222';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(bx-78,by-20,160,14,4);ctx.fill();ctx.stroke();
+  // Bar body
+  ctx.fillStyle='#c8956c';
+  ctx.beginPath();ctx.roundRect(bx-78,by-8,160,34,4);ctx.fill();ctx.stroke();
+  // Bar surface shine
+  ctx.fillStyle='#d4a67a';
+  ctx.beginPath();ctx.roundRect(bx-74,by-18,152,10,3);ctx.fill();
+  // Bottles
+  [{x:bx-55,c:'#e74c3c'},{x:bx-35,c:'#27ae60'},{x:bx-15,c:'#f39c12'},
+   {x:bx+5,c:'#9b59b6'},{x:bx+30,c:'#3498db'},{x:bx+52,c:'#e74c3c'}].forEach(b=>{
+    ctx.fillStyle=b.c;ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(b.x-4,by-34,8,16,2);ctx.fill();ctx.stroke();
+    ctx.fillRect(b.x-2,by-40,4,8);ctx.strokeRect(b.x-2,by-40,4,8);
+  });
+  // Label
+  ctx.fillStyle='#ffcc02';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('🍹 FREDAGSBAR',bx,by+22);ctx.textAlign='left';
+  // Fairy lights
+  const t=Date.now()/400;
+  for(let i=0;i<12;i++){
+    const lx=bx-72+i*13;
+    const cols=['#e74c3c','#ffcc02','#27ae60','#3498db','#9b59b6'];
+    ctx.fillStyle=cols[i%cols.length];
+    ctx.globalAlpha=0.6+0.4*Math.sin(t+i*0.8);
+    ctx.beginPath();ctx.arc(lx,by-20,2.5,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  // Cocktail bubbles
+  const jas=npcs.find(n=>n.id==='Jas');
+  const deli=npcs.find(n=>n.id==='Delisateth');
+  if(!jas||!deli)return;
+  const tb=Date.now()/800;
+  [jas,deli].forEach((npc,i)=>{
+    if(Math.hypot(npc.x-BAR_JAS.x,npc.y-BAR_JAS.y)>50&&
+       Math.hypot(npc.x-BAR_DELI.x,npc.y-BAR_DELI.y)>50)return;
+    const bob=Math.sin(tb+i)*4;
+    ctx.font='18px serif';ctx.textAlign='center';ctx.globalAlpha=0.9;
+    ctx.fillText(i===0?'🍹':'🥂',npc.x,npc.y-28+bob);
+    ctx.globalAlpha=1;ctx.textAlign='left';
+  });
+  // Tarkob trigger when both at bar
+  const jasAtBar =Math.hypot(jas.x-BAR_JAS.x, jas.y-BAR_JAS.y) <35;
+  const deliAtBar=Math.hypot(deli.x-BAR_DELI.x,deli.y-BAR_DELI.y)<35;
+  if(jasAtBar&&deliAtBar&&!tarkob.active&&!tarkobBarVisited){
+    tarkobBarVisited=true;
+    setTimeout(()=>{
+      flash('👀 Generalen har lugtet Aalborg-øl...');
+      setTimeout(()=>summonTarkob(),2500);
+    },3000);
+  }
+}
+function updateHint(){
+  const el=document.getElementById('hint');
+  const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=(!n&&!p&&!cal&&!rad&&!gen&&!paint)?nearbyItem():null;
+  const mobileE=document.getElementById('mobile-e');
+  if(n||p||cal||rad||gen||paint||o){mobileE.classList.add('visible');}
+  else{mobileE.classList.remove('visible');}
+  if(n){
+    el.style.display='block';el.textContent='[E] Tal med '+n.name;
+    el.style.left=(n.x-40+45)+'px';el.style.top=(n.y-55+30)+'px';
+  } else if(p){
+    el.style.display='block';el.textContent='[E] Ring til FDF 📞';
+    el.style.left='60px';el.style.top='120px';
+  } else if(cal){
+    el.style.display='block';el.textContent='[E] Åbn kalender 📅';
+    el.style.left=(calObj.x-50+45)+'px';el.style.top='85px';
+  } else if(rad){
+    el.style.display='block';el.textContent='[E] Slå radio til 📻';
+    el.style.left=(radioObj.x-50+45)+'px';el.style.top=(radioObj.y-55)+'px';
+  } else if(gen){
+    el.style.display='block';el.textContent='[E] Ring til Generalen 🔴';
+    el.style.left=(generalBtn.x-60+45)+'px';el.style.top='85px';
+  } else if(paint){
+    el.style.display='block';el.textContent='[E] Se maleriet 🎨';
+    el.style.left=(paintingObj.x-50+45)+'px';el.style.top='85px';
+  } else if(o){
+    el.style.display='block';el.textContent='[E] '+o.label;
+    el.style.left=(o.x-60+45)+'px';el.style.top=(o.y-55+30)+'px';
+  } else {
+    el.style.display='none';
+  }
+}
+
+// ═══════════════════════════════════════════
+// DAY CHANGE
+// ═══════════════════════════════════════════
+function changeDay(){
+  const days=['MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG'];
+  const idx=days.indexOf(currentDay);
+  currentDay=days[(idx<0?0:idx+1)%days.length];
+  document.getElementById('day-badge').textContent=currentDay;
+  // reset systems
+  meetState='idle';
+  meetT=currentDay==='ONSDAG'?80:600+Math.random()*500;
+  coffeeState='idle';coffeeDone=false;
+  coffeeT=currentDay==='TORSDAG'?400:9999;
+  sudokuState='home';sudokuT=300+Math.random()*400;
+  Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
+  document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
+  if(currentDay==='FREDAG'){flash('🍹 FREDAG! Noget ser anderledes ud i dag...');setTimeout(triggerFriday,2000);}
+  else if(currentDay==='MANDAG')flash('📅 MANDAG — Alle er på kontoret!');
+  else if(currentDay==='ONSDAG')flash('📅 ONSDAG — Mødedag! 💻');
+  else if(currentDay==='TORSDAG')flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+  else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
+}
+
+let welcomeDismissed=false;
+function dismissWelcome(){
+  if(welcomeDismissed)return;
+  welcomeDismissed=true;
+  muzakStarted=true;
+  setRadio(3); // start on Jazz
+  const el=document.getElementById('welcome');
+  el.classList.add('fade');
+  setTimeout(()=>el.style.display='none',650);
+}
+document.getElementById('welcome').addEventListener('click',dismissWelcome);
+document.getElementById('welcome').addEventListener('touchstart',e=>{e.preventDefault();dismissWelcome();},{passive:false});
+
+
+// tap-to-move target
+let tapTarget=null;
+
+function update(){
+  if(dlgOpen||phoneOpen)return;
+  let dx=0,dy=0;
+
+  // keyboard
+  if(keys['w']||keys['W']||keys['ArrowUp'])   {dy=-player.spd; tapTarget=null;}
+  if(keys['s']||keys['S']||keys['ArrowDown']) {dy= player.spd; tapTarget=null;}
+  if(keys['a']||keys['A']||keys['ArrowLeft']) {dx=-player.spd; tapTarget=null;}
+  if(keys['d']||keys['D']||keys['ArrowRight']){dx= player.spd; tapTarget=null;}
+
+  // tap-to-move
+  if(tapTarget&&dx===0&&dy===0){
+    const tdx=tapTarget.x-player.x, tdy=tapTarget.y-player.y;
+    const dist=Math.hypot(tdx,tdy);
+    if(dist<4){
+      tapTarget=null;
+    } else {
+      dx=tdx/dist*player.spd;
+      dy=tdy/dist*player.spd;
+    }
+  }
+
+  if(dx!==0||dy!==0) dismissWelcome();
+  if(!collides(player.x+dx,player.y))player.x=Math.max(35,Math.min(865,player.x+dx));
+  if(!collides(player.x,player.y+dy))player.y=Math.max(35,Math.min(555,player.y+dy));
+  if(discOpen&&(Math.abs(player.x-discPlayerPos.x)>8||Math.abs(player.y-discPlayerPos.y)>8))closeDisc();
+  updateHint();
+}
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(-camX,-camY);
+  drawRoom();
+  drawFridayBar();
+  // sparkles on undiscovered items
+  drawSparkles();
+  // NPCs
+  visibleNPCs().forEach(n=>drawNPC(n));
+  drawSudokuBubble();
+  drawMeetingLaptop();
+  drawCoffeeBubbles();
+  drawTarkob();
+  drawPlayer();
+  drawTapTarget();
+  drawNotes();
+  // NPC interaction ring
+  const n=nearbyNPC();
+  if(n){
+    ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.arc(n.x,n.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+  ctx.restore(); // end camera transform
+  drawMinimap();
+}
+
+function loop(){
+  update();
+  updateTarkob();
+  updateWander();
+  updateCamera();
+  updateNotes();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(!muzakStarted){muzakStarted=true;ac();}
+  keys[e.key]=true;
+  if(e.key==='Escape'){closeDialog();closePhone();closeRadio();}
+  if((e.key==='e'||e.key==='E')&&!dlgOpen&&!phoneOpen){
+    if(discOpen){advDisc();return;}
+    const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=nearbyItem();
+    if(n)openDialog(n);
+    else if(p)openPhone();
+    else if(cal)openCalendar();
+    else if(rad)openRadio();
+    else if(gen)summonTarkob();
+    else if(paint)activatePainting();
+    else if(o)openDisc(o);
+  }
+  if(e.key==='t'||e.key==='T')changeDay();
+});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+// ── TAP-TO-MOVE ──────────────────────────────
+function canvasToGame(touch){
+  const rect=cvs.getBoundingClientRect();
+  const scaleX=W/rect.width, scaleY=H/rect.height;
+  return {
+    x:(touch.clientX-rect.left)*scaleX + camX,
+    y:(touch.clientY-rect.top)*scaleY  + camY
+  };
+}
+
+cvs.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(!muzakStarted){muzakStarted=true;ac();}
+  dismissWelcome();
+  const pos=canvasToGame(e.touches[0]);
+
+  // if dialog/phone open, ignore movement taps
+  if(dlgOpen||phoneOpen) return;
+
+  // check for nearby interactive before moving
+  const oldX=player.x, oldY=player.y;
+  // temporarily check if tap is near an NPC/phone/calendar/item
+  const tmpDist=(obj)=>Math.hypot(pos.x-obj.x,pos.y-obj.y);
+  const n=visibleNPCs().find(n=>tmpDist(n)<70);
+  const p=tmpDist(phoneObj)<phoneObj.r?phoneObj:null;
+  const cal=tmpDist(calObj)<calObj.r?calObj:null;
+  const rad=tmpDist(radioObj)<radioObj.r?radioObj:null;
+  const gen=tmpDist(generalBtn)<generalBtn.r&&!tarkob.active?generalBtn:null;
+  const paint=tmpDist(paintingObj)<paintingObj.r?paintingObj:null;
+  const o=items.find(it=>tmpDist(it)<it.r);
+
+  if(n&&Math.hypot(player.x-n.x,player.y-n.y)<90){openDialog(n);return;}
+  if(p&&Math.hypot(player.x-phoneObj.x,player.y-phoneObj.y)<phoneObj.r){openPhone();return;}
+  if(cal&&Math.hypot(player.x-calObj.x,player.y-calObj.y)<calObj.r){openCalendar();return;}
+  if(rad&&Math.hypot(player.x-radioObj.x,player.y-radioObj.y)<radioObj.r){openRadio();return;}
+  if(gen&&Math.hypot(player.x-generalBtn.x,player.y-generalBtn.y)<generalBtn.r){summonTarkob();return;}
+  if(paint&&Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y)<paintingObj.r){activatePainting();return;}
+  if(o&&Math.hypot(player.x-o.x,player.y-o.y)<o.r){
+    if(discOpen){advDisc();}else{openDisc(o);}
+    return;
+  }
+
+  // otherwise: walk to tap position
+  tapTarget={x:pos.x, y:pos.y};
+},{passive:false});
+
+cvs.addEventListener('touchend',e=>{e.preventDefault();},{passive:false});
+
+// ── MOBILE SCALING & CAMERA ──────────────────
+const miniCvs=document.getElementById('minimap');
+const miniCtx=miniCvs.getContext('2d');
+const MW=90,MH=56; // minimap dimensions
+
+// camera offset (for auto-scroll on small screens)
+let camX=0,camY=0;
+const VIEW_W=900,VIEW_H=560;
+
+function scaleGame(){
+  const vw=window.innerWidth;
+  const vh=window.innerHeight;
+  const isSmall=vw<900||vh<600;
+
+  const wrap=document.getElementById('wrap');
+  if(isSmall){
+    // fill screen edge-to-edge in landscape
+    const scale=Math.min(vw/900, vh/600);
+    wrap.style.width='900px';
+    wrap.style.transform=`scale(${scale})`;
+    wrap.style.transformOrigin='top left';
+    wrap.style.position='absolute';
+    wrap.style.left=Math.max(0,(vw-900*scale)/2)+'px';
+    wrap.style.top=Math.max(0,(vh-600*scale)/2)+'px';
+  } else {
+    wrap.style.transform='';
+    wrap.style.position='';
+    wrap.style.left='';
+    wrap.style.top='';
+  }
+}
+
+
+function updateCamera(){
+  // only scroll camera if screen is smaller than game world
+  const vw=window.innerWidth, vh=window.innerHeight;
+  if(vw>=900 && vh>=560){ camX=0; camY=0; return; }
+  const scale=Math.min(vw/900, vh/600);
+  const visW=vw/scale, visH=vh/scale;
+  // center camera on player with clamping
+  camX=Math.max(0, Math.min(W-visW, player.x - visW/2));
+  camY=Math.max(0, Math.min(H-visH, player.y - visH/2));
+}
+
+function drawMinimap(){
+  miniCtx.clearRect(0,0,MW,MH);
+  // bg
+  miniCtx.fillStyle='rgba(20,18,50,.9)';
+  miniCtx.fillRect(0,0,MW,MH);
+  // scale factor
+  const sx=MW/W, sy=MH/H;
+
+  // room outline
+  miniCtx.fillStyle='#2d3561';
+  miniCtx.fillRect(0,0,MW,MH);
+  miniCtx.fillStyle='#3a4570';
+  miniCtx.fillRect(2,2,MW-4,MH-4);
+
+  // obstacles (desks etc) as tiny grey blocks
+  miniCtx.fillStyle='#555';
+  obstacles.forEach(o=>miniCtx.fillRect(o.x*sx,o.y*sy,Math.max(2,o.w*sx),Math.max(1,o.h*sy)));
+
+  // NPCs as coloured dots
+  visibleNPCs().forEach(n=>{
+    const c=COLORS[n.id];
+    miniCtx.fillStyle=c.shirt;
+    miniCtx.beginPath();
+    miniCtx.arc(n.x*sx, n.y*sy, 2.5, 0, Math.PI*2);
+    miniCtx.fill();
+  });
+
+  // tarkob
+  if(tarkob.visible){
+    miniCtx.fillStyle='#2d5016';
+    miniCtx.beginPath();
+    miniCtx.arc(tarkob.x*sx, tarkob.y*sy, 2.5, 0, Math.PI*2);
+    miniCtx.fill();
+  }
+
+  // player as bright yellow dot
+  miniCtx.fillStyle='#ffcc02';
+  miniCtx.beginPath();
+  miniCtx.arc(player.x*sx, player.y*sy, 3, 0, Math.PI*2);
+  miniCtx.fill();
+  miniCtx.strokeStyle='#fff';
+  miniCtx.lineWidth=1;
+  miniCtx.stroke();
+
+  // viewport rect (if camera is scrolled)
+  if(camX>0||camY>0){
+    const vw=window.innerWidth,vh=window.innerHeight;
+    const scale=Math.min(vw/900,vh/600);
+    const visW=vw/scale,visH=vh/scale;
+    miniCtx.strokeStyle='rgba(255,204,2,.6)';
+    miniCtx.lineWidth=1;
+    miniCtx.strokeRect(camX*sx,camY*sy,visW*sx,visH*sy);
+  }
+}
+
+scaleGame();
+
+window.addEventListener('resize',()=>{ scaleGame();  });
+
+
+// draw tap indicator on canvas
+function drawTapTarget(){
+  if(!tapTarget)return;
+  const t=Date.now()/200;
+  const r=10+3*Math.sin(t);
+  ctx.strokeStyle='rgba(255,204,2,0.7)';
+  ctx.lineWidth=2;
+  ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.arc(tapTarget.x,tapTarget.y,r,0,Math.PI*2);ctx.stroke();
+  ctx.setLineDash([]);
+  // crosshair
+  ctx.strokeStyle='rgba(255,204,2,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(tapTarget.x-6,tapTarget.y);ctx.lineTo(tapTarget.x+6,tapTarget.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(tapTarget.x,tapTarget.y-6);ctx.lineTo(tapTarget.x,tapTarget.y+6);ctx.stroke();
+}
+
+
+// dialog events
+document.getElementById('dlg-close').addEventListener('click',closeDialog);
+document.getElementById('dlg-send').addEventListener('click',()=>{
+  const v=document.getElementById('dlg-input').value.trim();
+  if(v&&activeNPC){askNPC(activeNPC,v);document.getElementById('dlg-input').value='';}
+});
+document.getElementById('dlg-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')document.getElementById('dlg-send').click();
+  e.stopPropagation();
+});
+
+// mobile E button
+document.getElementById('mobile-e').addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(discOpen){advDisc();return;}
+  const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=nearbyItem();
+  if(n)openDialog(n);
+  else if(p)openPhone();
+  else if(cal)openCalendar();
+  else if(rad)openRadio();
+  else if(gen)summonTarkob();
+  else if(paint)activatePainting();
+  else if(o)openDisc(o);
+},{passive:false});
+
+// calendar events
+document.getElementById('cal-close').addEventListener('click',closeCalendar);
+document.querySelectorAll('.cal-day-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const day=btn.dataset.day;
+    closeCalendar();
+    currentDay=day;
+    // reuse changeDay logic without cycling
+    document.getElementById('day-badge').textContent=currentDay;
+    meetState='idle'; meetT=currentDay==='ONSDAG'?80:600+Math.random()*500;
+    coffeeState='idle'; coffeeDone=false; coffeeT=currentDay==='TORSDAG'?400:9999;
+    sudokuState='home'; sudokuT=300+Math.random()*400;
+    Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
+    document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
+    if(currentDay==='FREDAG'){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
+    else if(currentDay==='MANDAG')flash('📅 MANDAG — Alle er på kontoret!');
+    else if(currentDay==='ONSDAG')flash('📅 ONSDAG — Mødedag! 💻');
+    else if(currentDay==='TORSDAG')flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+    else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
+  });
+});
+
+// phone hangup (static button still in HTML)
+document.getElementById('phone-hangup').addEventListener('click',closePhone);
+
+// radio panel
+document.getElementById('radio-panel-close').addEventListener('click',closeRadio);
+document.querySelectorAll('.radio-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(!muzakStarted){muzakStarted=true;}
+    const ch=parseInt(btn.dataset.ch);
+    setRadio(ch);
+    // update wave animation
+    const wave=document.getElementById('radio-wave');
+    if(wave) wave.classList.toggle('off',ch===0);
+  });
+});
+
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+// Set day from real weekday (Sat+Sun = Fredag)
+const dayMap=['SØNDAG','MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG','FREDAG'];
+currentDay = dayMap[new Date().getDay()];
+document.getElementById('day-badge').textContent = currentDay;
+// Trigger day-specific setup
+if(currentDay==='ONSDAG') meetT=80;
+if(currentDay==='TORSDAG') coffeeT=400;
+if(currentDay==='FREDAG') setTimeout(()=>{triggerFriday();},1500);
+
+loop();
+flash('🏢 Velkommen til FDF! WASD = bevæg, E = tal/undersøg, T = skift dag');
+</script>
+</body>
+</html>
