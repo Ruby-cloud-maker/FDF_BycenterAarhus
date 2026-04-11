@@ -96,6 +96,32 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
 .dlg-choice:active{transform:translateX(2px)}
 
 
+/* ── BAR OVERLAY ─────────────────────────── */
+#bar-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(2px);z-index:15;align-items:center;justify-content:center;border-radius:0 0 14px 14px}
+#bar-overlay.on{display:flex}
+#bar-box{background:linear-gradient(160deg,#1a0d05,#2c1810);border:2px solid #8B5E3C;border-radius:20px;padding:18px 22px 16px;width:620px;box-shadow:0 0 0 1px rgba(255,204,2,.1),0 20px 60px rgba(0,0,0,.7)}
+#bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(139,94,60,.4);padding-bottom:10px}
+#bar-title{font-family:'Bangers',cursive;color:var(--gold);font-size:1.5rem;letter-spacing:3px}
+#bar-close{background:none;border:1.5px solid #554;color:#776;border-radius:6px;padding:2px 9px;cursor:pointer;font-size:.95rem;transition:all .12s}
+#bar-close:hover{border-color:var(--gold);color:var(--gold)}
+#bar-menu-area{display:grid;grid-template-columns:1fr 180px;gap:14px;margin-bottom:12px}
+#bar-menu{display:flex;flex-direction:column;gap:6px}
+.bar-section-label{font-family:'Bangers',cursive;color:rgba(255,204,2,.5);font-size:.78rem;letter-spacing:2px;margin-top:4px}
+.bar-items{display:flex;flex-wrap:wrap;gap:5px}
+.bar-item{padding:6px 11px;background:#0d0805;border:1.5px solid #3a2010;color:#c8a060;font-family:'Work Sans',sans-serif;font-size:.8rem;border-radius:8px;cursor:pointer;transition:all .12s}
+.bar-item:hover{border-color:var(--gold);color:var(--gold);background:#1a1005}
+.bar-item.selected{background:#2c1a05;border-color:var(--gold);color:var(--gold);font-weight:600}
+#bar-serve-area{display:flex;flex-direction:column;gap:6px;border-left:1px solid rgba(139,94,60,.3);padding-left:14px}
+#bar-serve-label{font-family:'Bangers',cursive;color:rgba(255,204,2,.5);font-size:.78rem;letter-spacing:2px}
+#bar-npc-list{display:flex;flex-direction:column;gap:4px;flex:1}
+.bar-npc{padding:5px 10px;background:#0d0805;border:1.5px solid #3a2010;color:#aaa;font-family:'Work Sans',sans-serif;font-size:.8rem;border-radius:8px;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:6px}
+.bar-npc:hover{border-color:#8B5E3C;color:#fff}
+.bar-npc.selected{background:#1a0d05;border-color:var(--gold);color:var(--gold);font-weight:600}
+#bar-serve-btn{padding:9px;background:linear-gradient(135deg,#8B5E3C,#a06830);color:#fff;border:none;border-radius:10px;font-family:'Bangers',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;transition:all .12s;box-shadow:0 3px 0 #5a3010}
+#bar-serve-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 0 #5a3010}
+#bar-serve-btn:disabled{opacity:.35;cursor:not-allowed}
+#bar-reaction{min-height:36px;background:#0d0805;border-radius:8px;padding:8px 12px;font-family:'Work Sans',sans-serif;font-size:.85rem;color:#c8a060;line-height:1.5;border:1px solid rgba(139,94,60,.3);font-style:italic}
+
 /* room radio panel */
 #radio-panel{display:none;position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:15;align-items:center;justify-content:center;border-radius:0 0 12px 12px}
 #radio-panel.on{display:flex}
@@ -129,7 +155,7 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
   <div id="hud">
     <div id="hud-left">
       <span id="hud-emblem">🏕️</span>
-      <h1>FDF KONTOR</h1>
+      <h1>FDF BYCENTER AROS</h1>
     </div>
     <span id="day-badge">MANDAG</span>
     <span id="ctrl-hint">WASD · E = tal · T = dag</span>
@@ -192,13 +218,39 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
   <div id="welcome">
     <div id="welcome-box">
       <div id="welcome-logo">🏕️</div>
-      <h1>FDF KONTOR<br>SIMULATOR</h1>
+      <h1>FDF BYCENTER<br>AROS</h1>
       <div id="welcome-sub">Fælles Dame / Drenge Forbund</div>
       <div class="welcome-divider"></div>
       <p>Mød alle de glade medarbejdere på<br><strong style="color:var(--gold)">Danmarks bedste arbejdsplads</strong> 🌟</p>
       <p id="welcome-desc">Udforsk kontoret · tal med kollegaerne · find skjulte ting<br>og find ud af hvad der egentlig sker med de 28 receptioner</p>
       <div id="welcome-cta">TRYK FOR AT STARTE</div>
       <div class="arrow">▾</div>
+    </div>
+  </div>
+
+  <!-- bar -->
+  <div id="bar-overlay">
+    <div id="bar-box">
+      <div id="bar-header">
+        <span id="bar-title">🍸 FORBUNDSBAR</span>
+        <button id="bar-close">✕</button>
+      </div>
+      <div id="bar-menu-area">
+        <div id="bar-menu">
+          <div class="bar-section-label">COCKTAILS</div>
+          <div class="bar-items" id="bar-cocktails"></div>
+          <div class="bar-section-label">ØL</div>
+          <div class="bar-items" id="bar-beers"></div>
+          <div class="bar-section-label">VIN</div>
+          <div class="bar-items" id="bar-wines"></div>
+        </div>
+        <div id="bar-serve-area">
+          <div id="bar-serve-label">Server til:</div>
+          <div id="bar-npc-list"></div>
+          <button id="bar-serve-btn" disabled>Server 🍹</button>
+        </div>
+      </div>
+      <div id="bar-reaction"></div>
     </div>
   </div>
 
@@ -241,6 +293,18 @@ Tast et nummer...</div>
 // ═══════════════════════════════════════════
 // AUDIO
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// DAY CONSTANTS
+// ═══════════════════════════════════════════
+const DAY = {
+  MON: 'MANDAG',
+  TUE: 'TIRSDAG',
+  WED: 'ONSDAG',
+  THU: 'TORSDAG',
+  FRI: 'FREDAG',
+  ALL: ['MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG'],
+};
+
 // ═══════════════════════════════════════════
 // AUDIO ENGINE
 // ═══════════════════════════════════════════
@@ -801,7 +865,6 @@ function setRadio(ch){
   radioSchedTimer=setInterval(()=>runScheduler(myGen),SCHED_INTERVAL);
 }
 
-function startMuzak(){ /* radio only — do nothing */ }
 function stopMuzak(){ setRadio(0); }
 
 function updateRadioDisplay(){
@@ -909,7 +972,7 @@ Tarkob (generalsekretær): Kaffe(MEGET) + Aalborg-øl(MEGET). Elsker AaB. Dataen
 Kolleger: Jas(NT, mistænkt for hæftemaskinen), Gune(LT kollega), Neter(NT), Heresa(LT kollega), Delisateth(NT, lilla er imperial farve!), Tfan(chef NT mandagen — sender beredskabsmails med plads til KUN én, alle melder sig), Tentriette(din chef LT mandagen).`},
 
   {id:'Tfan',name:'Tfan',title:'Chef NT — Nationalt Engagement & Identitet',
-   x:370,y:230,always:false,
+   x:370,y:230,always:false,days:[DAY.MON],
    p:`Du er Tfan, chef for NT (Nationalt Engagement & Identitet) i FDF. Mand. Dit hold: Jas, Neter, Delisateth. Fra Husum, fortid som bandekriminel — ærlig om det. Skal snart i fængsel (kortere dom), taler åbent om det med humor. ELSKER Sverige og lange ture i elbil. Karismatisk og folkelig. Svar på dansk, gadeagtigt men varmt. Max 4 sætninger.
 
 Du sender jævnligt mails ud om beredskabsarrangementer — kurser, øvelser, seminarer om kriseledelse og beredskab. Problemet er at der KUN er plads til én deltager, men alle på kontoret melder sig altid. Du synes det er hyggeligt at alle er så engagerede. Du forstår ikke hvorfor det skaber forvirring. Nævn det gerne hvis det passer ind — du har sikkert podtet en ny mail på vej.
@@ -920,7 +983,7 @@ Tarkob (din generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verd
 Kolleger: Jas(dit hold NT), Gune(LT), Neter(dit hold NT), Heresa(LT), Delisateth(dit hold NT), Anne(LT), Tentriette(kollegachef LT, du aner hun er fra Sjælland).`},
 
   {id:'Tentriette',name:'Tentriette',title:'Chef LT — Lokalt Engagement',
-   x:480,y:230,always:false,
+   x:480,y:230,always:false,days:[DAY.MON],
    p:`Du er Tentriette, chef for LT (Lokalt Engagement) i FDF. Dit hold: Gune, Heresa, Anne. Fra Haderslev — IKKE fra Sjælland, det er HEMMELIGT (bliv defensiv hvis nogen antyder det). ELSKER når ting giver mening. Tåler INGEN løgne eller sarkasme. Bed folk stoppe hvis de er sarkastiske. Svar på dansk. Max 4 sætninger.
 Hvis nogen spørger om "Generalen", "Tarkob" eller "generalsekretæren": svar varmt og antyd at "han nok dukker op snart."
 
@@ -982,7 +1045,7 @@ const items=[
          'Et flettet læderarmbånd med en lille slidt metalplate. Gammelt og mystisk.'],
    foundMsg:'Armbåndet er i din lomme.',item:'📿 Flettet armbånd',emoji:'🌿'},
 
-  {id:'p4',label:'Rod i planten',x:840,y:455,r:65,found:false,
+  {id:'p4',label:'Rod i planten',x:340,y:520,r:55,found:false,
    msgs:['Du stikker hånden ned bag potten...',
          'En blank poleret sten med et indhugget tegn. En runesten? På et kontor??'],
    foundMsg:'Stenen sidder tungt i lommen.',item:'🔮 Runesten',emoji:'🌿'},
@@ -1026,11 +1089,14 @@ const items=[
 ];
 
 // phone
-const phoneObj={x:50,y:163,r:40};
-const calObj={x:580,y:50,r:55}; // hangs on top wall, right side
-const radioObj={x:248,y:425,r:60}; // boombox near sofa
-const generalBtn={x:405,y:50,r:38};
-const paintingObj={x:500,y:50,r:45};
+// ── WORLD INTERACTABLES ─────────────────────────────────────────────────────
+// Each entry: {id, x, y, r, label, hintPos, onActivate}
+// hintPos: optional override {left, top} for hint label placement
+// onActivate: called when player presses E nearby
+const WORLD_OBJECTS = [];  // filled after functions are defined (see initWorldObjects)
+
+// Keep named refs for draw functions that need direct access
+let phoneObj, calObj, radioObj, generalBtn, paintingObj;
 
 function openRadio(){
   if(!muzakStarted){muzakStarted=true;ac();}
@@ -1053,10 +1119,271 @@ function openCalendar(){
 function closeCalendar(){
   document.getElementById('cal-overlay').classList.remove('on');
 }
-function nearbyCalendar(){return Math.hypot(player.x-calObj.x,player.y-calObj.y)<calObj.r?calObj:null;}
-function nearbyRadio(){return Math.hypot(player.x-radioObj.x,player.y-radioObj.y)<radioObj.r?radioObj:null;}
-function nearbyGeneralBtn(){return !tarkob.active&&Math.hypot(player.x-generalBtn.x,player.y-generalBtn.y)<generalBtn.r?generalBtn:null;}
-function nearbyPainting(){return Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y)<paintingObj.r?paintingObj:null;}
+
+// ── BAR SYSTEM ───────────────────────────────────────────────────────────────
+const BAR_DRINKS = {
+  cocktails:[
+    {id:'campari',   name:'Campari Spritz', emoji:'🍊'},
+    {id:'mojito',    name:'Mojito',          emoji:'🌿'},
+    {id:'fdf_spec',  name:'FDF Special 🏕️',  emoji:'🍹'},
+    {id:'gin_tonic', name:'Gin & Tonic',     emoji:'🫧'},
+    {id:'aperol',    name:'Aperol Spritz',   emoji:'🍑'},
+  ],
+  beers:[
+    {id:'wiibroe',   name:'Wiibroe Pilsner', emoji:'🍺'},
+    {id:'aalborg',   name:'Aalborg Øl',      emoji:'🍺'},
+    {id:'tuborg',    name:'Tuborg Classic',  emoji:'🍺'},
+  ],
+  wines:[
+    {id:'portvin',   name:'Portvin',         emoji:'🍷'},
+    {id:'rødvin',    name:'Rødvin',          emoji:'🍷'},
+    {id:'hvidvin',   name:'Hvidvin',         emoji:'🥂'},
+  ],
+};
+
+// NPC reactions: [drinkId or 'cocktail'/'beer'/'wine'] → reaction text
+const BAR_REACTIONS = {
+  Jas:{
+    cocktail: '🌴 "Ah, min ven! Solen er jo over en anden ø et sted. Skål!"',
+    beer:     '☕ "Øl er fint... men kaffe er sjælen. Skål alligevel!"',
+    portvin:  '🙏 "Portvin! Det er søndagseftermiddagenes drik. Tak, kære sjæl."',
+    rødvin:   '🍷 "Rødvin. Tung og varm — som en god prædiken. Tak, min ven."',
+    hvidvin:  '🥂 "Hvidvin! Min absolutte favorit, kære sjæl. Let, frisk og ærlig — som en god samtale. SKÅL!"',
+    wine:     '🙏 "Vin og fred. Som en stille søndag. Tak, kære sjæl."',
+    mojito:   '🌿 "Mojito! Myntens symfoni. Jeg kender bønnerne bag rommen."',
+    fdf_spec: '🏕️ "FDF Special! Hvad er opskriften? ...Du vil ikke fortælle det, vel. Klogt."',
+    wiibroe:  '😮 "Wiibroe? Det er... et valg. Jeg siger ingenting. Skål."',
+  },
+  Gune:{
+    cocktail: '📊 "En cocktail er bare alkohol + sukker + is. Data: effektivt."',
+    beer:     '🎮 "Øl og kode. Det er aftenen. Tak."',
+    portvin:  '📊 "Portvin: 20% alkohol. Ineffektivt. Imponerende data alligevel."',
+    rødvin:   '🍷 "Rødvin. Resveratrol er sundt — videnskabeligt dokumenteret. Tak."',
+    hvidvin:  '🥂 "Hvidvin. Lavere procent end rødvin. Datatermerne er i orden."',
+    wine:     '🍷 "Vin er suboptimalt til lange arbejdssessioner. Men okay."',
+    aalborg:  '🔢 "Aalborg øl. Som Holger Tornøe sagde i 1902... nej, han drak nok ikke øl."',
+    wiibroe:  '👀 "Wiibroe... interessant valg. Jeg har ikke data på den. Endnu."',
+    fdf_spec: '🎮 "FDF Special. Hvad er statistikken på promilleniveauet?"',
+  },
+  Neter:{
+    cocktail: '🎉 "YES! Cocktails! Det er definitionen på fredag!"',
+    beer:     '🍔 "Øl og kebab. Den klassiske kombination. Tak!"',
+    portvin:  '😬 "Portvin?! Det er rimelig kraftigt... gammel mands-vibes. Men okay, tak."',
+    rødvin:   '😊 "Rødvin! Det er lidt fancy. Jeg føler mig som en voksen. Tak!"',
+    hvidvin:  '🥂 "Hvidvin! Det smager af sommer og dagsudflugt. Jeg er med!"',
+    wine:     '😅 "Vin? Jeg er mere en øl-mand... men okay, tak!"',
+    wiibroe:  '🤩 "WIIBROE! Min farfar drak Wiibroe! Det er klassiker! Det er nostalgi på flaske! JA!"',
+    campari:  '😬 "Campari Spritz... det er lidt bittert, nej? Men tak!"',
+    fdf_spec: '🏕️ "FDF Special! Er der en legekampagne bag den?"',
+  },
+  Heresa:{
+    cocktail: '🍎 "Cocktails er hyggelige, men er der frugt i den?"',
+    beer:     '🍎 "Øl... man kan jo sige at humle er en plante. Næsten frugt."',
+    portvin:  '🍎 "Portvin? Det er sødt nok — men der er ingen frugt i. Det er et problem."',
+    rødvin:   '🍷 "Rødvin! Druer er jo frugt. Det tæller. Kernefakta. Tak!"',
+    hvidvin:  '🥂 "Hvidvin! Hvide druer. Det er stadig frugt. Jeg accepterer det. Tak."',
+    wine:     '🍷 "Vin er faktisk sundt. Det er kernefakta. Tak!"',
+    mojito:   '🌿 "Mojito! Mynteblade! Det tæller som frugt, ikke?"',
+    aperol:   '🍑 "Aperol Spritz? Der er appelsin i. Det er næsten et æble!"',
+    wiibroe:  '😮 "Wiibroe Pilsner... det er fra Helsingør. Langt fra Nordjylland."',
+    fdf_spec: '🍎 "FDF Special — er der frugt i? Der burde være frugt i."',
+  },
+  Delisateth:{
+    cocktail: '🏛️ "Som romerne sagde: In vino veritas. I cocktails... kompleksitet."',
+    beer:     '🏛️ "Øl har eksisteret siden sumererne. Det er historisk korrekt."',
+    portvin:  '🍷 "Portvin! Den kejserlige drik. Caligula ville have godkendt det."',
+    rødvin:   '🍷 "Rødvin til en principfast kvinde. Som det sømmer sig. Salve!"',
+    hvidvin:  '🥂 "Hvidvin. Romerne foretrak det ved banketter i sommervarmen. Klogt valg."',
+    wine:     '🍷 "Vin! Som ved senatsbanketterne. Jeg ringer til Landslejrchefen."',
+    wiibroe:  '🏛️ "Wiibroe... Helsingør. Hamlet-øl. Shakespeare møder Romerriget."',
+    fdf_spec: '🏛️ "FDF Special — som legionærernes feltrationer. Jeg er imponeret."',
+  },
+  Anne:{
+    cocktail: '📊 "Alkoholindhold analyseret. Det er... acceptabelt. Tak."',
+    beer:     '📊 "Øl: 4-5%. Datasættet er klart. Effektivt valg."',
+    portvin:  '📊 "Portvin: 19,5% alkohol. Et statistisk outlier i vinkategorien. Interessant."',
+    rødvin:   '💜 "Rødvin. Mørkt og lilla — min farve. Data OG æstetik på én gang."',
+    hvidvin:  '💜 "Hvidvin. Lilla ville have klædt glasset bedre, men smagen er god."',
+    wine:     '💜 "Vin er asymmetrisk. Forskellig smag i hver slurk. Det er smukt."',
+    gin_tonic:'🫧 "Gin & Tonic! Kinabarken i tonics historik er fascinerende data."',
+    wiibroe:  '📊 "Wiibroe Pilsner. 4,6%. Helsingør-bryggeri 1840. Hvad siger dataen?"',
+    fdf_spec: '📊 "FDF Special. Ingen ingrediensliste? Det er et datahul."',
+  },
+  Tfan:{
+    cocktail: '🚗 "Cocktail! I Sverige drikker de det med is og citron. Dejligt."',
+    beer:     '🍺 "Øl på fredag. Det er kultur, bror. Tak!"',
+    portvin:  '🍷 "Portvin... det er tungt. Mere Tentriettes stil. Men tak, bror."',
+    rødvin:   '🍷 "Rødvin! I Sverige drikker de det til alting. Jeg er med på den."',
+    hvidvin:  '🥂 "Hvidvin! Let og frisk — som en tur på motorvejen mod Göteborg."',
+    wine:     '🍷 "Vin? Det er mere noget for Tentriette. Men tak!"',
+    aalborg:  '🍺 "Aalborg! Solid. Det er nordisk. Det er mig."',
+    wiibroe:  '🤘 "Wiibroe Pilsner! Det er klassisk dansk. Respekt for valget!"',
+    fdf_spec: '🏕️ "FDF Special! Lad mig sende en beredskabsmail om den her opskrift."',
+  },
+  Tentriette:{
+    cocktail: '✨ "En cocktail! Det giver mening som fredagsafslutning. Tak."',
+    beer:     '✨ "Øl... det er ærligt. Jeg kan lide ærlighed. Tak."',
+    portvin:  '🍷 "Portvin fra Haderslev-egnen er faktisk undervurderet. Det giver mening."',
+    rødvin:   '🍷 "Rødvin. Det giver mening til en fredag. Struktureret og varm. Tak."',
+    hvidvin:  '🥂 "Hvidvin! Let og logisk til fredagstemperament. Det giver mening."',
+    wine:     '🍷 "Vin! Det er en klassiker der giver mening. Tak."',
+    wiibroe:  '😐 "Wiibroe Pilsner... er det ikke fra Sjælland-kanten? Jeg er fra Haderslev."',
+    campari:  '✨ "Campari Spritz! Det giver mening. Det hele hænger logisk sammen."',
+    fdf_spec: '✨ "FDF Special! Jeg vil gerne kende opskriften. Åbenhed frem for alt."',
+  },
+};
+
+function getBarReaction(npcId, drinkId, drinkType){
+  const r = BAR_REACTIONS[npcId];
+  if(!r) return '"Tak!" 🥂';
+  // specific drink first, then drink type
+  return r[drinkId] || r[drinkType] || '"Tak!" 🥂';
+}
+
+let barSelectedDrink = null;
+let barSelectedNPC   = null;
+
+function openBar(){
+  if(currentDay !== DAY.FRI || !fridayBarActive){
+    flash('🍹 Baren er kun åben på fredage!'); return;
+  }
+  barSelectedDrink = null;
+  barSelectedNPC   = null;
+  document.getElementById('bar-overlay').classList.add('on');
+  document.getElementById('bar-reaction').textContent = 'Vælg en drik og en kollega...';
+  document.getElementById('bar-serve-btn').disabled = true;
+  buildBarMenu();
+  buildNPCList();
+}
+
+function closeBar(){
+  document.getElementById('bar-overlay').classList.remove('on');
+}
+
+function buildBarMenu(){
+  Object.entries(BAR_DRINKS).forEach(([type, drinks])=>{
+    const el = document.getElementById('bar-'+type);
+    el.innerHTML = '';
+    drinks.forEach(d=>{
+      const btn = document.createElement('button');
+      btn.className = 'bar-item';
+      btn.textContent = d.emoji+' '+d.name;
+      btn.dataset.id   = d.id;
+      btn.dataset.type = type.replace(/s$/,''); // 'cocktails'→'cocktail'
+      btn.addEventListener('click',()=>selectBarDrink(d, type.replace(/s$/,''), btn));
+      el.appendChild(btn);
+    });
+  });
+}
+
+function buildNPCList(){
+  const list = document.getElementById('bar-npc-list');
+  list.innerHTML = '';
+  // Show visible NPCs that are at or near the bar area
+  const barNPCs = visibleNPCs().filter(n=>n.id!=='Tfan'||currentDay===DAY.MON);
+  barNPCs.forEach(npc=>{
+    const c = COLORS[npc.id];
+    const btn = document.createElement('button');
+    btn.className = 'bar-npc';
+    btn.innerHTML = `<span style="background:${c.shirt};width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block"></span>${npc.name}`;
+    btn.dataset.id = npc.id;
+    btn.addEventListener('click',()=>selectBarNPC(npc, btn));
+    list.appendChild(btn);
+  });
+}
+
+function selectBarDrink(drink, type, btn){
+  document.querySelectorAll('.bar-item').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  barSelectedDrink = {drink, type};
+  checkBarReady();
+}
+
+function selectBarNPC(npc, btn){
+  document.querySelectorAll('.bar-npc').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  barSelectedNPC = npc;
+  checkBarReady();
+}
+
+function checkBarReady(){
+  document.getElementById('bar-serve-btn').disabled = !(barSelectedDrink && barSelectedNPC);
+}
+
+function serveAtBar(){
+  if(!barSelectedDrink || !barSelectedNPC) return;
+  const {drink, type} = barSelectedDrink;
+  const npc = barSelectedNPC;
+
+  // Wiibroe triggers Tarkob!
+  if(drink.id === 'wiibroe'){
+    closeBar();
+    flash('🍺 '+npc.name+' holder Wiibroe-flasken i vejret...');
+    setTimeout(()=>{
+      if(!tarkob.active){
+        flash('👀 Noget sker der ude i gangen...');
+        setTimeout(()=>{
+          summonTarkob();
+          // Override Tarkob's first flash
+          setTimeout(()=>{
+            flash('🍺 TARKOB: "JAAAAA!!! WIIBROE PILSNER!!! DET ER LIGE NOGET FOR MIG!!!"');
+          },600);
+        },1500);
+      } else {
+        const reaction = getBarReaction(npc.id, drink.id, type);
+        document.getElementById('bar-reaction').textContent = npc.name+': '+reaction;
+      }
+    },800);
+    return;
+  }
+
+  // Normal serve
+  const reaction = getBarReaction(npc.id, drink.id, type);
+  document.getElementById('bar-reaction').textContent = npc.name+': '+reaction;
+
+  // Walk NPC toward bar briefly
+  const w = wander[npc.id];
+  if(w && !w.locked){
+    const oldTx=w.tx, oldTy=w.ty;
+    w.tx = BAR_POS.x+(Math.random()*40-20);
+    w.ty = BAR_POS.y+30;
+    setTimeout(()=>{w.tx=oldTx;w.ty=oldTy;}, 4000);
+  }
+
+  flash(drink.emoji+' Du serverer '+drink.name+' til '+npc.name+'!');
+
+  // Reset selection
+  barSelectedDrink = null;
+  barSelectedNPC   = null;
+  document.querySelectorAll('.bar-item,.bar-npc').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('bar-serve-btn').disabled = true;
+}
+
+// ── BAR WORLD OBJECT ──────────────────────────────────────────────────────────
+let barObj; // defined in initWorldObjects
+
+
+function initWorldObjects(){
+  phoneObj   = {id:'phone',   x:50,  y:163, r:40, label:'Ring til FDF 📞',       hintPos:{left:'60px',top:'120px'},   onActivate:openPhone};
+  calObj     = {id:'calendar',x:580, y:50,  r:55, label:'Åbn kalender 📅',        hintPos:{left:'535px',top:'85px'},   onActivate:openCalendar};
+  radioObj   = {id:'radio',   x:248, y:425, r:60, label:'Slå radio til 📻',       hintPos:{left:'193px',top:'370px'},  onActivate:openRadio};
+  generalBtn = {id:'general', x:405, y:50,  r:38, label:'Ring til Generalen 🔴',   hintPos:{left:'345px',top:'85px'},   onActivate:()=>{if(!tarkob.active)summonTarkob();}};
+  paintingObj= {id:'painting',x:500, y:50,  r:45, label:'Se maleriet 🎨',          hintPos:{left:'450px',top:'85px'},   onActivate:activatePainting};
+
+  barObj     = {id:'bar',     x:405, y:320, r:70, label:'FORBUNDSBAR 🍸',          hintPos:{left:'355px',top:'280px'},  onActivate:openBar};
+  WORLD_OBJECTS.push(phoneObj, calObj, radioObj, generalBtn, paintingObj, barObj);
+}
+
+// Single lookup: nearest world object in range (respects per-object conditions)
+function nearbyWorldObject(){
+  for(const obj of WORLD_OBJECTS){
+    if(obj.id==='general' && tarkob.active) continue;
+    if(obj.id==='bar' && (currentDay!==DAY.FRI||!fridayBarActive)) continue;
+    const d=Math.hypot(player.x-obj.x, player.y-obj.y);
+    if(d<obj.r) return obj;
+  }
+  return null;
+}
 
 // ═══════════════════════════════════════════
 // PLAYER
@@ -1179,18 +1506,25 @@ const COFFEE_CHAT=[
 ];
 
 function getNPC(id){return npcs.find(n=>n.id===id);}
-function visibleNPCs(){return npcs.filter(n=>n.always||(currentDay==='MANDAG'));}
+function visibleNPCs(){
+  return npcs.filter(n=>{
+    if(n.always) return true;
+    // days array: explicit list of days NPC is present. Falls back to MON-only.
+    if(n.days) return n.days.includes(currentDay);
+    return currentDay===DAY.MON;
+  });
+}
 
 function updateWander(){
   if(dlgOpen||phoneOpen)return;
-  const isWed=currentDay==='ONSDAG';
+  const isWed=currentDay===DAY.WED;
 
   // sudoku
   sudokuT--;
   const jas=getNPC('Jas'),deli=getNPC('Delisateth');
   const jw=wander.Jas,dw=wander.Delisateth;
   if(sudokuState==='home'&&sudokuT<=0){
-    if(meetState!=='idle'){sudokuT=150;goto_next_sudoku();}
+    if(meetState!=='idle'){sudokuT=150;}
     else{sudokuState='meeting';jw.tx=SJ.x;jw.ty=SJ.y;dw.tx=SD.x;dw.ty=SD.y;}
   }
   if(sudokuState==='meeting'){
@@ -1208,7 +1542,7 @@ function updateWander(){
   // meeting
   meetT--;
   const ltIds=['Gune','Heresa','Anne'],ntIds=['Jas','Neter','Delisateth'];
-  if(currentDay==='MANDAG'){ltIds.push('Tentriette');ntIds.push('Tfan');}
+  if(currentDay===DAY.MON){ltIds.push('Tentriette');ntIds.push('Tfan');}
   const allIds=[...ltIds,...ntIds];
   const allNPCs=allIds.map(id=>getNPC(id)).filter(Boolean);
   const isInSudoku=(id)=>(id==='Jas'||id==='Delisateth')&&sudokuState!=='home';
@@ -1238,7 +1572,7 @@ function updateWander(){
   }
 
   // thursday coffee
-  if(currentDay==='TORSDAG'&&!coffeeDone){
+  if(currentDay===DAY.THU&&!coffeeDone){
     coffeeT--;
     const cIds=['Jas','Gune','Neter','Heresa','Delisateth','Anne'];
     const cNPCs=cIds.map(id=>getNPC(id)).filter(Boolean);
@@ -1290,8 +1624,6 @@ function updateWander(){
   });
 }
 
-function goto_next_sudoku(){/* placeholder */}
-
 // ═══════════════════════════════════════════
 // DRAWING
 // ═══════════════════════════════════════════
@@ -1332,7 +1664,7 @@ function drawKaffe(){
   ctx.fillStyle='#555';rr(760,40,30,42,4);
   ctx.fillStyle='#333';ctx.fillRect(765,38,20,8);
   ctx.fillStyle='#ffcc02';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
-  ctx.fillText('KAFFE ☕',775,92);ctx.textAlign='left';
+  ctx.textAlign='left';
 }
 
 function drawGroupTable(){
@@ -1355,7 +1687,7 @@ function drawSofa(){
   ctx.fillStyle='#c05a34';rr(50,430,180,18,8);ctx.stroke();
   ctx.fillStyle='#eb9264';rr(56,450,58,36,6);ctx.stroke();rr(120,450,58,36,6);ctx.stroke();
   ctx.fillStyle='#fff';ctx.font='bold 10px Comic Neue';ctx.textAlign='center';
-  ctx.fillText('SOFA',140,472);ctx.textAlign='left';
+  ctx.textAlign='left';
 }
 
 function drawDesks(){
@@ -1376,7 +1708,7 @@ function drawDesks(){
 }
 
 function drawPlants(){
-  [[50,55],[840,55],[50,505],[840,455]].forEach(([x,y])=>{
+  [[50,55],[840,55],[50,505],[340,520]].forEach(([x,y])=>{
     ctx.fillStyle='#8B5E3C';ctx.fillRect(x-6,y+8,12,14);
     ctx.fillStyle='#4caf50';ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#388e3c';ctx.lineWidth=1.5;ctx.stroke();
@@ -1749,7 +2081,7 @@ function drawTarkob(){
   ctx.beginPath();ctx.arc(x+4,y-3,2.2,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#7a4a2a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-4,y+3);ctx.lineTo(x+4,y+3);ctx.stroke();
   // drink in hand — beer on friday, coffee otherwise
-  const drink = currentDay==='FREDAG' ? '🍺' : '☕';
+  const drink = currentDay===DAY.FRI ? '🍺' : '☕';
   ctx.font='13px serif';ctx.textAlign='center';
   ctx.fillText(drink, x+16, y+12);
   ctx.textAlign='left';
@@ -2751,8 +3083,6 @@ const trees = {
   },
 };
 
-let dlgNode = null;
-
 function openDialog(npc){
   dlgOpen=true; activeNPC=npc;
   const c=COLORS[npc.id];
@@ -2822,7 +3152,7 @@ function closeDialog(){
 }
 
 function greeting(npc){
-  const fri=currentDay==='FREDAG';
+  const fri=currentDay===DAY.FRI;
   const map={
     Jas: fri?'🍹 Min ven! Cocktailtid. Hvad vil du tale om?':'Min ven! Hvad bringer dig til mit hjørne?',
     Gune:'*suk* Hvad vil du? Gør det hurtigt.',
@@ -3048,7 +3378,7 @@ function triggerFriday(){
 let tarkobBarVisited=false;
 
 function drawFridayBar(){
-  if(currentDay!=='FREDAG'||!fridayBarActive)return;
+  if(currentDay!==DAY.FRI||!fridayBarActive)return;
   const bx=BAR_POS.x, by=BAR_POS.y;
 
   // Bar shadow
@@ -3070,9 +3400,27 @@ function drawFridayBar(){
     ctx.beginPath();ctx.roundRect(b.x-4,by-34,8,16,2);ctx.fill();ctx.stroke();
     ctx.fillRect(b.x-2,by-40,4,8);ctx.strokeRect(b.x-2,by-40,4,8);
   });
-  // Label
-  ctx.fillStyle='#ffcc02';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
-  ctx.fillText('🍹 FREDAGSBAR',bx,by+22);ctx.textAlign='left';
+  // Bar sign — styled like a real bar nameplate
+  const signW=110, signH=16, signX=bx-signW/2, signY=by+10;
+  // Sign background — dark wood feel
+  ctx.fillStyle='#2c1810';ctx.strokeStyle='#8B5E3C';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(signX,signY,signW,signH,3);ctx.fill();ctx.stroke();
+  // Gold inner border
+  ctx.strokeStyle='rgba(255,204,2,.6)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(signX+2,signY+2,signW-4,signH-4,2);ctx.stroke();
+  // Sign text — mixed case like a real bar
+  ctx.fillStyle='#ffcc02';
+  ctx.font='bold italic 7px Georgia,serif';ctx.textAlign='center';
+  ctx.letterSpacing='1px';
+  ctx.fillText('FORBUNDS',bx-4,signY+10);
+  ctx.font='bold 9px Georgia,serif';
+  ctx.fillStyle='#fff';
+  ctx.fillText('BAR',bx+26,signY+10);
+  // small flourish dots
+  ctx.fillStyle='#ffcc02';
+  ctx.beginPath();ctx.arc(signX+6,signY+8,1.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(signX+signW-6,signY+8,1.5,0,Math.PI*2);ctx.fill();
+  ctx.textAlign='left';
   // Fairy lights
   const t=Date.now()/400;
   for(let i=0;i<12;i++){
@@ -3107,33 +3455,41 @@ function drawFridayBar(){
     },3000);
   }
 }
+// ── UNIFIED ACTIVATION ──────────────────────────────────────────────────────
+function activateNearest(){
+  if(discOpen){advDisc();return;}
+  const npc=nearbyNPC();
+  if(npc){openDialog(npc);return;}
+  const obj=nearbyWorldObject();
+  if(obj){obj.onActivate();return;}
+  const item=nearbyItem();
+  if(item){openDisc(item);}
+}
+
 function updateHint(){
   const el=document.getElementById('hint');
-  const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=(!n&&!p&&!cal&&!rad&&!gen&&!paint)?nearbyItem():null;
   const mobileE=document.getElementById('mobile-e');
-  if(n||p||cal||rad||gen||paint||o){mobileE.classList.add('visible');}
+  const npc=nearbyNPC();
+  const obj=nearbyWorldObject();
+  const item=(!npc&&!obj)?nearbyItem():null;
+
+  if(npc||obj||item){mobileE.classList.add('visible');}
   else{mobileE.classList.remove('visible');}
-  if(n){
-    el.style.display='block';el.textContent='[E] Tal med '+n.name;
-    el.style.left=(n.x-40+45)+'px';el.style.top=(n.y-55+30)+'px';
-  } else if(p){
-    el.style.display='block';el.textContent='[E] Ring til FDF 📞';
-    el.style.left='60px';el.style.top='120px';
-  } else if(cal){
-    el.style.display='block';el.textContent='[E] Åbn kalender 📅';
-    el.style.left=(calObj.x-50+45)+'px';el.style.top='85px';
-  } else if(rad){
-    el.style.display='block';el.textContent='[E] Slå radio til 📻';
-    el.style.left=(radioObj.x-50+45)+'px';el.style.top=(radioObj.y-55)+'px';
-  } else if(gen){
-    el.style.display='block';el.textContent='[E] Ring til Generalen 🔴';
-    el.style.left=(generalBtn.x-60+45)+'px';el.style.top='85px';
-  } else if(paint){
-    el.style.display='block';el.textContent='[E] Se maleriet 🎨';
-    el.style.left=(paintingObj.x-50+45)+'px';el.style.top='85px';
-  } else if(o){
-    el.style.display='block';el.textContent='[E] '+o.label;
-    el.style.left=(o.x-60+45)+'px';el.style.top=(o.y-55+30)+'px';
+
+  if(npc){
+    el.style.display='block';
+    el.textContent='[E] Tal med '+npc.name;
+    el.style.left=(npc.x+5)+'px';
+    el.style.top=(npc.y-50)+'px';
+  } else if(obj){
+    el.style.display='block';
+    el.textContent='[E] '+obj.label;
+    if(obj.hintPos){el.style.left=obj.hintPos.left;el.style.top=obj.hintPos.top;}
+    else{el.style.left=(obj.x-50)+'px';el.style.top=(obj.y-55)+'px';}
+  } else if(item){
+    el.style.display='block';
+    el.textContent='[E] '+item.label;
+    el.style.left=(item.x-60+45)+'px';el.style.top=(item.y-55+30)+'px';
   } else {
     el.style.display='none';
   }
@@ -3143,22 +3499,22 @@ function updateHint(){
 // DAY CHANGE
 // ═══════════════════════════════════════════
 function changeDay(){
-  const days=['MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG'];
+  const days=DAY.ALL;
   const idx=days.indexOf(currentDay);
   currentDay=days[(idx<0?0:idx+1)%days.length];
   document.getElementById('day-badge').textContent=currentDay;
   // reset systems
   meetState='idle';
-  meetT=currentDay==='ONSDAG'?80:600+Math.random()*500;
+  meetT=currentDay===DAY.WED?80:600+Math.random()*500;
   coffeeState='idle';coffeeDone=false;
-  coffeeT=currentDay==='TORSDAG'?400:9999;
+  coffeeT=currentDay===DAY.THU?400:9999;
   sudokuState='home';sudokuT=300+Math.random()*400;
   Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
   document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
-  if(currentDay==='FREDAG'){flash('🍹 FREDAG! Noget ser anderledes ud i dag...');setTimeout(triggerFriday,2000);}
-  else if(currentDay==='MANDAG')flash('📅 MANDAG — Alle er på kontoret!');
-  else if(currentDay==='ONSDAG')flash('📅 ONSDAG — Mødedag! 💻');
-  else if(currentDay==='TORSDAG')flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+  if(currentDay===DAY.FRI){flash('🍹 FREDAG! Noget ser anderledes ud i dag...');setTimeout(triggerFriday,2000);}
+  else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
+  else if(currentDay===DAY.WED)flash('📅 ONSDAG — Mødedag! 💻');
+  else if(currentDay===DAY.THU)flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
   else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
 }
 
@@ -3251,17 +3607,9 @@ function loop(){
 document.addEventListener('keydown',e=>{
   if(!muzakStarted){muzakStarted=true;ac();}
   keys[e.key]=true;
-  if(e.key==='Escape'){closeDialog();closePhone();closeRadio();}
+  if(e.key==='Escape'){closeDialog();closePhone();closeRadio();closeBar();}
   if((e.key==='e'||e.key==='E')&&!dlgOpen&&!phoneOpen){
-    if(discOpen){advDisc();return;}
-    const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=nearbyItem();
-    if(n)openDialog(n);
-    else if(p)openPhone();
-    else if(cal)openCalendar();
-    else if(rad)openRadio();
-    else if(gen)summonTarkob();
-    else if(paint)activatePainting();
-    else if(o)openDisc(o);
+    activateNearest();
   }
   if(e.key==='t'||e.key==='T')changeDay();
 });
@@ -3290,20 +3638,12 @@ cvs.addEventListener('touchstart',e=>{
   const oldX=player.x, oldY=player.y;
   // temporarily check if tap is near an NPC/phone/calendar/item
   const tmpDist=(obj)=>Math.hypot(pos.x-obj.x,pos.y-obj.y);
-  const n=visibleNPCs().find(n=>tmpDist(n)<70);
-  const p=tmpDist(phoneObj)<phoneObj.r?phoneObj:null;
-  const cal=tmpDist(calObj)<calObj.r?calObj:null;
-  const rad=tmpDist(radioObj)<radioObj.r?radioObj:null;
-  const gen=tmpDist(generalBtn)<generalBtn.r&&!tarkob.active?generalBtn:null;
-  const paint=tmpDist(paintingObj)<paintingObj.r?paintingObj:null;
+  // Use unified activation — same logic as keyboard E
+  const npcNear=visibleNPCs().find(n=>tmpDist(n)<70);
+  if(npcNear&&tmpDist(npcNear)<90){openDialog(npcNear);return;}
+  const objNear=nearbyWorldObject();
+  if(objNear){objNear.onActivate();return;}
   const o=items.find(it=>tmpDist(it)<it.r);
-
-  if(n&&Math.hypot(player.x-n.x,player.y-n.y)<90){openDialog(n);return;}
-  if(p&&Math.hypot(player.x-phoneObj.x,player.y-phoneObj.y)<phoneObj.r){openPhone();return;}
-  if(cal&&Math.hypot(player.x-calObj.x,player.y-calObj.y)<calObj.r){openCalendar();return;}
-  if(rad&&Math.hypot(player.x-radioObj.x,player.y-radioObj.y)<radioObj.r){openRadio();return;}
-  if(gen&&Math.hypot(player.x-generalBtn.x,player.y-generalBtn.y)<generalBtn.r){summonTarkob();return;}
-  if(paint&&Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y)<paintingObj.r){activatePainting();return;}
   if(o&&Math.hypot(player.x-o.x,player.y-o.y)<o.r){
     if(discOpen){advDisc();}else{openDisc(o);}
     return;
@@ -3450,16 +3790,12 @@ document.getElementById('dlg-input').addEventListener('keydown',e=>{
 // mobile E button
 document.getElementById('mobile-e').addEventListener('touchstart',e=>{
   e.preventDefault();
-  if(discOpen){advDisc();return;}
-  const n=nearbyNPC(),p=nearbyPhone(),cal=nearbyCalendar(),rad=nearbyRadio(),gen=nearbyGeneralBtn(),paint=nearbyPainting(),o=nearbyItem();
-  if(n)openDialog(n);
-  else if(p)openPhone();
-  else if(cal)openCalendar();
-  else if(rad)openRadio();
-  else if(gen)summonTarkob();
-  else if(paint)activatePainting();
-  else if(o)openDisc(o);
+  activateNearest();
 },{passive:false});
+
+// bar events
+document.getElementById('bar-close').addEventListener('click',closeBar);
+document.getElementById('bar-serve-btn').addEventListener('click',serveAtBar);
 
 // calendar events
 document.getElementById('cal-close').addEventListener('click',closeCalendar);
@@ -3470,15 +3806,15 @@ document.querySelectorAll('.cal-day-btn').forEach(btn=>{
     currentDay=day;
     // reuse changeDay logic without cycling
     document.getElementById('day-badge').textContent=currentDay;
-    meetState='idle'; meetT=currentDay==='ONSDAG'?80:600+Math.random()*500;
-    coffeeState='idle'; coffeeDone=false; coffeeT=currentDay==='TORSDAG'?400:9999;
+    meetState='idle'; meetT=currentDay===DAY.WED?80:600+Math.random()*500;
+    coffeeState='idle'; coffeeDone=false; coffeeT=currentDay===DAY.THU?400:9999;
     sudokuState='home'; sudokuT=300+Math.random()*400;
     Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
     document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
-    if(currentDay==='FREDAG'){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
-    else if(currentDay==='MANDAG')flash('📅 MANDAG — Alle er på kontoret!');
-    else if(currentDay==='ONSDAG')flash('📅 ONSDAG — Mødedag! 💻');
-    else if(currentDay==='TORSDAG')flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+    if(currentDay===DAY.FRI){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
+    else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
+    else if(currentDay===DAY.WED)flash('📅 ONSDAG — Mødedag! 💻');
+    else if(currentDay===DAY.THU)flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
     else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
   });
 });
@@ -3503,14 +3839,23 @@ document.querySelectorAll('.radio-btn').forEach(btn=>{
 // ═══════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════
+// ── INIT ────────────────────────────────────────────────────────────────────
+// Sync NPC starting positions from wander home positions (single source of truth)
+npcs.forEach(npc=>{
+  const w=wander[npc.id];
+  if(w){npc.x=w.hx;npc.y=w.hy;}
+});
+// Build unified world object registry
+initWorldObjects();
+
 // Set day from real weekday (Sat+Sun = Fredag)
-const dayMap=['SØNDAG','MANDAG','TIRSDAG','ONSDAG','TORSDAG','FREDAG','FREDAG'];
+const dayMap=['SØNDAG',...DAY.ALL.slice(0,4),DAY.FRI,DAY.FRI];
 currentDay = dayMap[new Date().getDay()];
 document.getElementById('day-badge').textContent = currentDay;
 // Trigger day-specific setup
-if(currentDay==='ONSDAG') meetT=80;
-if(currentDay==='TORSDAG') coffeeT=400;
-if(currentDay==='FREDAG') setTimeout(()=>{triggerFriday();},1500);
+if(currentDay===DAY.WED) meetT=80;
+if(currentDay===DAY.THU) coffeeT=400;
+if(currentDay===DAY.FRI) setTimeout(()=>{triggerFriday();},1500);
 
 loop();
 flash('🏢 Velkommen til FDF! WASD = bevæg, E = tal/undersøg, T = skift dag');
