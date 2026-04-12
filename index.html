@@ -259,6 +259,7 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
     <div id="cal-box">
       <h2>📅 VÆLG DAG</h2>
       <p>Klik på en dag for at skifte</p>
+      <p style="font-size:.65rem;color:#bbb;margin-top:-10px;font-style:italic">FDF grundlagt 1902 · Holger Tornøe</p>
       <div id="cal-days">
         <button class="cal-day-btn" data-day="MANDAG">MAN</button>
         <button class="cal-day-btn" data-day="TIRSDAG">TIR</button>
@@ -856,6 +857,9 @@ function setRadio(ch){
   getRGain().gain.setValueAtTime(0,a.currentTime);
   radioChannel=ch;
   updateRadioDisplay();
+  // Heresa dances on Latin, stops on other channels
+  if(ch===4) startHeresaDance();
+  else stopHeresaDance();
   if(ch===0)return;
   // Ramp up and start new channel
   getRGain().gain.linearRampToValueAtTime(1,a.currentTime+0.1);
@@ -906,6 +910,7 @@ const COLORS={
   Anne:       {skin:'#f9e4b7',hair:'#7d3c98',shirt:'#2980b9',emoji:'📊',male:false},
   Tfan:       {skin:'#d5a87a',hair:'#1a1a1a',shirt:'#2ecc71',emoji:'🚗',male:true},
   Tentriette: {skin:'#f5b7b1',hair:'#922b21',shirt:'#e67e22',emoji:'✨',male:false},
+  Tarkob:     {skin:'#d4956a',hair:'#1a3008',shirt:'#2d5016',emoji:'🎖️',male:true},
 };
 
 const npcs=[
@@ -916,7 +921,7 @@ const npcs=[
 Du er i NT (Nationalt Engagement & Identitet) under chef Tfan. Du koordinerer frivillige i FDF sammen med Delisateth. Hemmelig tradition: når cheferne ikke kigger, løser du og Delisateth Sudoku. Efter kl. 14 drikker I cocktails — "Solen er over en anden ø et sted, min ven." HEMMELIGHED: Du har gemt Annes hæftemaskine bag sofapuden — Anne støbte den i gele, du støbte den i BETON. Du nægter blankt hvis nogen spørger.
 
 FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902 af Holger Tornøe. Fundament: relationer, tro, leg, samfundsengagement.
-Tarkob (generalsekretær): Elsker kaffe (MEGET), speedmetal, 2. verdenskrig, biler uden autostart. Drikker KUN Aalborg-øl (ALDRIG cocktails eller vin). Elsker fodboldholdet AaB fra Aalborg — kan tale om dem i timevis. Råber "Rådhusklokkerne ringer!!!" og deler Aalborg-øl og skjorter ud.
+Tarkob (generalsekretær): Elsker kaffe (MEGET), speedmetal, 2. verdenskrig, biler uden autostart. Drikker KUN Aalborg-øl (ALDRIG cocktails eller vin). Elsker fodboldholdet AaB fra Aalborg — kan tale om dem i timevis. Råber "Rådhusklokkerne ringer!!!" og deler Aalborg-øl og skjorter ud. Har godkendt tre forbundscentre: Friluftscenter Sletten ved Skanderborg (landslejrens hjem), Lejrcentrum Work ved Vejle (Dons hjertebarn — godkendte det med ordene "Godt. Sørg for der er kaffe."), og Skovly Oplevelsescenter ved Viborg (under udvikling — tredje bank er i gang).
 Kolleger: Gune(LT), Neter(NT), Heresa(LT), Delisateth(NT), Anne(LT), Tfan(din chef NT, mandagen — sender beredskabsmails med kun 1 plads, du melder dig ALTID til), Tentriette(chef LT, mandagen).`},
 
   {id:'Gune',name:'Gune',title:'Foreningskonsulent LT — Digitalisering & Regioner',
@@ -983,22 +988,42 @@ Tarkob (din generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verd
 Kolleger: Jas(dit hold NT), Gune(LT), Neter(dit hold NT), Heresa(LT), Delisateth(dit hold NT), Anne(LT), Tentriette(kollegachef LT, du aner hun er fra Sjælland).`},
 
   {id:'Tentriette',name:'Tentriette',title:'Chef LT — Lokalt Engagement',
-   x:480,y:230,always:false,days:[DAY.MON],
-   p:`Du er Tentriette, chef for LT (Lokalt Engagement) i FDF. Dit hold: Gune, Heresa, Anne. Fra Haderslev — IKKE fra Sjælland, det er HEMMELIGT (bliv defensiv hvis nogen antyder det). ELSKER når ting giver mening. Tåler INGEN løgne eller sarkasme. Bed folk stoppe hvis de er sarkastiske. Svar på dansk. Max 4 sætninger.
+   x:480,y:230,always:false,days:[DAY.MON],   p:`Du er Tentriette, chef for LT (Lokalt Engagement) i FDF. Dit hold: Gune, Heresa, Anne. Fra Haderslev — IKKE fra Sjælland, det er HEMMELIGT (bliv defensiv hvis nogen antyder det). ELSKER når ting giver mening. Tåler INGEN løgne eller sarkasme. Bed folk stoppe hvis de er sarkastiske. Svar på dansk. Max 4 sætninger.
 Hvis nogen spørger om "Generalen", "Tarkob" eller "generalsekretæren": svar varmt og antyd at "han nok dukker op snart."
 
 FDF: Kristen børne- og ungeorganisation, 340 kredse, grundlagt 1902. Alt skal give mening fra bund til top. Stolt af 120-årig arv.
 Tarkob (din generalsekretær): Ordensmenneske, kaffe(MEGET), speedmetal, 2. verdenskrig, biler uden autostart, drikker KUN Aalborg-øl, elsker AaB fodbold.
 Kolleger: Jas(NT, kontorets hjerte), Gune(dit hold LT), Neter(NT), Heresa(dit hold LT), Delisateth(NT), Anne(dit hold LT), Tfan(kollegachef NT — hans beredskabsmails med plads til én deltager skaber altid kaos).`},
+
+  {id:'Tarkob',name:'Tarkob',title:'Generalsekretær',
+   x:450,y:570,always:false,days:[DAY.WED],
+   p:`Du er Tarkob, generalsekretær i FDF. Du er på kontoret onsdag og hilser på alle. Du er direkte, varm og en smule overvældende. Du ELSKER kaffe — drikker det konstant, men er LIGEGLAD med kvalitet, bare det er kaffe. Du drikker KUN Aalborg-øl. AaB er dit hold og du kan tale om dem i timevis. Du er vild med speedmetal og 2. verdenskrig. Din bil har IKKE autostart — det er et princip. Svar på dansk, myndigt og varmt. Max 4 sætninger. Du kender til de tre FDF-centre: Sletten ved Skanderborg (landslejrens hjem), Lejrcentrum Work ved Vejle (godkendte det med "Godt. Sørg for der er kaffe."), og Skovly ved Viborg (tredje bank — du har troen på Don). Råb "RÅDHUSKLOKKERNE RINGER!!!" hvis nogen siger det magiske ord.`},
 ];
 
 // ═══════════════════════════════════════════
 // ROOM
 // ═══════════════════════════════════════════
 const walls=[
-  {x:0,y:0,w:900,h:30},{x:0,y:0,w:30,h:560},{x:870,y:0,w:30,h:560},
+  {x:0,y:0,w:350,h:30},{x:550,y:0,w:350,h:30}, // top with door gap 350-550
+  {x:0,y:0,w:30,h:560},{x:870,y:0,w:30,h:560},
   {x:0,y:530,w:370,h:30},{x:530,y:530,w:370,h:30}
 ];
+
+
+// ── KOPIRUM WALLS (x:900-1300) ──────────────────────────────────────────────
+
+
+
+// ── KBH WALLS (x:1300-2200) ──────────────────────────────────────────────────
+// Outer walls
+
+
+
+// Blocking wall — shown before unlock, removed after
+// (removed - zone system)
+let kbhBlocked = true;
+ // solid wall between kopi and KBH
+
 const obstacles=[
   {x:290,y:155,w:230,h:120}, // group table
   {x:690,y:35,w:170,h:60},   // coffee counter
@@ -1025,7 +1050,7 @@ const items=[
 
   {id:'kaffe',label:'Undersøg kaffemaskinen',x:720,y:65,r:90,found:false,
    msgs:['Du kigger bag kaffemaskinen... der er noget gemt bag kværnen.',
-         'En dåse! Du ryster den. Intet. Du kigger ind. Tom. Fuldstændig tom. Hvorfor er den her??'],
+         'En dåse! Du ryster den. Intet. Tom. Men på bagsiden er der skrevet med permanent marker: "Holger brugte altid 13 skeer. Aldrig mere. Aldrig mindre. — H.T." Hvem er H.T.?'],
    foundMsg:'Den tomme dåse er stadig der. Stadig tom.',
    item:'🥫 Tom dåse',emoji:'☕',
    onDisc:()=>coffeeSnd()},
@@ -1071,19 +1096,19 @@ const items=[
 
   {id:'desk_heresa',label:'Kig på Heresas bord',x:90,y:350,r:75,found:false,
    msgs:['En frugtskål (to æbler, en banan og noget der muligvis er en mango), et kæmpe ringbind mærket "KREDITSTART — PROTOKOL V.7" og en pakke blyantspisser.',
-         'Du åbner ringbindet på en tilfældig side. Der er 4 sider om "hvorfor folk IKKE starter en kreds". Den er håndskrevet. Med rødt. Understreget tre gange.'],
+         'Du åbner ringbindet. Indeni på forsiden — med rød kuglepen og tre understregninger: "19 AF 28 RECEPTIONER ER MIN DEL. 19. Jeg finder ud af hvem der besluttede det." Tallet 19 er cirkuleret.'],
    foundMsg:'Frugtskålen er fyldt op igen. Heresa holder øje.',
    item:'🍎 Kreditstart-protokol V.7',emoji:'🍎'},
 
   {id:'desk_delisateth',label:'Kig på Delisateths bord',x:795,y:370,r:75,found:false,
    msgs:['Et printout af et Excelark så stort at det folder sig ud over hele bordet. En lille Colosseum-figur i plast. Og tre tekandler — én tom, én halvt, én fuld.',
-         'Du kigger på Excelark. Det har 47 faneblade. Et af dem hedder "28 RECEPTIONER — WORST CASE SCENARIER". Du lukker det igen.'],
+         'Du kigger på Excelark. 47 faneblade. Et hedder "28 RECEPTIONER — WORST CASE SCENARIER". Et andet: "BORINGER — status". Øverst: "Boring nr. 2402 — AFSLUTTET". I marginen en håndskrevet note: "02 — HUSK!"'],
    foundMsg:'Colosseum-figuren kigger bebrejdende på dig.',
    item:'🏛️ Colosseum-figur (8 cm)',emoji:'🍵'},
 
   {id:'desk_anne',label:'Kig på Annes bord',x:795,y:210,r:75,found:false,
    msgs:['En lilla kaffekop med teksten "DATA > MAVEFORNEMMELSE", en asymmetrisk stak bøger (bevidst skæv), og en The Office DVD-boks — sæson 2 er halvt ude af æsken.',
-         'På skærmen kører et regneark. I toppen af siden har hun skrevet: "Kollega-sammenligning: FDF vs Dunder Mifflin (n=8)". Kolonner: Navn, The Office karakter, Match-procent. Jas scorer 94% Creed.'],
+         'På skærmen kører et regneark: "Kollega-sammenligning: FDF vs Dunder Mifflin (n=8)". Jas scorer 94% Creed. Nederst sidder en gul Post-it: "94 — Holger ville aldrig forstå det."'],
    foundMsg:'Regnearket er stadig åbent. Jas scorer stadig 94% Creed.',
    item:'📊 FDF vs Dunder Mifflin-analyse',emoji:'📊'},
 ];
@@ -1359,8 +1384,209 @@ function serveAtBar(){
   document.getElementById('bar-serve-btn').disabled = true;
 }
 
-// ── BAR WORLD OBJECT ──────────────────────────────────────────────────────────
-let barObj; // defined in initWorldObjects
+// ── SECRET DOOR ───────────────────────────────────────────────────────────────
+const SECRET_CODE = '94190213';
+let secretDoorUnlocked = false;
+let secretDoorOpen     = false;
+let secretDoorAnim     = 0; // 0=closed, 1=open (animated)
+
+const secretDoorObj = {
+  id:'secret_door', x:310, y:50, r:45,
+  label:'Åbn den hemmelige dør 🚪',
+  hintPos:{left:'260px',top:'85px'},
+  onActivate: openSecretRoom,
+};
+
+function unlockSecretDoor(){
+  if(secretDoorUnlocked) return;
+  secretDoorUnlocked = true;
+  closePhone();
+
+  // Flash near phone position
+  function pFlash(msg, dur){
+    const el=document.getElementById('flash');
+    el.textContent=msg;
+    el.style.display='block';
+    el.style.left='110px';
+    el.style.top='120px';
+    el.style.transform='none';
+    if(flashTimer)clearTimeout(flashTimer);
+    flashTimer=setTimeout(()=>{
+      el.style.display='none';
+      el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    }, dur||4000);
+  }
+
+  // ── FASE 1: Statisk på linjen (0s) ───────────────────────────────────────
+  // Kort statisk støj — noget er anderledes
+  for(let i=0;i<6;i++){
+    setTimeout(()=>{
+      sfxOsc(200+Math.random()*800, .03+Math.random()*.04, .08, 'sawtooth');
+    }, i*80);
+  }
+  pFlash('📞 ... ... ...', 2000);
+
+  // ── FASE 2: Holger tager telefonen (2.5s) ─────────────────────────────────
+  setTimeout(()=>{
+    // Dyb, gammel stemme — lav formant-lyd
+    [180,200,220,195,185].forEach((f,i)=>{
+      setTimeout(()=>{
+        sfxOsc(f,    .06, .28, 'sawtooth');
+        sfxOsc(f*2.1,.025,.24, 'sine');
+        sfxOsc(f*3.5,.012,.18, 'sine');
+      }, i*220);
+    });
+  }, 2500);
+
+  setTimeout(()=>{
+    pFlash('📞  "... Ja?"', 2200);
+  }, 2500);
+
+  // ── FASE 3: Holger præsenterer sig (4.5s) ────────────────────────────────
+  setTimeout(()=>{
+    [170,185,175,190,165,180,195,170].forEach((f,i)=>{
+      setTimeout(()=>{
+        sfxOsc(f,    .055,.22,'sawtooth');
+        sfxOsc(f*2.2,.02, .18,'sine');
+      }, i*200);
+    });
+  }, 4500);
+
+  setTimeout(()=>{
+    pFlash('🔔  "Du har ringet til Holger Tornøe."', 3000);
+  }, 4600);
+
+  // ── FASE 4: Bekræftelse (8s) ───────────────────────────────────────────────
+  setTimeout(()=>{
+    // Højtidelig, rolig tone
+    sfxOsc(220, .08, 1.5, 'sine');
+    sfxOsc(330, .05, 1.2, 'sine');
+    sfxOsc(440, .03, 0.8, 'sine');
+  }, 8000);
+
+  setTimeout(()=>{
+    pFlash('📜  "Koden er korrekt."', 3200);
+  }, 8200);
+
+  // ── FASE 5: Instruktion (12s) ─────────────────────────────────────────────
+  setTimeout(()=>{
+    pFlash('🗝️  "Du ved hvad du skal gøre."', 3200);
+  }, 12000);
+
+  // ── FASE 6: Væggen reagerer (15.5s) ──────────────────────────────────────
+  setTimeout(()=>{
+    // Mekanisk klik — tungt og gammelt
+    sfxOsc(80,  .18, 0.05, 'square');
+    sfxOsc(60,  .22, 0.08, 'sine');
+    sfxOsc(120, .10, 0.06, 'square');
+    setTimeout(()=>sfxOsc(55,.14,.4,'sine'), 100);
+    setTimeout(()=>sfxOsc(40,.10,.6,'sine'), 200);
+  }, 15500);
+
+  setTimeout(()=>{
+    pFlash('🔩  Et tungt klik lyder i væggen bag gruppebordet.', 3500);
+  }, 15600);
+
+  // ── FASE 7: Døren materialiserer (19.5s) ─────────────────────────────────
+  setTimeout(()=>{
+    // Klokker + stigning
+    bells();
+    setTimeout(()=>{
+      sfxOsc(523,.08,.8,'sine');
+      sfxOsc(659,.06,.7,'sine');
+      sfxOsc(784,.05,.6,'sine');
+    }, 600);
+  }, 19500);
+
+  setTimeout(()=>{
+    pFlash('✨  En dør bag gruppebordet — du har aldrig lagt mærke til den før.', 5000);
+  }, 20000);
+
+  // Tilføj døren + åbn KBH EFTER den sidste tekst er færdig
+  setTimeout(()=>{
+    WORLD_OBJECTS.push(secretDoorObj);
+    kbhBlocked = false;
+    // Place KBH NPCs at their world positions
+    kbhNpcs.forEach(n=>{ const w=kbhWander[n.id]; if(w&&n.id!=='Sumsar'){n.x=w.hx;n.y=w.hy;} });
+  }, 25000);
+}
+
+function openSecretRoom(){
+  if(!secretDoorUnlocked) return;
+  if(secretDoorOpen) return;
+  secretDoorOpen = true;
+  bells();
+  flash('🚪 Døren glider op...');
+  setTimeout(()=>enterKopi('aros'), 800);
+}
+
+function drawSecretDoor(){
+  if(!secretDoorUnlocked) return;
+  const dx = secretDoorObj.x, dy = 10;
+  const dw = 32, dh = 50;
+  const x = dx - dw/2;
+
+  // Animate opening
+  if(secretDoorOpen && secretDoorAnim < 1) secretDoorAnim = Math.min(1, secretDoorAnim + 0.02);
+
+  // Door frame
+  ctx.fillStyle = '#1a1a2e';
+  ctx.strokeStyle = '#ffcc02';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x-3, dy-3, dw+6, dh+6);
+  ctx.strokeRect(x-3, dy-3, dw+6, dh+6);
+
+  // Door panel — swings open on anim
+  if(secretDoorAnim < 1){
+    const openW = dw * (1 - secretDoorAnim);
+    ctx.fillStyle = '#2d3561';
+    ctx.strokeStyle = '#ffcc02';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(x, dy, openW, dh);
+    ctx.strokeRect(x, dy, openW, dh);
+    // Door handle
+    if(secretDoorAnim < 0.5){
+      ctx.fillStyle = '#ffcc02';
+      ctx.beginPath(); ctx.arc(x+openW-5, dy+dh/2, 2.5, 0, Math.PI*2); ctx.fill();
+    }
+    // Lock symbol when first unlocked, not yet opened
+    if(secretDoorAnim === 0){
+      ctx.fillStyle='#ffcc02'; ctx.font='10px serif'; ctx.textAlign='center';
+      ctx.fillText('🔓', dx, dy+dh/2+4);
+      ctx.textAlign='left';
+    }
+  }
+
+  // Dark opening behind door
+  if(secretDoorAnim > 0){
+    const openX = x + dw*(1-secretDoorAnim);
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(openX, dy, dw*secretDoorAnim, dh);
+    // Glow from inside
+    const g = ctx.createLinearGradient(openX, 0, openX+dw*secretDoorAnim, 0);
+    g.addColorStop(0,'rgba(100,80,255,0.0)');
+    g.addColorStop(1,'rgba(100,80,255,0.15)');
+    ctx.fillStyle = g;
+    ctx.fillRect(openX, dy, dw*secretDoorAnim, dh);
+  }
+
+  // Label
+  ctx.fillStyle = secretDoorOpen ? 'rgba(100,80,255,.8)' : '#ffcc02';
+  ctx.font = 'bold 6px Comic Neue'; ctx.textAlign='center';
+  ctx.fillText(secretDoorOpen ? 'ÅBEN' : '🔓 HEM.', dx, dy+dh+8);
+  ctx.textAlign='left';
+
+  // Proximity pulse
+  const d = Math.hypot(player.x-secretDoorObj.x, player.y-secretDoorObj.y);
+  if(d < secretDoorObj.r && !secretDoorOpen){
+    const p = .35+.35*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(100,80,255,${p})`; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.arc(secretDoorObj.x, secretDoorObj.y, 38, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+
 
 
 function initWorldObjects(){
@@ -1392,8 +1618,9 @@ const player={x:440,y:480,spd:3};
 
 function collides(nx,ny){
   const hw=14,hh=14;
-  for(const o of obstacles){if(nx-hw<o.x+o.w&&nx+hw>o.x&&ny-hh<o.y+o.h&&ny+hh>o.y)return true;}
-  for(const w of walls){if(nx-hw<w.x+w.w&&nx+hw>w.x&&ny-hh<w.y+w.h&&ny+hh>w.y)return true;}
+  function hits(list){for(const o of list){if(nx-hw<o.x+o.w&&nx+hw>o.x&&ny-hh<o.y+o.h&&ny+hh>o.y)return true;}return false;}
+  if(currentZone==='aros') return hits(obstacles)||hits(walls);
+  if(currentZone==='kbh')  return hits(kbhOuterWalls)||hits(kbhObstacles);
   return false;
 }
 
@@ -1448,6 +1675,31 @@ function updateTarkob(){
   const dx=tarkob.tx-tarkob.x,dy=tarkob.ty-tarkob.y,d=Math.hypot(dx,dy);
   if(d<3){tarkob.x=tarkob.tx;tarkob.y=tarkob.ty;tarkob.walking=false;}
   else{tarkob.x+=dx/d*2.2;tarkob.y+=dy/d*2.2;tarkob.phase+=.25;}
+}
+
+// ── TARKOB WEDNESDAY VISIT ────────────────────────────────────────────────────
+let tarkobWedVisit = false;   // is he currently on the floor as NPC?
+let tarkobWedTimer = null;
+
+function startTarkobWedVisit(){
+  if(tarkobWedVisit || tarkob.active) return;
+  tarkobWedVisit = true;
+  // Add to wander system
+  wander['Tarkob'] = {hx:690, hy:65, tx:690, ty:65, t:0, r:120};
+  // Enter from bottom
+  const t = npcs.find(n=>n.id==='Tarkob');
+  if(t){ t.x=450; t.y=570; }
+  flash('👣 Nogen banker på gulvet udefra...');
+  setTimeout(()=>flash('🎖️ Tarkob træder ind — det er onsdag.'), 1500);
+  // Leave after ~4 minutes
+  tarkobWedTimer = setTimeout(endTarkobWedVisit, 240000);
+}
+
+function endTarkobWedVisit(){
+  if(!tarkobWedVisit) return;
+  tarkobWedVisit = false;
+  delete wander['Tarkob'];
+  flash('🎖️ Tarkob nikker og går. "God onsdag."');
 }
 
 // ═══════════════════════════════════════════
@@ -1508,8 +1760,8 @@ const COFFEE_CHAT=[
 function getNPC(id){return npcs.find(n=>n.id===id);}
 function visibleNPCs(){
   return npcs.filter(n=>{
+    if(n.id==='Tarkob') return tarkobWedVisit && currentDay===DAY.WED;
     if(n.always) return true;
-    // days array: explicit list of days NPC is present. Falls back to MON-only.
     if(n.days) return n.days.includes(currentDay);
     return currentDay===DAY.MON;
   });
@@ -1642,6 +1894,14 @@ function drawRoom(){
   ctx.strokeStyle='#7b9ea6';ctx.lineWidth=3;ctx.stroke();
   // walls
   ctx.fillStyle='#2d3561';walls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+  // Door to kopi (top, x:350-550)
+  if(secretDoorUnlocked){
+    const dt=Date.now()/600;
+    ctx.fillStyle=`rgba(100,60,200,${.3+.2*Math.sin(dt)})`;
+    ctx.fillRect(350,0,200,30);
+    ctx.fillStyle='rgba(180,150,255,.8)';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('↑ KOPIRUM',450,20);ctx.textAlign='left';
+  }
   // door
   ctx.fillStyle='#f5e9d0';ctx.fillRect(370,530,160,30);
   ctx.fillStyle='#8B5E3C';ctx.fillRect(370,520,8,20);ctx.fillRect(522,520,8,20);
@@ -1651,7 +1911,7 @@ function drawRoom(){
   ctx.strokeStyle='#3d4571';ctx.lineWidth=2;
   for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(30,60+i*30);ctx.lineTo(870,60+i*30);ctx.globalAlpha=.12;ctx.stroke();ctx.globalAlpha=1;}
 
-  drawKaffe(); drawGroupTable(); drawSofa(); drawDesks(); drawPlants(); drawPhone(); drawCalendar(); drawRadioObj(); drawGeneralBtn(); drawPainting();
+  drawKaffe(); drawGroupTable(); drawSofa(); drawDesks(); drawPlants(); drawPhone(); drawCalendar(); drawRadioObj(); drawGeneralBtn(); drawPainting(); drawSecretDoor();
 }
 
 function drawKaffe(){
@@ -1790,7 +2050,10 @@ function drawPainting(){
   ctx.fillStyle='#c8a04a';ctx.strokeStyle='#5a3a1a';ctx.lineWidth=1.5;
   ctx.fillRect(x+pw/2-18,y+ph+2,36,9);ctx.strokeRect(x+pw/2-18,y+ph+2,36,9);
   ctx.fillStyle='#3a2000';ctx.font='bold 5px Comic Neue';ctx.textAlign='center';
-  ctx.fillText('LEG 🎲',px,y+ph+9);ctx.textAlign='left';
+  ctx.fillText('LEG 🎲',px,y+ph+9);
+  // Tiny note on frame back
+  ctx.fillStyle='rgba(180,160,100,.7)';ctx.font='4px monospace';ctx.textAlign='center';
+  ctx.fillText('3 børn — Holger',px,y+ph+15);ctx.textAlign='left';ctx.textAlign='left';
 
   // Proximity pulse
   const d=Math.hypot(player.x-paintingObj.x,player.y-paintingObj.y);
@@ -2048,7 +2311,158 @@ function drawCalendar(){
   }
 }
 
+// ── HERESA DANCE ─────────────────────────────────────────────────────────────
+let heresaDancing = false;
+let heresaDanceT  = 0;
+const HERESA_SHOUTS = [
+  '¡ESTO ES LO MÍO!',
+  '¡AY, QUÉ RITMO!',
+  '¡COLOMBIA EN MI CORAZÓN!',
+  '¡BAILEMOS!',
+  '¡DIOS MÍO, QUÉ CANCIÓN!',
+  '¡ESO ES SALSA DE VERDAD!',
+];
+let heresaShout = '';
+let heresaShoutT = 0;
+
+function startHeresaDance(){
+  if(heresaDancing) return;
+  heresaDancing = true;
+  heresaDanceT  = 0;
+  const w = wander['Heresa'];
+  if(w){ w.locked=true; }
+  // Pick a spot in the middle of the room to dance
+  const heresa = npcs.find(n=>n.id==='Heresa');
+  if(w){ w.tx=340; w.ty=350; w.spd=2.5; }
+  // Shout immediately
+  heresaShout  = HERESA_SHOUTS[Math.floor(Math.random()*HERESA_SHOUTS.length)];
+  heresaShoutT = 180;
+  flash('💃 Heresa: "'+heresaShout+'"');
+  // Rotate shouts while dancing
+  heresaDanceInterval = setInterval(()=>{
+    if(!heresaDancing){ clearInterval(heresaDanceInterval); return; }
+    heresaShout  = HERESA_SHOUTS[Math.floor(Math.random()*HERESA_SHOUTS.length)];
+    heresaShoutT = 140;
+  }, 4000);
+}
+
+function stopHeresaDance(){
+  if(!heresaDancing) return;
+  heresaDancing = false;
+  clearInterval(heresaDanceInterval);
+  const w = wander['Heresa'];
+  if(w){ w.locked=false; w.spd=.55; w.tx=w.hx; w.ty=w.hy; }
+  heresaShout = '';
+}
+
+let heresaDanceInterval = null;
+
+function drawHeresaDance(npc){
+  // Called instead of normal drawNPC when Heresa is dancing
+  const c = COLORS['Heresa'];
+  const t = Date.now()/200;
+  const bob = Math.sin(t)*5;
+  const sway = Math.sin(t*0.7)*8;
+  const x = npc.x + sway, y = npc.y + bob;
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,.2)';
+  ctx.beginPath();ctx.ellipse(npc.x,npc.y+17,14+Math.abs(sway)*.3,5,0,0,Math.PI*2);ctx.fill();
+
+  // Body
+  ctx.fillStyle=c.shirt;ctx.strokeStyle='#222';ctx.lineWidth=2.5;
+  rr(x-10,y+2,20,20,4);ctx.stroke();
+
+  // Arms out dancing (raised and spread)
+  const armAngle = Math.sin(t)*0.6;
+  ctx.strokeStyle=c.shirt;ctx.lineWidth=5;ctx.lineCap='round';
+  // Left arm
+  ctx.beginPath();
+  ctx.moveTo(x-10,y+8);
+  ctx.lineTo(x-22+Math.cos(armAngle)*8, y-4+Math.sin(armAngle)*6);
+  ctx.stroke();
+  // Right arm
+  ctx.beginPath();
+  ctx.moveTo(x+10,y+8);
+  ctx.lineTo(x+22+Math.cos(-armAngle)*8, y-4+Math.sin(-armAngle)*6);
+  ctx.stroke();
+
+  // Head
+  ctx.fillStyle=c.skin;ctx.strokeStyle='#222';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(x,y-2,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // Hair
+  ctx.fillStyle=c.hair;
+  ctx.beginPath();ctx.arc(x,y-10,10,Math.PI,0);ctx.fill();ctx.stroke();
+  // Eyes (happy — curved)
+  ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(x-4,y-4,2.5,Math.PI,0);ctx.stroke();
+  ctx.beginPath();ctx.arc(x+4,y-4,2.5,Math.PI,0);ctx.stroke();
+  // Big smile
+  ctx.beginPath();ctx.arc(x,y+1,5,0.1,Math.PI-0.1);ctx.stroke();
+
+  // Nametag
+  ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+  const nw=npc.name.length*6+8;rr(x-nw/2,y+23,nw,14,4);ctx.stroke();
+  ctx.fillStyle='#e74c3c';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText(npc.name,x,y+33);ctx.textAlign='left';
+
+  // Dance emoji spinning around her
+  const emojis=['💃','🎵','✨','🌶️'];
+  emojis.forEach((e,i)=>{
+    const a = t*0.8 + i*(Math.PI/2);
+    const r = 26 + Math.sin(t+i)*4;
+    const ex = npc.x + Math.cos(a)*r;
+    const ey = npc.y + Math.sin(a)*r*0.5 - 10;
+    ctx.font='13px serif';ctx.textAlign='center';
+    ctx.globalAlpha=0.75+0.25*Math.sin(t+i);
+    ctx.fillText(e,ex,ey);
+    ctx.globalAlpha=1;ctx.textAlign='left';
+  });
+
+  // Shout bubble
+  if(heresaShoutT>0){
+    heresaShoutT--;
+    const alpha=Math.min(1,heresaShoutT/30);
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='rgba(255,253,231,.97)';ctx.strokeStyle='#e74c3c';ctx.lineWidth=2;
+    const bw=heresaShout.length*5.5+16;
+    ctx.beginPath();ctx.roundRect(x-bw/2,y-52,bw,18,6);ctx.fill();ctx.stroke();
+    // tail
+    ctx.beginPath();ctx.moveTo(x-4,y-34);ctx.lineTo(x+4,y-34);ctx.lineTo(x,y-28);ctx.closePath();
+    ctx.fill();ctx.stroke();
+    ctx.fillStyle='#c0392b';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(heresaShout,x,y-40);ctx.textAlign='left';
+    ctx.globalAlpha=1;
+  }
+}
+
+
+function drawTarkobNPC(npc){
+  // Reuse existing Tarkob drawing but positioned from npc.x/y
+  const x=npc.x, bob=Math.sin(Date.now()/400)*2, y=npc.y+bob;
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(x,y+19,15,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#2d5016';ctx.strokeStyle='#111';ctx.lineWidth=2.5;rr(x-13,y+2,26,22,5);ctx.stroke();
+  ctx.fillStyle='#ffcc02';
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(x-7+i*6,y+8,2.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a00';ctx.lineWidth=1;ctx.stroke();}
+  ctx.fillStyle='#d4956a';ctx.strokeStyle='#111';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(x,y-3,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1a3008';ctx.beginPath();ctx.ellipse(x,y-13,13,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillRect(x-15,y-16,30,5);ctx.strokeRect(x-15,y-16,30,5);
+  ctx.fillStyle='#ffcc02';ctx.beginPath();ctx.arc(x,y-14,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(x-4,y-3,2.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+4,y-3,2.2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#7a4a2a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-4,y+3);ctx.lineTo(x+4,y+3);ctx.stroke();
+  // Nametag
+  ctx.fillStyle='rgba(255,253,231,.95)';ctx.strokeStyle='#111';ctx.lineWidth=1.5;
+  rr(x-24,y+23,48,14,4);ctx.stroke();
+  ctx.fillStyle='#1a3008';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('Tarkob',x,y+33);ctx.textAlign='left';
+  ctx.font='14px serif';ctx.fillText('🎖️',x+13,y-14);
+}
+
 function drawNPC(npc){
+  if(npc.id==='Heresa'&&heresaDancing){drawHeresaDance(npc);return;}
+  if(npc.id==='Tarkob'){drawTarkobNPC(npc);return;}
   const c=COLORS[npc.id],x=npc.x,y=npc.y;
   ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(x,y+17,13,6,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=c.shirt;ctx.strokeStyle='#222';ctx.lineWidth=2.5;rr(x-10,y+2,20,20,4);ctx.stroke();
@@ -2177,6 +2591,13 @@ function flash(msg){
   flashTimer=setTimeout(()=>el.style.display='none',3500);
 }
 
+function flashLong(msg, dur){
+  const el=document.getElementById('flash');
+  el.textContent=msg;el.style.display='block';
+  if(flashTimer)clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>el.style.display='none', dur||5000);
+}
+
 function openDisc(obj){
   discObj=obj;discOpen=true;discStep=0;
   discPlayerPos={x:player.x,y:player.y};
@@ -2237,77 +2658,86 @@ function nearbyItem(){
 const trees = {
   Jas: {
     start: [
-      {label:'💬 Hvad laver du egentlig her?', next:'jas_job'},
-      {label:'☕ Fortæl mig om kaffen',         next:'jas_kaffe'},
-      {label:'🧩 Er du god til Sudoku?',         next:'jas_sudoku'},
+      {label:'💬 Hvad laver du egentlig her?',    next:'jas_job'},
+      {label:'☕ Fortæl mig om kaffen',            next:'jas_kaffe'},
+      {label:'🧩 Er du god til Sudoku?',           next:'jas_sudoku'},
+      {label:'🎲 Spiller du D&D?',                 next:'jas_dnd'},
+      {label:'🗣️ Historisk lingvistik?',           next:'jas_lingvistik'},
+      {label:'🎵 Synger du nogensinde?',            next:'jas_sang'},
     ],
     jas_job: {
-      text:'Jeg koordinerer frivillige, min ven. Det er som at lede en lille hær af gode sjæle.',
+      text:'Jas. Jas Bach. Foreningskonsulent — frivilligkoordinering. Kaffen er frisk. Hvad bringer dig hertil, min ven?',
       choices:[
-        {label:'Hvad er det sværeste ved det?', next:'jas_job_svaer'},
-        {label:'Arbejder du tæt med nogen?',    next:'jas_job_med'},
+        {label:'Hvad laver du præcist?',           next:'jas_job2'},
+        {label:'Arbejder du tæt med nogen?',       next:'jas_job_med'},
+      ]
+    },
+    jas_job2: {
+      text:'Jeg koordinerer frivillige, min ven. Det er som at lede en lille hær af gode sjæle — uden uniform, uden hierarki. Kun vilje.',
+      choices:[
+        {label:'Hvad er det sværeste?',            next:'jas_job_svaer'},
+        {label:'Tilbage til start',                next:'__start'},
       ]
     },
     jas_job_svaer: {
       text:'At folk tilmelder sig på måder som ikke passer i medlemservice. Det er dumt. Det kan jeg ikke lide.',
       choices:[
-        {label:'Hvad gør du ved det?', next:'jas_job_svaer2'},
-        {label:'Fortæl mig om kaffen i stedet', next:'jas_kaffe'},
+        {label:'Hvad gør du ved det?',             next:'jas_job_svaer2'},
+        {label:'Fortæl mig om kaffen i stedet',    next:'jas_kaffe'},
       ]
     },
     jas_job_svaer2: {
       text:'Jeg trækker vejret dybt, min ven. Og henter en kop kaffe. Det hjælper på det meste.',
-      choices:[{label:'Tilbage til start', next:'__start'}]
+      choices:[{label:'Tilbage til start',         next:'__start'}]
     },
     jas_job_med: {
       text:'Delisateth og jeg er et godt hold. Vi løser også Sudoku. Det er ikke officielt.',
       choices:[
-        {label:'Sudoku — hemmeligt?',        next:'jas_sudoku'},
-        {label:'Hvad laver Delisateth ellers?', next:'jas_deli'},
+        {label:'Sudoku — hemmeligt?',              next:'jas_sudoku'},
+        {label:'Hvad laver Delisateth ellers?',    next:'jas_deli'},
       ]
     },
     jas_deli: {
       text:'Hun koordinerer landslejren. 10.000 deltagere! Som romerne, siger hun. Det er lidt rigtigt.',
-      choices:[{label:'Tilbage til start', next:'__start'}]
+      choices:[{label:'Tilbage til start',         next:'__start'}]
     },
     jas_kaffe: {
-      text:'Kaffe er ikke en drik, kære sjæl. Det er en filosofi.',
+      text:'Kaffe er ikke en drik, kære sjæl. Det er en filosofi. Etymologisk stammer ordet fra det arabiske qahwa — "det der holder en vågen". Passende.',
       choices:[
-        {label:'Hvilken kaffe er bedst?',  next:'jas_kaffe_bedst'},
-        {label:'Laver du kaffe til alle?', next:'jas_kaffe_alle'},
+        {label:'Hvilken kaffe er bedst?',          next:'jas_kaffe_bedst'},
+        {label:'Laver du kaffe til alle?',         next:'jas_kaffe_alle'},
       ]
     },
     jas_kaffe_bedst: {
-      text:'Ethiopisk single origin. Frugtig, let — som en god søndagsprædiken.',
+      text:'Ethiopisk single origin. Frugtig, let — som en god søndagsprædiken. Ethiopien er for øvrigt kaffeens fødested. Det er ikke en tilfældighed.',
       choices:[
-        {label:'Du går i kirke?',           next:'jas_kirke'},
-        {label:'Kan jeg få en kop?',        next:'jas_kaffe_kop'},
+        {label:'Du går i kirke?',                  next:'jas_kirke'},
+        {label:'Kan jeg få en kop?',               next:'jas_kaffe_kop'},
       ]
     },
     jas_kirke: {
-      text:'Hver søndag, min ven. Det giver ro i sjælen. Og tid til at tænke på Sudoku.',
-      choices:[{label:'Tilbage til start', next:'__start'}]
+      text:'Hver søndag, min ven. Det giver ro i sjælen. Og tid til at tænke på Sudoku. Og indimellem synger jeg lidt på Gassisk under salmen.',
+      choices:[
+        {label:'Gassisk?',                         next:'jas_sang'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
     },
     jas_kaffe_kop: {
       text:'Naturligvis! Den sidder allerede klar. Det er min gave til verden.',
-      choices:[{label:'Tak, Jas!', next:'__close'}]
+      choices:[{label:'Tak, Jas Bach.',            next:'__close'}]
     },
     jas_kaffe_alle: {
-      text:'Naturligvis. Det er min gave til verden. Ingen forlader kontoret tørstige.',
+      text:'Naturligvis. Ingen forlader kontoret tørstige. Det er en grundlov jeg har indført stille og roligt.',
       choices:[
-        {label:'Meget generøst',          next:'jas_generoes'},
-        {label:'Hvad med Tarkob?',        next:'jas_tarkob'},
+        {label:'Hvad med Tarkob?',                 next:'jas_tarkob'},
+        {label:'Tilbage til start',                next:'__start'},
       ]
-    },
-    jas_generoes: {
-      text:'Generøsitet koster intet, men giver meget. Holger Tornøe vidste det. Vi ved det også.',
-      choices:[{label:'Tilbage til start', next:'__start'}]
     },
     jas_tarkob: {
       text:'Tarkob? Han drikker Aalborg-øl og kaffe. Mest kaffe. Og han er fan af AaB — det respekterer jeg.',
       choices:[
-        {label:'Hvem er Generalen?',        next:'jas_tarkob2'},
-        {label:'Tilbage til start',         next:'__start'},
+        {label:'Hvem er Generalen?',               next:'jas_tarkob2'},
+        {label:'Tilbage til start',                next:'__start'},
       ]
     },
     jas_tarkob2: {
@@ -2316,33 +2746,119 @@ const trees = {
       onSelect: ()=>setTimeout(()=>summonTarkob(),400)
     },
     jas_sudoku: {
-      text:'God? Jeg er sublim. Men det er hemmeligt.',
+      text:'God? Jeg er sublim. Men det er hemmeligt. Delisateth er min eneste modstander. Det er et langstrakt diplomatisk spil.',
       choices:[
-        {label:'Hvem konkurrerer du med?', next:'jas_sudoku_hvem'},
-        {label:'Hvornår løser du dem?',    next:'jas_sudoku_hvornaar'},
+        {label:'Hvem vinder oftest?',              next:'jas_sudoku_hvem'},
+        {label:'Hvornår løser I dem?',             next:'jas_sudoku_hvornaar'},
       ]
     },
     jas_sudoku_hvem: {
-      text:'Delisateth. Hun tror hun vinder. Det er sødt.',
+      text:'Jeg. Altid jeg. Undtagen én gang i december. Vi taler ikke om december.',
       choices:[
-        {label:'Vinder hun nogensinde?', next:'jas_sudoku_vinder'},
-        {label:'Tilbage til start',      next:'__start'},
+        {label:'Hvad skete der i december?',       next:'jas_sudoku_dec'},
+        {label:'😄 Forstået!',                     next:'__close'},
       ]
     },
-    jas_sudoku_vinder: {
-      text:'Én gang. I december. Vi taler ikke om december.',
-      choices:[{label:'😄 Forstået!', next:'__close'}]
+    jas_sudoku_dec: {
+      text:'...*langt blik ud i luften*... Delisateth var i meget god form den dag. Det er alt jeg siger.',
+      choices:[{label:'Accepteret.',               next:'__close'}]
     },
     jas_sudoku_hvornaar: {
-      text:'Når cheferne ikke kigger. Og efter kl. 14 med en cocktail. Solen er jo over en anden ø et sted.',
+      text:'Når cheferne ikke kigger. Og efter kl. 14 med en cocktail. Solen er jo over en anden ø et sted, min ven.',
       choices:[
-        {label:'Hvem er cheferne?',     next:'jas_chefer'},
-        {label:'Tilbage til start',     next:'__start'},
+        {label:'Hvem er cheferne?',                next:'jas_chefer'},
+        {label:'Tilbage til start',                next:'__start'},
       ]
     },
     jas_chefer: {
-      text:'Tentriette og Tfan. Gode mennesker begge to. Men de forstår ikke Sudoku-diplomatiet.',
-      choices:[{label:'Tilbage til start', next:'__start'}]
+      text:'Tentriette og Tfan. Gode mennesker begge to. Men de forstår ikke Sudoku-diplomatiet. Det er deres tab.',
+      choices:[{label:'Tilbage til start',         next:'__start'}]
+    },
+    jas_dnd: {
+      text:'D&D? *læner sig tilbage med et smil* Jeg har spillet siden 1987. Jeg er Dungeon Master. Det har jeg altid været. Det er min naturlige rolle.',
+      choices:[
+        {label:'Hvad kører du for en kampagne?',   next:'jas_dnd_kampagne'},
+        {label:'Hvem spiller med dig?',            next:'jas_dnd_spillere'},
+      ]
+    },
+    jas_dnd_kampagne: {
+      text:'En langstrakt kampagne sat i det middelalderlige Madagaskar. Spillerne taler Gassisk i karakter. Jeg insisterer på det. Det giver atmosfære.',
+      choices:[
+        {label:'Gassisk?',                         next:'jas_sang'},
+        {label:'Hvor lang er kampagnen?',          next:'jas_dnd_lang'},
+      ]
+    },
+    jas_dnd_lang: {
+      text:'Vi er i session 34. Vi startede i 2019. Der er ingen slutdato. Godt D&D slutter ikke — det udvikler sig.',
+      choices:[
+        {label:'Hvem spiller med?',                next:'jas_dnd_spillere'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
+    },
+    jas_dnd_spillere: {
+      text:'En gruppe fra kirken. To lærere, en bibliotekar og Delisateth. Ja. Delisateth. Hun spiller en romersk gladiator. Det burde ikke fungere i Madagaskar-setting. Det fungerer alligevel.',
+      choices:[
+        {label:'😄 Naturligvis gør det det.',      next:'jas_dnd_deli'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
+    },
+    jas_dnd_deli: {
+      text:'Hun siger "Jeg ringer til Landslejrchefen" in-character. Vi har accepteret det som en kampagne-running-joke. Det er blevet kanonisk.',
+      choices:[{label:'Perfekt.',                  next:'__close'}]
+    },
+    jas_lingvistik: {
+      text:'Historisk lingvistik, ja. Sprogets evolution er som en langsom flod — den former alt den berører. Jeg læste det som bifag i 90erne.',
+      choices:[
+        {label:'Hvad interesserer dig mest?',      next:'jas_lingvistik2'},
+        {label:'Bruger du det til noget?',         next:'jas_lingvistik_brug'},
+      ]
+    },
+    jas_lingvistik2: {
+      text:'Proto-bantu. Og Austronesisk sprogfamilie — derfra kommer Gassisk. De to sprogfamilier mødtes på Madagaskar for 1500 år siden. Det er fascinerende, min ven.',
+      choices:[
+        {label:'Og Gassisk?',                      next:'jas_sang'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
+    },
+    jas_lingvistik_brug: {
+      text:'Jeg finder etymologier på alt. FDF stammer fra... nej, det er for indlysende. "Kaffe" fra arabisk qahwa. "Frivillig" fra latin libera voluntas. Sproget husker alt.',
+      choices:[
+        {label:'Hvad med "Sudoku"?',               next:'jas_lingvistik_sudoku'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
+    },
+    jas_lingvistik_sudoku: {
+      text:'"Sūdoku" — japansk forkortelse af sūji wa dokushin ni kagiru: "cifrene er begrænset til enkeltforekomster". Det er ikke bare et spil. Det er en filosofi.',
+      choices:[{label:'Naturligvis er det det.',   next:'__close'}]
+    },
+    jas_sang: {
+      text:'Gassisk? *rydder halsen* Det er sproget på Madagaskar. Jeg synger indimellem. Det falder bare ud af mig.',
+      choices:[
+        {label:'Kan du synge noget?',              next:'jas_sang2'},
+        {label:'Hvorfor Gassisk?',                 next:'jas_sang_hvorfor'},
+      ]
+    },
+    jas_sang2: {
+      text:'*synger roligt* "Ry lalao, ry lalao, ny fiainana... 🎵" — Det betyder omtrent: "Kær leg, kær leg, livet er leg." Passende for FDF, synes jeg.',
+      choices:[
+        {label:'Det er smukt.',                    next:'jas_sang3'},
+        {label:'Forstår kollegerne det?',          next:'jas_sang_kolleger'},
+      ]
+    },
+    jas_sang3: {
+      text:'*nikker stille* Ja. Sproget har en rundhed som dansk mangler. Men kaffen kompenserer.',
+      choices:[{label:'Tak, Jas Bach.',            next:'__close'}]
+    },
+    jas_sang_hvorfor: {
+      text:'Jeg besøgte Madagaskar i 2003. Tre uger. Jeg lærte fem sange og to grammatiske strukturer. Jeg har ikke glemt nogen af dem.',
+      choices:[
+        {label:'Kan du synge noget?',              next:'jas_sang2'},
+        {label:'Tilbage til start',                next:'__start'},
+      ]
+    },
+    jas_sang_kolleger: {
+      text:'Neter nikker altid. Gune siger "interessant datapunkt". Delisateth finder en romansk parallel. Anne analyserer vokalstrukturen. Det er et godt publikum.',
+      choices:[{label:'😄 Det lyder rigtigt.',     next:'__close'}]
     },
   },
   Gune: {
@@ -2350,6 +2866,7 @@ const trees = {
       {label:'🎮 Hvad spiller du?',              next:'gune_spil'},
       {label:'📊 Hvad arbejder du med?',          next:'gune_job'},
       {label:'🏛️ Hvad ved du om FDF\'s historie?', next:'gune_historie'},
+      {label:'🔢 Hvad ved du om Holger Tornøe?',  next:'gune_holger'},
     ],
     gune_spil:{
       text:'*suk* Det er ikke relevant for arbejdet. Men... lige nu: Factorio. Det er effektivitetssimulator. Meget realistisk.',
@@ -2445,6 +2962,31 @@ const trees = {
     gune_historie_v2:{
       text:'Tak. Jeg har overvejet at lave en changelog. Fra 1902 til nu. Det er et sideprojekt.',
       choices:[{label:'Det vil jeg gerne læse', next:'__close'}]
+    },
+    gune_holger:{
+      text:'Holger Tornøe? Jeg har lavet et datasystem over alle referencer til ham i dette kontor. Der er overraskende mange.',
+      choices:[
+        {label:'Hvilke referencer?',             next:'gune_holger_ref'},
+        {label:'Hvorfor har du gjort det?',      next:'gune_holger_hvorfor'},
+      ]
+    },
+    gune_holger_ref:{
+      text:'Fire præcise datapunkter. Annes regneark. Heresas protokol. Delisateths boringsoversigt. Og kaffemaskinen. I den rækkefølge — det er den kronologiske orden de blev tilføjet systemet.',
+      choices:[
+        {label:'Hvad betyder det?',              next:'gune_holger_betyder'},
+        {label:'Tak, det er nok',                next:'__close'},
+      ]
+    },
+    gune_holger_betyder:{
+      text:'Det ved jeg ikke. Jeg registrerer data. Jeg fortolker ikke. Det er andres arbejde. *vender tilbage til skærmen*',
+      choices:[{label:'Forstået. Tak.', next:'__close'}]
+    },
+    gune_holger_hvorfor:{
+      text:'Fordi data ikke forsvinder af sig selv. Nogen skal holde styr på det. Det er mig. Det er altid mig.',
+      choices:[
+        {label:'Hvilke referencer fandt du?',    next:'gune_holger_ref'},
+        {label:'Tilbage til start',              next:'__start'},
+      ]
     },
   },
   Heresa: {
@@ -3081,6 +3623,167 @@ const trees = {
       choices:[{label:'Tilbage til start', next:'__start'}]
     },
   },
+  Tarkob: {
+    start:[
+      {label:'🎖️ Hvad bringer dig hertil i dag?',       next:'tark_besog'},
+      {label:'⚽ Hvad tænker du om AaB?',                next:'tark_aab'},
+      {label:'🏕️ Hvad ved du om FDFs centre?',           next:'tark_centre'},
+      {label:'🤘 Er du til musik?',                      next:'tark_metal'},
+      {label:'🏙️ Kan man besøge jer i København?',        next:'tark_kbh'},
+    ],
+    tark_besog:{
+      text:'Onsdag er min dag. Jeg holder øje med at I har det godt. Og at der er kaffe. Det er ledelse.',
+      choices:[
+        {label:'Er der altid kaffe?',                    next:'tark_kaffe'},
+        {label:'Hvad ser du efter?',                     next:'tark_besog2'},
+      ]
+    },
+    tark_besog2:{
+      text:'Energien. Når folk griner og alligevel arbejder — det er det rigtige. Hvis det er stille er der noget galt.',
+      choices:[
+        {label:'Er der noget galt i dag?',               next:'tark_besog3'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_besog3:{
+      text:'Nej. Jeg hører Heresa diskutere med Delisateth. Jas laver kaffe. Alt er normalt. God onsdag.',
+      choices:[{label:'God onsdag, Tarkob.',             next:'__close'}]
+    },
+    tark_kaffe:{
+      text:'Der er altid kaffe. Det er det eneste jeg kræver. Hvad det er, er underordnet. Bare det er kaffe.',
+      choices:[
+        {label:'Hvad med AaB?',                          next:'tark_aab'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_aab:{
+      text:'AaB er ikke bare et fodboldhold. Det er Aalborgs hjerte. Vi sidder på 3. pladsen nu — men vi kommer. Det ved jeg.',
+      choices:[
+        {label:'Hvad er problemet lige nu?',             next:'tark_aab2'},
+        {label:'Har du sæsonkort?',                      next:'tark_aab3'},
+      ]
+    },
+    tark_aab2:{
+      text:'Midtbanen. Den er for åben. Men det er et spørgsmål om tålmodighed. Træneren ved hvad han laver. Stort set.',
+      choices:[
+        {label:'Hvem er din yndlingsspiller?',           next:'tark_aab4'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_aab3:{
+      text:'Selvfølgelig. Blok 7. Har haft den i 11 år. Jeg går aldrig alene — det er ikke pointen med fodbold.',
+      choices:[
+        {label:'Hvem tager du med?',                     next:'tark_aab5'},
+        {label:'Hvad er problemet lige nu?',             next:'tark_aab2'},
+      ]
+    },
+    tark_aab4:{
+      text:'Det skifter med sæsonerne. Men loyalitet er vigtigere end talent. En spiller der kæmper for Aalborg er mere værd end en der spiller flot andre steder.',
+      choices:[{label:'Det giver mening.',               next:'__close'}]
+    },
+    tark_aab5:{
+      text:'Mine børn. Og indimellem Don. Don forstår ikke offside-reglen. Det er irriterende og hyggeligt på samme tid.',
+      choices:[{label:'😄 Det lyder rigtigt.',            next:'__close'}]
+    },
+    tark_centre:{
+      text:'Vi har tre. Sletten ved Skanderborg er hjertet — der er landslejren hjemme. Don styrer det hele. Han cykler mountainbike derud klokken seks om morgenen.',
+      choices:[
+        {label:'Hvad med de andre centre?',              next:'tark_centre2'},
+        {label:'Hvad er Lejrcentrum Work?',              next:'tark_vejle'},
+      ]
+    },
+    tark_centre2:{
+      text:'Lejrcentrum Work ved Vejle — det er Dons hjertebarn. Jeg godkendte det. Jeg sagde: "Godt. Sørg for der er kaffe." Det er min ledelsesstil.',
+      choices:[
+        {label:'Og det tredje?',                         next:'tark_viborg'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_vejle:{
+      text:'Praktisk dannelse. Børn bygger noget rigtigt med rigtige hænder. Shelters, bålpladser. Jeg kan lide det. Det er FDF i praksis.',
+      choices:[
+        {label:'Og Skovly ved Viborg?',                  next:'tark_viborg'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_viborg:{
+      text:'Skovly. Det er undervejs. Don forhandler med tredje bank. Jeg har troen på Don. Han er standhaftig. Lidt ligesom AaB.',
+      choices:[{label:'😄 God sammenligning.',            next:'__close'}]
+    },
+    tark_metal:{
+      text:'Speedmetal. Altid speedmetal. Det renser hovedet. Folk tror det er kaotisk — det er det modsatte. Det er struktur ved høj hastighed.',
+      choices:[
+        {label:'Hvilke bands?',                          next:'tark_metal2'},
+        {label:'Hører du det på kontoret?',              next:'tark_metal3'},
+      ]
+    },
+    tark_metal2:{
+      text:'Slayer. Lamb of God. Meshuggah. Og gammelt AC/DC når jeg er i mildt humør. Det sker sjældent.',
+      choices:[
+        {label:'Meshuggah — hvad er det?',               next:'tark_metal4'},
+        {label:'Hører nogen andre det?',                 next:'tark_metal3'},
+      ]
+    },
+    tark_metal3:{
+      text:'Ikke åbenlyst. Jeg bruger høretelefoner. Men folk ved godt hvad der foregår. Jas accepterer det. Han siger det minder ham om gassiske trommer. Det er en venlig tolkning.',
+      choices:[{label:'Tilbage til start',               next:'__start'}]
+    },
+    tark_metal4:{
+      text:'Svenske. Matematisk. Rytmerne er ikke i 4/4 — de er i alt muligt andet. Det kræver koncentration at høre. Det er det der giver ro.',
+      choices:[{label:'Interessant, Tarkob.',             next:'__close'}]
+    },
+    tark_kbh:{
+      text:'Selvfølgelig! Kom forbi Rubinsteinsvej 47 i Køpmannæhafn. Vi sidder der midlertidigt mens Rysensteen ombygges. Kaffen er klar.',
+      choices:[
+        {label:'Hvem sidder der?',                       next:'tark_kbh_hvem'},
+        {label:'Hvad er Rysensteen?',                    next:'tark_kbh_rysensteen'},
+      ]
+    },
+    tark_kbh_hvem:{
+      text:'Alle os ansatte. Stefan fra presse. Mia fra foreningsudvikling. Og selvfølgelig mig — men jeg er ikke altid på kontoret. Jeg er ude i verden. Som nu.',
+      choices:[
+        {label:'Hvornår er du på kontoret?',             next:'tark_kbh_hvornaar'},
+        {label:'Hvad er åbningstiderne?',                next:'tark_kbh_tid'},
+      ]
+    },
+    tark_kbh_hvornaar:{
+      text:'Mandag til fredag i princippet. Men onsdage er jeg gerne ude og besøge folk som jer. Det er vigtigt at komme ud. Ledelse sker ikke bag et skrivebord.',
+      choices:[
+        {label:'Hvad er adressen?',                      next:'tark_kbh_adresse'},
+        {label:'Tilbage til start',                      next:'__start'},
+      ]
+    },
+    tark_kbh_tid:{
+      text:'Normal kontortid mandag til fredag. Ring på 33 13 68 88 inden du kommer — så er der kaffe klar til dig.',
+      choices:[
+        {label:'Hvad er adressen?',                      next:'tark_kbh_adresse'},
+        {label:'Tak, Tarkob.',                           next:'__close'},
+      ]
+    },
+    tark_kbh_adresse:{
+      text:'Rubinsteinsvej 47, 2450 København SV. Det er Køpmannæhafn — ikke Sjælland generelt, som Tentriette ville sige. Konkret og præcist.',
+      choices:[
+        {label:'😄 Tak for invitationen.',               next:'tark_kbh_slut'},
+        {label:'Hvad er Rysensteen?',                    next:'tark_kbh_rysensteen'},
+      ]
+    },
+    tark_kbh_rysensteen:{
+      text:'Rysensteensgade 3 — det er vores rigtige hjem. Lige nu ombygges det. Vi er på Rubinsteinsvej i mellemtiden. Midlertidigt er ikke det samme som permanent. Det skal folk huske.',
+      choices:[
+        {label:'Hvornår flytter I tilbage?',             next:'tark_kbh_tilbage'},
+        {label:'Tak, Tarkob.',                           next:'__close'},
+      ]
+    },
+    tark_kbh_tilbage:{
+      text:'Når det er klar. Jeg presser på. Et forbundskontor skal have en fast adresse — det signalerer stabilitet. Som AaB. Vi er altid på Aalborg Portland Park.',
+      choices:[{label:'Selvfølgelig.',                   next:'tark_kbh_slut'}]
+    },
+    tark_kbh_slut:{
+      text:'Kom forbi. Tag en kollega med. Kaffen er gratis og Køpmannæhafn er altid besøget værd. Vi ses.',
+      choices:[{label:'Vi ses, Tarkob. 🎖️',             next:'__close'}]
+    },
+  },
+
 };
 
 function openDialog(npc){
@@ -3154,7 +3857,8 @@ function closeDialog(){
 function greeting(npc){
   const fri=currentDay===DAY.FRI;
   const map={
-    Jas: fri?'🍹 Min ven! Cocktailtid. Hvad vil du tale om?':'Min ven! Hvad bringer dig til mit hjørne?',
+    Jas: fri?'🍹 Jas. Jas Bach. Cocktailtid. Hvad bringer dig til baren, min ven?':'Jas. Jas Bach. Foreningskonsulent — frivilligkoordinering. Kaffen er frisk. Hvad bringer dig hertil?',
+    Tarkob: 'Tarkob. God onsdag. Hvad kan jeg gøre for dig?',
     Gune:'*suk* Hvad vil du? Gør det hurtigt.',
     Neter:'Heeej! Hvad sker der? Har du prøvet den nye burgerbod på hjørnet?',
     Heresa:'Hvad er EGENTLIG problemet? Lad os finde kernen. Frugt?',
@@ -3265,6 +3969,118 @@ const phoneTrees={
     fri_plads:{text:'Vi har pladser de fleste weekender. Sommer og efterår er mest efterspurgt. Ring eller skriv tidligt — helst 2-3 måneder i forvejen.',choices:[{label:'Hvordan kontakter vi jer?',next:'fri_kontakt'},{label:'Tak, vi vender tilbage',next:'__close'}]},
     fri_kontakt:{text:'Ring hertil, skriv til friluft@fdf.dk eller find os på fdf.dk/friluftscenter. Vi svarer altid inden for en dag. Naturen venter!',choices:[{label:'Tak for hjælpen! 🌲',next:'__close'}]},
   },
+
+  don:{
+    greeting:'Don Tilstrup, Chef for udvikling af forbundscentre. Hvad kan jeg gøre for dig?',
+    start:[
+      {label:'🌲 Hvad laver du egentlig?',             next:'don_job'},
+      {label:'🏕️ Hvilke centre har FDF?',               next:'don_centre'},
+      {label:'🚵 Er du glad for mountainbikes?',        next:'don_bike'},
+      {label:'🏦 Hvad ved du om banklån?',              next:'don_laan'},
+    ],
+    don_job:{text:'Jeg udvikler FDFs forbundscentre. Det vil sige alt fra bygninger og natur til strategi og drift. Hvis det har jord under sig og FDF-flag over sig, er det mit.',choices:[{label:'Hvilke centre?',next:'don_centre'},{label:'Er naturen vigtig for dig?',next:'don_natur'}]},
+    don_centre:{text:'Vi har tre. Friluftscenter Sletten ved Skanderborg — det er vores hjerte. Lejrcentrum Work ved Vejle — det er vores muskel. Og Skovly Oplevelsescenter ved Viborg — det er vores... arbejder vi stadig på det.',choices:[{label:'Fortæl om Sletten',next:'don_sletten'},{label:'Hvad er Lejrcentrum Work?',next:'don_vejle'},{label:'Og Skovly ved Viborg?',next:'don_viborg'}]},
+    don_sletten:{text:'Sletten er hjertet. Det er der landslejren bor hvert femte år. Det er der FDF-drømmene bliver til virkelighed. Og det er der jeg cykler mountainbike om morgenen.',choices:[{label:'Mountainbike om morgenen?',next:'don_bike'},{label:'Hvad med de andre centre?',next:'don_centre'}]},
+    don_skanderborg:{text:'Sletten ligger ved Skanderborg — skov, søer, klatrevæg. Vi eksperimenterer konstant med hvad natur kan gøre ved børn.',choices:[{label:'Hvad kan natur gøre ved børn?',next:'don_natur'},{label:'Hvad med de andre centre?',next:'don_centre'}]},
+    don_vejle:{text:'Lejrcentrum Work ved Vejle er vores nyeste. Det er bygget til større grupper og fokuserer på det vi kalder "aktiv dannelse" — friluftsliv kombineret med fælles arbejdsprojekter. Lejrbyggeri, skovdrift, det praktiske. Meget Don Tilstrup.',choices:[{label:'Er det dit projekt?',next:'don_vejle2'},{label:'Og Skovly ved Viborg?',next:'don_viborg'}]},
+    don_vejle2:{text:'Det er mit hjertebarn. Konceptet er enkelt: børn og unge skal ikke bare nyde naturen — de skal bygge noget i den. Shelters, bålpladser, broer. Hænderne i mulden.',choices:[{label:'Hvem ved om det?',next:'don_vejle3'},{label:'Det lyder stærkt.',next:'__close'}]},
+    don_vejle3:{text:'Mig og Generalen. Han godkendte budgettet personligt. Han sagde — og jeg citerer — "Godt. Sørg for der er kaffe." Det var godkendelsen.',choices:[{label:'😄 Klassisk.',next:'__close'},{label:'Hvad med Skovly?',next:'don_viborg'}]},
+    don_viborg:{text:'Skovly Oplevelsescenter ved Viborg. Det er... komplekst. Grunden er købt. Visionen er klar. Banklånet er... under forhandling. Tredje bank nu.',choices:[{label:'Tredje bank?',next:'don_viborg2'},{label:'Hvornår åbner det?',next:'don_viborg3'}]},
+    don_viborg2:{text:'Den første sagde nej fordi de ikke forstod FDF. Den anden sagde nej fordi renterne steg. Den tredje... de lytter. Det er fremskridt.',choices:[{label:'Hvad er visionen for Skovly?',next:'don_viborg3'},{label:'Hvad siger Generalen?',next:'don_viborg4'}]},
+    don_viborg3:{text:'Et center for natur, kreativitet og fællesskab. Tarzanbane, friluftsteater, skovskole. Det skal være FDFs svar på Disneyland — bare med birketræer og langt færre køer.',choices:[{label:'Det lyder vidunderligt.',next:'don_viborg4'},{label:'Hvornår ved du om banken?',next:'don_viborg2'}]},
+    don_viborg4:{text:'Generalen er positiv. Han sagde "Don, det der lyder som noget der virker." Det er hans højeste ros. Jeg er optimist.',choices:[{label:'Lykke til, Don.',next:'__close'}]},
+    don_natur:{text:'Natur giver ro. Ro giver eftertanke. Eftertanke giver modige mennesker. Det er i hvert fald min teori — og jeg har 30 års praksis bag den.',choices:[{label:'Er du selv et naturmenneske?',next:'don_natur2'},{label:'Tilbage til start',next:'__start'}]},
+    don_natur2:{text:'Jeg sov i telt 47 nætter sidste år. Deraf tre i sneen. Med det rette udstyr er natur aldrig ubehagelig — kun interessant.',choices:[{label:'Og mountainbiken?',next:'don_bike'},{label:'Imponerende. Tak.',next:'__close'}]},
+    don_bike:{text:'Mountainbike er meditation i bevægelse. Jeg cykler til møder når det er muligt. Også i regn. Det renser hovedet. Har du prøvet det?',choices:[{label:'Nej, hvad anbefaler du?',next:'don_bike2'},{label:'Hvad med banklån?',next:'don_laan'}]},
+    don_bike2:{text:'Start med en hardtail, god hjelm og en rute du ikke kender. Resten kommer af sig selv. Og ring til mig hvis du vil have en guide i Sletten-skoven.',choices:[{label:'Det kunne jeg godt!',next:'__close'},{label:'Hvad ved du om banklån?',next:'don_laan'}]},
+    don_laan:{text:'Banklån? Ja. Når man bygger og renoverer centre i FDF-regi, er det ikke gratis. Jeg har forhandlet med fem forskellige banker de seneste tre år. Det er en kunstart.',choices:[{label:'Hvad er tricket?',next:'don_laan2'},{label:'Det lyder hårdt.',next:'don_laan3'}]},
+    don_laan2:{text:'Vis dem din passion. Banker kan godt lide tal — men de kan *mærke* om du tror på projektet. Kombiner de to og du klarer dig.',choices:[{label:'Er det virkeligt?',next:'don_laan3'},{label:'Tak, Don.',next:'__close'}]},
+    don_laan3:{text:'Det er det. Og hvis det ikke virker — så tag en tur på mountainbike og prøv igen. Det hjælper altid.',choices:[{label:'😄 Tak, Don.',next:'__close'}]},
+  },
+
+  crisdan:{
+    greeting:'Crisdan Callas, Landslejrchef. Hvem ringer?',
+    start:[
+      {label:'🏕️ Hvad er status på Landslejr 2026?',    next:'cris_status'},
+      {label:'🚂 Hvad er et tog-system?',                next:'cris_tog'},
+      {label:'🌲 Hvordan planlægger man en landslejr?',  next:'cris_plan'},
+      {label:'📋 28 receptioner — hvad er din mening?',  next:'cris_recep'},
+    ],
+    cris_status:{text:'Vi er på skinner. Billetmæssigt, infrastrukturmæssigt og bogstaveligt talt. Tog-systemet kører. Deltagerne ruller ind. Det bliver stort.',choices:[{label:'Tog-system?',next:'cris_tog'},{label:'Hvad er det sværeste?',next:'cris_svaer'}]},
+    cris_tog:{text:'Landslejren samler 10.000 deltagere. De skal ankomme og afrejse koordineret. Så vi kører et dedikeret tog-system — egne skemaer, egne vogne, koordineret med DSB. Det er min yndlingsdel.',choices:[{label:'Samarbejder I med DSB?',next:'cris_dsb'},{label:'Hvad er status 2026?',next:'cris_status'}]},
+    cris_dsb:{text:'Ja. Det er komplekst, men fascinerende. Man lærer hurtigt at tænke i kapacitet og flow. Det er egentlig ikke så forskelligt fra at planlægge en lejr.',choices:[{label:'Hvad er det sværeste ved landslejr?',next:'cris_svaer'},{label:'Tak, Crisdan.',next:'__close'}]},
+    cris_svaer:{text:'At holde 10.000 mennesker glade på én gang. Det er umuligt — men man kommer tæt på. Hemmeligheden er gode ledere i hvert telt.',choices:[{label:'Hvad med logistik?',next:'cris_tog'},{label:'28 receptioner?',next:'cris_recep'}]},
+    cris_plan:{text:'Start fire år i forvejen. Byg en organisation. Find stedet. Forhandl med DSB. Lav mad til 10.000. Gentag. Det lyder simpelt. Det er det ikke.',choices:[{label:'Hvad er næste trin?',next:'cris_naeste'},{label:'Hvad med tog-systemet?',next:'cris_tog'}]},
+    cris_naeste:{text:'Nu er det billetterne og infrastrukturen. Piloneringsweekend, byggehold, køkkener. Det er i gang. Sletten er ved at vågne.',choices:[{label:'Glæder du dig?',next:'cris_glaede'},{label:'Tak!',next:'__close'}]},
+    cris_glaede:{text:'Mere end nogen ved. Landslejr er FDF i sin reneste form. Det er derfor jeg gør det.',choices:[{label:'Det mærker man. Tak, Crisdan.',next:'__close'}]},
+    cris_recep:{text:'28 receptioner er... ambitiøst. Heresa og Delisateth kæmper med dem. Men de leverer. De leverer altid. Giv dem tid.',choices:[{label:'Hvad tænker du om dem?',next:'cris_recep2'},{label:'Tak for dit syn.',next:'__close'}]},
+    cris_recep2:{text:'Jeg tænker at det er nødvendigt og klogt. En landslejr af den størrelse kræver struktur. 28 receptioner er struktur. Det er mit svar.',choices:[{label:'Fair nok. Tak.',next:'__close'}]},
+  },
+
+  forbund:{
+    greeting:'...*lang ringetid* ...*klik* ... "Tarkob." *kort pause* "Dette nummer er FDFs nødtelefon. Er der en kreds i akut nød?"',
+    start:[
+      {label:'Ja — vi vil gerne starte en kreds akut!',   next:'forb_ja'},
+      {label:'Nej, jeg ringede forkert.',                  next:'forb_forkert'},
+      {label:'Hvad definerer "akut"?',                     next:'forb_hvad'},
+    ],
+    forb_ja:{
+      text:'"Godt. Fortæl mig: By, antal frivillige og om der er en kirke i nærheden." *lyd af kuglepen*',
+      choices:[
+        {label:'Vi er tre frivillige i Skanderborg.',      next:'forb_skanderborg'},
+        {label:'Vi er én frivillig i Ikast.',              next:'forb_ikast'},
+        {label:'Vi er mange — ingen kirke.',               next:'forb_kirke'},
+      ]
+    },
+    forb_skanderborg:{
+      text:'"Skanderborg. Tre frivillige. Det er nok. Kig forbi kontoret i Køpmannæhafn — så taler vi om det. Heresa eller Bennette kan hjælpe jer i gang." *klik*',
+      choices:[{label:'Tak, Tarkob!', next:'__close'}]
+    },
+    forb_ikast:{
+      text:'"Én frivillig er én frivillig. Det er nok til at starte. Det er nok til alt. Kig forbi kontoret — så taler vi om det. Heresa eller Bennette kan hjælpe." *klik*',
+      choices:[{label:'Tak!', next:'__close'}]
+    },
+    forb_kirke:{
+      text:'"Kirken er ikke et krav — det er et udgangspunkt. Kig forbi kontoret — så taler vi om det. Heresa eller Bennette hjælper jer videre." *klik*',
+      choices:[{label:'Forstået. Tak!', next:'__close'}]
+    },
+    forb_forkert:{
+      text:'"Det er ikke et problem. Men nu ved du at dette nummer findes." *lang pause* "Brug det hvis det brænder på." *klik*',
+      choices:[{label:'Det gør jeg. Farvel.', next:'__close'}]
+    },
+    forb_hvad:{
+      text:'"Akut: en gruppe voksne der vil starte en kreds i dag og ikke kan vente til mandag. Det er definitionen." *pause* "Er du akut?"',
+      choices:[
+        {label:'Ja, faktisk.',                             next:'forb_ja'},
+        {label:'Nej, ikke helt.',                          next:'forb_forkert'},
+      ]
+    },
+  },
+
+  sauna:{
+    greeting:'...*damp* ... *skvulp* ... *nogen løfter røret* ... "Ja?"',
+    start:[
+      {label:'Hej, hvem er det?',                        next:'sauna_hvem'},
+      {label:'Er det FDFs sauna?',                       next:'sauna_ja'},
+      {label:'Undskyld, forkert nummer.',                next:'sauna_forkert'},
+    ],
+    sauna_hvem:{text:'*lang pause* ... "Det er... vi er tre. Det er varmt herinde. Hvad vil du?"',choices:[{label:'Hvem er I tre?',next:'sauna_tre'},{label:'Jeg ringer bare for at tjekke...',next:'sauna_tjekke'}]},
+    sauna_tre:{text:'"Der er mig, Don og... hvem er det egentlig du er?" *mumlen i baggrunden* "Han ved det ikke selv. Vi er to og en halv."',choices:[{label:'Don Tilstrup?',next:'sauna_don'},{label:'En halv?',next:'sauna_halv'}]},
+    sauna_don:{text:'"Ja, Don er her. Han taler om mountainbike-ruter. Det er fjerde gang i dag. Det er meget varmt."',choices:[{label:'Hvad laver I egentlig?',next:'sauna_hvad'},{label:'Fortæl Don hej fra mig.',next:'sauna_hej'}]},
+    sauna_halv:{text:'"Han kom ind, sagde \'åh nej\', og er nu halvvejs ude igen. Han hedder Bent. Eller Bjarne. Det er uklart."',choices:[{label:'Hvad laver I egentlig?',next:'sauna_hvad'},{label:'Det er en mystisk sauna.',next:'sauna_mystisk'}]},
+    sauna_ja:{text:'"Det er det. 80 grader. Vi har birkekviste. Der er kaffe udenfor hvis du har brug for det."',choices:[{label:'Kaffe i saunaen?',next:'sauna_kaffe'},{label:'Hvem er derinde?',next:'sauna_hvem'}]},
+    sauna_kaffe:{text:'"Udenfor saunaen. Ikke indeni. Vi er ikke vilde." *tøvende pause* "Don prøvede det en gang. Det gik ikke godt."',choices:[{label:'Hvad skete der med Don?',next:'sauna_don_kaffe'},{label:'Tak. Farvel.',next:'sauna_farvel'}]},
+    sauna_don_kaffe:{text:'"Kaffen fordampede. Det lugtede af espresso i en time. Det var faktisk ret hyggeligt. Don var stolt."',choices:[{label:'😄 Naturligvis var han det.',next:'sauna_farvel'}]},
+    sauna_hvad:{text:'"Vi holder personalemøde. Det er den mest demokratiske form for møde — ingen kan tjekke mails. Det er faktisk vores bedste møder."',choices:[{label:'Det er genialt.',next:'sauna_genialt'},{label:'Er der referat?',next:'sauna_referat'}]},
+    sauna_genialt:{text:'"Tak. Det var Dons idé. Det er faktisk hans eneste idé som ikke involverer mountainbike. Det er historisk."',choices:[{label:'😄 Hils dem alle.',next:'sauna_farvel'}]},
+    sauna_referat:{text:'"Nej. Det er saunaens styrke. Intet referat. Ingen handling-punkter. Kun sved og enighed." *lang pause* "Og birkekviste."',choices:[{label:'Det er den bedste mødeform.',next:'sauna_farvel'}]},
+    sauna_tjekke:{text:'"Vi er her. Vi er varme. Alt er i orden." *damp* "Vil du med?"',choices:[{label:'Ja tak, gerne.',next:'sauna_velkommen'},{label:'Nej tak. God sauna!',next:'sauna_farvel'}]},
+    sauna_velkommen:{text:'"Godt. Tag et håndklæde. Kaffen er udenfor. Mød op på Sletten fredag."',choices:[{label:'Det gør jeg. Farvel!',next:'__close'}]},
+    sauna_forkert:{text:'"Forkert nummer... men du er velkommen alligevel. 80 grader. Birkekviste. Kaffe udenfor." *røret lægges blidt på.*',choices:[{label:'...',next:'__close'}]},
+    sauna_mystisk:{text:'"Ja." *lang pause* "Det er alle saunaer."',choices:[{label:'Fair nok. Farvel.',next:'sauna_farvel'}]},
+    sauna_hej:{text:'"DON — nogen hilser på dig!" *mumlen* "Han siger: \'Kom ned på Sletten og cykl en tur\'. Det er hans svar på alt."',choices:[{label:'Det er et godt svar.',next:'sauna_farvel'}]},
+    sauna_farvel:{text:'*damp* *skvulp* "Farvel." *klik*',choices:[{label:'*Læg på*',next:'__close'}]},
+  },
 };
 
 let phoneTreeState=null;
@@ -3287,6 +4103,46 @@ function showPhoneMenu(){
   row.innerHTML='';
   const div=document.createElement('div');
   div.style.cssText='display:flex;flex-direction:column;gap:5px;width:100%';
+
+  // Secret number input field
+  const secretRow=document.createElement('div');
+  secretRow.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+  const secretInp=document.createElement('input');
+  secretInp.type='text';secretInp.placeholder='Tast nummer...';secretInp.maxLength=12;
+  secretInp.style.cssText='flex:1;padding:6px 10px;border:1.5px solid #00ff88;border-radius:8px;background:#07120d;color:#00ff88;font-family:monospace;font-size:.9rem';
+  const secretBtn=document.createElement('button');
+  secretBtn.className='dlg-choice';secretBtn.textContent='📞 Ring';
+  secretBtn.style.cssText='padding:6px 12px;white-space:nowrap';
+  const dialSecret=()=>{
+    const v=secretInp.value.replace(/\s|-/g,'');
+    const screen=document.getElementById('phone-screen');
+    if(v===SECRET_CODE){
+      screen.textContent='Ringer til: '+v+'\n\n☎ ...';
+      setTimeout(unlockSecretDoor, 800);
+    } else if(v==='86845759'){
+      dialPhoneTree('don');
+    } else if(v==='40680106'){
+      dialPhoneTree('crisdan');
+    } else if(v==='86846028'){
+      dialPhoneTree('sauna');
+    } else if(v==='33136888'){
+      dialPhoneTreeLong('forbund', 5000);
+    } else if(v.startsWith('#')){
+      const n=v.slice(1);
+      if(n==='1')dialPhoneTree('lt');
+      else if(n==='2')dialPhoneTree('nt');
+      else if(n==='3')dialPhoneTree('fri');
+      else{screen.textContent='Ringer til: '+v+'\n\n☎ brrrr...\n\n*Intet svar*';}
+    } else if(v){
+      screen.textContent='Ringer til: '+v+'\n\n☎ brrrr...\n\n*Intet svar*';
+    }
+    secretInp.value='';
+  };
+  secretBtn.addEventListener('click',dialSecret);
+  secretInp.addEventListener('keydown',e=>{if(e.key==='Enter')dialSecret();e.stopPropagation();});
+  secretRow.appendChild(secretInp);secretRow.appendChild(secretBtn);
+  div.appendChild(secretRow);
+
   [{l:'#1 LT — Lokalt Engagement',e:'lt'},{l:'#2 NT — Nationalt Engagement',e:'nt'},{l:'#3 Friluftscenter, Skanderborg',e:'fri'}].forEach(o=>{
     const btn=document.createElement('button');
     btn.className='dlg-choice'; btn.textContent=o.l;
@@ -3305,15 +4161,38 @@ function dialPhoneTree(ext){
   const tree=phoneTrees[ext];
   if(!tree)return;
   phoneTreeState={ext};
-  const names={lt:'LT — Lokalt Engagement',nt:'NT — Nationalt Engagement',fri:'Friluftscenter, Skanderborg'};
+  const nums={lt:'#1',nt:'#2',fri:'#3',don:'86 84 57 59',crisdan:'40 68 01 06',sauna:'86 84 60 28',forbund:'33 13 68 88'};
   document.getElementById('phone-status').textContent='📳 Ringer...';
-  document.getElementById('phone-screen').textContent='Ringer til:\n'+names[ext]+'\n\n☎ brrrr... brrrr...';
+  document.getElementById('phone-screen').textContent='Ringer til: '+(nums[ext]||ext)+'\n\n☎ brrrr... brrrr...';
   document.getElementById('phone-row').innerHTML='';
   setTimeout(()=>{
-    document.getElementById('phone-status').textContent='📞 Forbundet — '+names[ext];
+    document.getElementById('phone-status').textContent='📞 Forbundet';
     document.getElementById('phone-screen').textContent=tree.greeting;
     showPhoneNode('__start');
   },1600);
+}
+
+function dialPhoneTreeLong(ext, delay){
+  const tree=phoneTrees[ext];
+  if(!tree)return;
+  phoneTreeState={ext};
+  const nums={forbund:'33 13 68 88'};
+  const screen=document.getElementById('phone-screen');
+  document.getElementById('phone-status').textContent='📳 Ringer...';
+  screen.textContent='Ringer til: '+(nums[ext]||ext)+'\n\n☎ brrrr...\n☎ brrrr...\n☎ brrrr...\n☎ brrrr...\n☎ brrrr...';
+  document.getElementById('phone-row').innerHTML='';
+  // Animate ringing dots
+  let rings=0;
+  const ringInterval=setInterval(()=>{
+    rings++;
+    screen.textContent='Ringer til: '+(nums[ext]||ext)+'\n\n'+'☎ brrrr...\n'.repeat(Math.min(rings,6));
+  },800);
+  setTimeout(()=>{
+    clearInterval(ringInterval);
+    document.getElementById('phone-status').textContent='📞 Forbundet';
+    screen.textContent=tree.greeting;
+    showPhoneNode('__start');
+  },delay);
 }
 
 function showPhoneNode(nodeId){
@@ -3457,6 +4336,12 @@ function drawFridayBar(){
 }
 // ── UNIFIED ACTIVATION ──────────────────────────────────────────────────────
 function activateNearest(){
+  if(currentZone==='kbh'){
+    const kn=nearbyKbhNPC();
+    if(kn){openKbhDialog(kn);return;}
+    if(player.y>510&&player.x>340&&player.x<560) enterArosFromKopi();
+    return;
+  }
   if(discOpen){advDisc();return;}
   const npc=nearbyNPC();
   if(npc){openDialog(npc);return;}
@@ -3467,6 +4352,7 @@ function activateNearest(){
 }
 
 function updateHint(){
+  if(currentZone==='kbh'){updateKbhHint();return;}
   const el=document.getElementById('hint');
   const mobileE=document.getElementById('mobile-e');
   const npc=nearbyNPC();
@@ -3513,7 +4399,7 @@ function changeDay(){
   document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
   if(currentDay===DAY.FRI){flash('🍹 FREDAG! Noget ser anderledes ud i dag...');setTimeout(triggerFriday,2000);}
   else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
-  else if(currentDay===DAY.WED)flash('📅 ONSDAG — Mødedag! 💻');
+  else if(currentDay===DAY.WED){flash('📅 ONSDAG — Mødedag! 💻');setTimeout(startTarkobWedVisit,8000);}
   else if(currentDay===DAY.THU)flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
   else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
 }
@@ -3559,42 +4445,734 @@ function update(){
 
   if(dx!==0||dy!==0) dismissWelcome();
   if(!collides(player.x+dx,player.y))player.x=Math.max(35,Math.min(865,player.x+dx));
-  if(!collides(player.x,player.y+dy))player.y=Math.max(35,Math.min(555,player.y+dy));
+  if(!collides(player.x,player.y+dy)){
+    player.y=Math.max(20,Math.min(540,player.y+dy));
+    // Zone boundary triggers
+    if(currentZone==='aros'&&player.y<30) enterKopi('aros');
+    if(currentZone==='kbh'&&player.y>530)  enterArosFromKopi();
+  }
   if(discOpen&&(Math.abs(player.x-discPlayerPos.x)>8||Math.abs(player.y-discPlayerPos.y)>8))closeDisc();
   updateHint();
 }
 
+
+// ═══════════════════════════════════════════
+// LOCATION SYSTEM
+// ═══════════════════════════════════════════
+let locationTransitioning = false;
+
+// ── ZONE SYSTEM ───────────────────────────────────────────────────────────────
+let currentZone = 'aros'; // 'aros' | 'kbh'
+
+function enterZone(zone, px, py){
+  if(locationTransitioning) return;
+  locationTransitioning = true;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;z-index:999;transition:opacity .5s;pointer-events:none';
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>{ overlay.style.opacity='1'; });
+  setTimeout(()=>{
+    currentZone = zone;
+    player.x = px || 450;
+    player.y = py || 280;
+    tapTarget = null;
+    closeDialog(); closeBar();
+    requestAnimationFrame(()=>{
+      overlay.style.opacity='0';
+      setTimeout(()=>{ document.body.removeChild(overlay); locationTransitioning=false; }, 550);
+    });
+  }, 520);
+}
+
+function enterKopi(fromZone){
+  // Kopi is the dark center of KBH — go straight there
+  if(fromZone==='aros'){
+    enterZone('kbh', 450, 470); // appear at bottom of KBH kopirummet
+    setTimeout(()=>flash('🕯️ Du træder ind... luften er anderledes her.'), 600);
+    setTimeout(()=>flash('📜 Du er i kopirummet. Gå opad for at nå fællesrummet.'), 3000);
+  } else {
+    enterZone('kbh', 450, 400); // appear in middle of KBH kopirummet
+    setTimeout(()=>flash('🚪 Tilbage i kopirummet.'), 600);
+  }
+}
+
+function enterArosFromKopi(){
+  enterZone('aros', 450, 60); // appear near top of Aros (kopi door)
+  setTimeout(()=>flash('🚪 Tilbage til Aros.'), 600);
+}
+
+
+function fadeTransition(fn){
+  if(locationTransitioning) return;
+  locationTransitioning=true;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:#000;opacity:0;z-index:999;transition:opacity .8s;pointer-events:none';
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>{overlay.style.opacity='1';});
+  setTimeout(()=>{
+    fn();
+    requestAnimationFrame(()=>{
+      overlay.style.opacity='0';
+      setTimeout(()=>{document.body.removeChild(overlay);locationTransitioning=false;},900);
+    });
+  },850);
+}
+
+function enterSecretRoom(){
+  // Secret room = kopirum — player walks there physically
+  // Just flash messages when player enters the kopi zone
+  flash('🕯️ Du nærmer dig kopirummet... luften er anderledes her.');
+}
+
+function enterKbh(){
+  // KBH is now physically adjacent — player just walks there
+  // Called after unlock to flash welcome message
+  flash('🏙️ Gå igennem kopirummet til Køpmannæhafn!');
+}
+
+function returnToAros(){
+  // Player just walks back west — no teleport needed
+  flash('🚪 Gå vestpå for at komme tilbage til Aros.');
+}
+let kbhRoom = 'kopi'; // legacy — kept for compatibility
+
+// ── KBH UNIFIED LAYOUT ───────────────────────────────────────────────────────
+// Single canvas, all rooms visible with internal walls
+
+const KBH_UNIFIED_WALLS = [
+  // Outer perimeter
+  {x:0,y:0,w:900,h:20},     // top
+  {x:0,y:0,w:20,h:560},     // left
+  {x:880,y:0,w:20,h:560},   // right
+  {x:0,y:540,w:900,h:20},   // bottom
+
+  // Møderum A right wall (x:200), with doorway gap at y:100-160
+  {x:196,y:20,w:8,h:80},   {x:196,y:165,w:8,h:70},
+
+  // Møderum B left wall (x:700), with doorway gap at y:100-160
+  {x:696,y:20,w:8,h:80},   {x:696,y:165,w:8,h:70},
+
+  // Møderum A bottom wall (y:230)
+  {x:20,y:226,w:176,h:8},
+
+  // Møderum B bottom wall (y:230)
+  {x:704,y:226,w:176,h:8},
+
+  // Main horizontal divider fællesrum/offices (y:290)
+  // Gaps: NT door at x:120-200, LT door at x:690-770
+  {x:20,y:286,w:100,h:8},
+  {x:204,y:286,w:486,h:8},
+  {x:770,y:286,w:110,h:8},
+
+  // Kontor NT / Kopirum divider (x:320), from y:290 to y:540
+  {x:316,y:294,w:8,h:246},
+
+  // Kopirum / Kontor LT divider (x:580), from y:290 to y:540
+  {x:576,y:294,w:8,h:246},
+
+  // Kopirum top wall (y:360), gap in middle at x:420-480
+  {x:324,y:356,w:96,h:8},  {x:484,y:356,w:96,h:8},
+];
+
+const KBH_UNIFIED_OBSTACLES = [
+  // Møderum A — round table
+  {x:60,y:90,w:110,h:90},
+  // Fællesrum — reception desk
+  {x:220,y:35,w:80,h:55},
+  // Fællesrum — big meeting table
+  {x:330,y:60,w:280,h:110},
+  // Kontor NT — 3 desks
+  {x:30,y:330,w:80,h:50},
+  {x:140,y:330,w:80,h:50},
+  {x:230,y:420,w:80,h:50},
+  // Kopirum — copy machine
+  {x:350,y:420,w:100,h:60},
+  // Kopirum — shelves
+  {x:480,y:390,w:80,h:100},
+  // Kontor LT — 2 desks
+  {x:620,y:330,w:80,h:50},
+  {x:740,y:330,w:100,h:50},
+];
+
+// Back door to Aros (in kopirum, bottom-center)
+// KBH_BACK_DOOR removed — player walks back through kopi physically
+
+
+// ── KBH COLLISION (local 0-900, 0-560) ───────────────────────────────────────
+
+const kbhOuterWalls = [
+  {x:0,  y:0,  w:900,h:20 }, // top
+  {x:0,  y:540,w:350,h:20 }, // bottom left of south door
+  {x:550,y:540,w:350,h:20 }, // bottom right of south door
+  {x:0,  y:0,  w:20, h:560}, // left
+  {x:880,y:0,  w:20, h:560}, // right
+  // Internal: Møderum A right wall (x:200), gap y:100-200
+  {x:196,y:20, w:8,h:80 },{x:196,y:205,w:8,h:60},
+  // Møderum B left wall (x:700), gap y:100-200
+  {x:696,y:20, w:8,h:80 },{x:696,y:205,w:8,h:60},
+  // Møderum A bottom
+  {x:20, y:230,w:176,h:8},
+  // Møderum B bottom
+  {x:704,y:230,w:176,h:8},
+  // Horizontal divider fællesrum/offices (y:295)
+  {x:20, y:291,w:100,h:8},{x:204,y:291,w:492,h:8},{x:776,y:291,w:104,h:8},
+  // NT/kopi divider
+  {x:316,y:299,w:8,h:241},
+  // kopi/LT divider
+  {x:576,y:299,w:8,h:241},
+];
+const kbhObstacles = [
+  {x:310,y:75, w:280,h:100}, // fællesrum table
+  {x:50, y:55, w:90, h:70 }, // reception
+  {x:30, y:95, w:130,h:140}, // Møderum A table
+  {x:740,y:95, w:130,h:140}, // Møderum B table
+  {x:40, y:335,w:90, h:55 }, // Kontor NT desk 1
+  {x:150,y:335,w:90, h:55 }, // Kontor NT desk 2
+  {x:40, y:425,w:90, h:55 }, // Kontor NT desk 3
+  {x:380,y:385,w:140,h:70 }, // Kopirum machine (in middle column)
+  {x:620,y:335,w:90, h:55 }, // Kontor LT desk 1
+  {x:730,y:335,w:90, h:55 }, // Kontor LT desk 2
+];
+
+// ── KBH NPCs ──────────────────────────────────────────────────────────────────
+const kbhNpcs=[
+  {id:'Tia',      name:'Tia Sydhavn',       title:'Kommunikation & Brand',       x:300,y:170, emoji:'🍺'},
+  {id:'Sarap',    name:'Sarap',             title:'Studentermedhjælper',          x:580,y:170, emoji:'🩰'},
+  {id:'Bennette', name:'Bennette',          title:'Kredsstart Co-Manager',        x:440,y:240, emoji:'⚽'},
+  {id:'Rime',     name:'Rime Bindberg',     title:'Kursus & Medlemsekspert',      x:70,y:370, emoji:'📋'},
+  {id:'Emse',     name:'Emse Thoftmår',    title:'Kursus & Strik Queen',         x:180,y:370, emoji:'🧶'},
+  {id:'Tonatan',  name:'Tonatan',           title:'Økonomi',                      x:270,y:460, emoji:'💰'},
+  {id:'Amers',    name:'Amers Klosterkant', title:'Medlemsorganisator',           x:660,y:370, emoji:'🖥️'},
+  {id:'Simona',   name:'Simona',            title:'Content & Kommunikation',      x:780,y:370, emoji:'📱'},
+  {id:'Asfriodr', name:'Ásfríðr',           title:'Landsdele & Krise',            x:108,y:140, emoji:'🌐'},
+  {id:'Sumsar',   name:'Sumsar Dnil',       title:'På barsel (tilsyneladende)',   x:450, y:430, emoji:'👶'},
+  {id:'Tfan',       name:'Tfan',       title:'Chef NT',         x:350,y:200, emoji:'🚗', days:[DAY.TUE,DAY.WED,DAY.THU,DAY.FRI], useArosDialog:true},
+  {id:'Tentriette', name:'Tentriette', title:'Chef LT',         x:540,y:240, emoji:'✨', days:[DAY.TUE,DAY.WED],                  useArosDialog:true},
+  {id:'Tarkob',     name:'Tarkob',     title:'Generalsekretær', x:450,y:120, emoji:'🎖️', days:[DAY.MON,DAY.TUE,DAY.THU,DAY.FRI], useArosDialog:true},
+];
+const KBH_COLORS={
+  Tia:{skin:'#f5cba7',hair:'#8e44ad',shirt:'#e74c3c',emoji:'🍺',male:false},
+  Sarap:{skin:'#fdebd0',hair:'#2c3e50',shirt:'#3498db',emoji:'🩰',male:false},
+  Bennette:{skin:'#f9e4b7',hair:'#c0392b',shirt:'#27ae60',emoji:'⚽',male:false},
+  Rime:{skin:'#f5c897',hair:'#7d3c98',shirt:'#9b59b6',emoji:'📋',male:false},
+  Emse:{skin:'#fad5a5',hair:'#e67e22',shirt:'#e74c3c',emoji:'🧶',male:false},
+  Tonatan:{skin:'#d5a87a',hair:'#1a1a1a',shirt:'#2ecc71',emoji:'💰',male:true},
+  Amers:{skin:'#f5c897',hair:'#c0392b',shirt:'#2980b9',emoji:'🖥️',male:true},
+  Simona:{skin:'#fdebd0',hair:'#8e44ad',shirt:'#e74c3c',emoji:'📱',male:false},
+  Asfriodr:{skin:'#f5cba7',hair:'#2c3e50',shirt:'#16a085',emoji:'🌐',male:false},
+  Sumsar:{skin:'#f0b27a',hair:'#922b21',shirt:'#f39c12',emoji:'👶',male:true},
+  Tfan:COLORS.Tfan, Tentriette:COLORS.Tentriette, Tarkob:COLORS.Tarkob,
+};
+const kbhWander={
+  Tia:{hx:300,hy:170,tx:300,ty:170,t:0,r:60,spd:.55},
+  Sarap:{hx:580,hy:170,tx:580,ty:170,t:0,r:50,spd:.55},
+  Bennette:{hx:440,hy:240,tx:440,ty:240,t:0,r:60,spd:.55},
+  Rime:{hx:70,hy:370,tx:70,ty:370,t:0,r:30,spd:.55},
+  Emse:{hx:180,hy:370,tx:180,ty:370,t:0,r:30,spd:.55},
+  Tonatan:{hx:270,hy:460,tx:270,ty:460,t:0,r:30,spd:.55},
+  Amers:{hx:660,hy:370,tx:660,ty:370,t:0,r:30,spd:.55},
+  Simona:{hx:780,hy:370,tx:780,ty:370,t:0,r:30,spd:.55},
+  Asfriodr:{hx:108,hy:140,tx:108,ty:140,t:0,r:70,spd:.55},
+  Sumsar:{hx:450, hy:430,tx:450, ty:430,t:0,r:15,spd:.2},
+  Tfan:{hx:350,hy:200,tx:350,ty:200,t:0,r:80,spd:.65},
+  Tentriette:{hx:540,hy:240,tx:540,ty:240,t:0,r:70,spd:.65},
+  Tarkob:{hx:450,hy:120,tx:450,ty:120,t:0,r:100,spd:.7},
+};
+function visibleKbhNpcs(){
+  return kbhNpcs.filter(n=>!n.days||n.days.includes(currentDay)||n.id==='Sumsar');
+}
+
+function nearbyKbhNPC(){
+  for(const n of visibleKbhNpcs()){
+    if(Math.hypot(player.x-n.x,player.y-n.y)<70) return n;
+  }
+  return null;
+}
+
+function updateKbhWander(){
+  visibleKbhNpcs().forEach(npc=>{
+    const w=kbhWander[npc.id]; if(!w)return;
+    if(!w.locked){
+      w.t--;
+      if(w.t<=0){
+        w.tx=w.hx+(Math.random()-.5)*w.r*2;
+        w.ty=w.hy+(Math.random()-.5)*w.r*2;
+        w.t=80+Math.random()*150;
+      }
+    }
+    const dx=w.tx-npc.x,dy=w.ty-npc.y,d=Math.hypot(dx,dy);
+    if(d>2){npc.x+=dx/d*(w.spd||.55);npc.y+=dy/d*(w.spd||.55);}
+  });
+}
+
+// getCurrentWalls/Obstacles — legacy stubs (collides() now handles all directly)
+function getCurrentWalls(){ return walls; }
+function getCurrentObstacles(){ return obstacles; }
+
+
+
+// ── KOPI CORRIDOR DRAW ───────────────────────────────────────────────────────
+function drawKbhRoom(){
+  ctx.save(); // no offset — KBH is its own full-screen zone
+  const t=Date.now()/1000;
+
+  // ── ROOM FLOORS ─────────────────────────────────────────────────────────────
+  // Fællesrum — warm cream
+  ctx.fillStyle='#f2ede3'; ctx.fillRect(20,20,680,270);
+  // Møderum A — soft blue-grey
+  ctx.fillStyle='#e8ecf0'; ctx.fillRect(20,20,176,206);
+  // Møderum B — soft green-grey
+  ctx.fillStyle='#e8f0eb'; ctx.fillRect(704,20,176,206);
+  // Kontor NT — warm beige
+  ctx.fillStyle='#ede8e0'; ctx.fillRect(20,294,296,246);
+  // Kontor LT — light blue
+  ctx.fillStyle='#e5eaf2'; ctx.fillRect(584,294,296,246);
+  // Kopirum — DARK and mysterious
+  ctx.fillStyle='#12090f'; ctx.fillRect(324,294,252,246);
+
+  // ── FLOOR GRID LINES ────────────────────────────────────────────────────────
+  ctx.strokeStyle='rgba(0,0,0,.04)'; ctx.lineWidth=1;
+  for(let x=20;x<900;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,560);ctx.stroke();}
+  for(let y=20;y<560;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(900,y);ctx.stroke();}
+
+  // ── INTERNAL WALLS ───────────────────────────────────────────────────────────
+  // Internal walls drawn in local coords (translate already applied)
+  ctx.fillStyle='#4a4560';
+  KBH_UNIFIED_WALLS.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h)); // local 0-900 coords, OK inside translate
+
+  // ── ROOM LABELS ──────────────────────────────────────────────────────────────
+  const labels=[
+    {txt:'MØDERUM A',x:108,y:238,col:'rgba(80,80,120,.4)'},
+    {txt:'FÆLLESRUM',x:450,y:14,col:'rgba(80,80,120,.5)'},
+    {txt:'MØDERUM B',x:792,y:238,col:'rgba(80,80,120,.4)'},
+    {txt:'KONTOR NT',x:168,y:548,col:'rgba(80,60,40,.4)'},
+    {txt:'KONTOR LT',x:732,y:548,col:'rgba(60,80,120,.4)'},
+  ];
+  ctx.font='bold 9px Comic Neue'; ctx.textAlign='center';
+  labels.forEach(l=>{ctx.fillStyle=l.col;ctx.fillText(l.txt,l.x,l.y);});
+
+  // Kopirum label — glowing
+  const glow=.4+.3*Math.sin(t*2);
+  ctx.fillStyle=`rgba(150,100,255,${glow})`;
+  ctx.font='bold 9px Comic Neue'; ctx.textAlign='center';
+  ctx.fillText('🌀 KOPIRUMMET',450,548);
+  ctx.textAlign='left';
+
+  // ── FURNITURE ────────────────────────────────────────────────────────────────
+  // Møderum A table (round)
+  ctx.fillStyle='#b8a888'; ctx.strokeStyle='#8a6a40'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(115,135,55,45,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  // Chairs around MA table
+  [[115,82],[160,110],[160,160],[115,185],[70,160],[70,110]].forEach(([cx,cy])=>{
+    ctx.fillStyle='#6a5030'; ctx.beginPath(); ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2); ctx.fill();
+  });
+
+  // Fællesrum reception
+  ctx.fillStyle='#a08060'; ctx.strokeStyle='#6a4020'; ctx.lineWidth=2;
+  ctx.fillRect(220,35,80,55); ctx.strokeRect(220,35,80,55);
+  // Fællesrum big table
+  ctx.fillStyle='#c8b078'; ctx.strokeStyle='#8a6a20'; ctx.lineWidth=2;
+  ctx.fillRect(330,60,280,110); ctx.strokeRect(330,60,280,110);
+  // Chairs around big table
+  [[350,50],[430,50],[510,50],[590,50],[610,80],[610,130],[590,180],[510,180],[430,180],[350,180],[330,130],[330,80]].forEach(([cx,cy])=>{
+    ctx.fillStyle='#6a5030'; ctx.beginPath(); ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2); ctx.fill();
+  });
+  // FDF logo faint on fællesrum wall
+  ctx.fillStyle='rgba(45,53,97,.06)'; ctx.font='bold 80px Bangers'; ctx.textAlign='center';
+  ctx.fillText('FDF',550,270); ctx.textAlign='left';
+
+  // NT desks
+  [[30,330],[140,330],[230,420]].forEach(([dx,dy])=>{
+    ctx.fillStyle='#c8b898'; ctx.strokeStyle='#8a6a40'; ctx.lineWidth=1.5;
+    ctx.fillRect(dx,dy,80,50); ctx.strokeRect(dx,dy,80,50);
+    ctx.fillStyle='#2a2a3a'; ctx.fillRect(dx+10,dy+8,30,20);
+    ctx.fillStyle='rgba(0,150,255,.2)'; ctx.fillRect(dx+12,dy+10,26,16);
+  });
+  // LT desks
+  [[620,330],[740,330]].forEach(([dx,dy])=>{
+    ctx.fillStyle='#b8c8d8'; ctx.strokeStyle='#607090'; ctx.lineWidth=1.5;
+    ctx.fillRect(dx,dy,80,50); ctx.strokeRect(dx,dy,80,50);
+    ctx.fillStyle='#2a2a3a'; ctx.fillRect(dx+10,dy+8,30,20);
+    ctx.fillStyle='rgba(0,150,255,.2)'; ctx.fillRect(dx+12,dy+10,26,16);
+  });
+
+  // ── KOPIRUM MAGIC ────────────────────────────────────────────────────────────
+  // Copy machine
+  ctx.fillStyle='#1e1830'; ctx.strokeStyle='#3a3060'; ctx.lineWidth=2;
+  ctx.fillRect(350,420,100,60); ctx.strokeRect(350,420,100,60);
+  const sc=.4+.6*Math.sin(t*3);
+  ctx.fillStyle=`rgba(0,200,100,${sc*.9})`; ctx.fillRect(360,430,60,25);
+  // Paper tray
+  ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fillRect(370,476,60,6);
+  // Shelves
+  ctx.fillStyle='#2a1a30'; ctx.strokeStyle='#4a2a50'; ctx.lineWidth=1.5;
+  [390,420,450].forEach(sy=>{ ctx.fillRect(480,sy,80,8); ctx.strokeRect(480,sy,80,8); });
+  // Flying paper
+  [[340,320],[500,350],[380,370],[550,400],[420,300]].forEach(([px,py],i)=>{
+    const fx=px+Math.sin(t*.7+i)*10, fy=py+Math.cos(t*.5+i)*8;
+    ctx.save(); ctx.translate(fx,fy); ctx.rotate(Math.sin(t+i)*.3);
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.fillRect(-8,-5,16,11);
+    ctx.strokeStyle='rgba(0,0,0,.15)'; ctx.lineWidth=.5; ctx.strokeRect(-8,-5,16,11);
+    ctx.restore();
+  });
+  // Eerie glow
+  const eg=ctx.createRadialGradient(400,450,5,400,450,120);
+  eg.addColorStop(0,`rgba(100,60,200,${sc*.12})`); eg.addColorStop(1,'transparent');
+  ctx.fillStyle=eg; ctx.fillRect(324,294,252,246);
+
+  // South door back to kopi (x:350-550, bottom)
+  const kbhDoorT=Date.now()/600;
+  ctx.fillStyle=`rgba(100,60,200,${.3+.2*Math.sin(kbhDoorT)})`;
+  ctx.fillRect(350,540,200,20);
+  ctx.fillStyle='rgba(180,150,255,.8)';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('↓ KOPIRUM',450,554);ctx.textAlign='left';
+  if(player.y>490){
+    const p=.4+.4*Math.sin(Date.now()/300);
+    ctx.strokeStyle=`rgba(180,150,255,${p})`;ctx.lineWidth=2;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.rect(340,510,220,50);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // ── VISIBLE NPCS ─────────────────────────────────────────────────────────────
+  visibleKbhNpcs().forEach(n=>drawKbhNPC(n));
+
+  // NPC ring
+  const kn=nearbyKbhNPC();
+  if(kn){
+    ctx.strokeStyle='rgba(255,204,2,.35)'; ctx.lineWidth=2; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.arc(kn.x,kn.y,60,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore(); // end translate(1300,0)
+}
+
+
+// ── SECRET ROOM DRAWING ───────────────────────────────────────────────────────
+function drawSecretRoom(){
+  // Dark dusty room
+  ctx.fillStyle='#0d0a12';ctx.fillRect(0,0,900,560);
+  // Dust particles
+  const t=Date.now()/2000;
+  for(let i=0;i<30;i++){
+    const px=((i*137+t*20)%900);
+    const py=((i*89+t*10)%560);
+    ctx.fillStyle=`rgba(200,180,150,${.1+.1*Math.sin(t+i)})`;
+    ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);ctx.fill();
+  }
+  // Walls
+  ctx.fillStyle='#1e1520';
+  [{x:0,y:0,w:900,h:30},{x:0,y:0,w:30,h:560},{x:870,y:0,w:30,h:560},{x:0,y:530,w:900,h:30}]
+    .forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+
+  // Holger's initials carved in walls
+  ctx.fillStyle='rgba(200,180,150,.25)';ctx.font='bold 120px Bangers';ctx.textAlign='center';
+  ctx.fillText('H.T.',450,320);ctx.textAlign='left';
+  ctx.fillStyle='rgba(200,180,150,.08)';ctx.font='40px Bangers';
+  ctx.fillText('H.T. — 1902',600,500);
+
+  // Old portrait on wall
+  ctx.fillStyle='#2a1a0a';ctx.strokeStyle='#8a6a30';ctx.lineWidth=3;
+  ctx.fillRect(380,50,140,180);ctx.strokeRect(380,50,140,180);
+  ctx.fillStyle='rgba(180,160,130,.15)';ctx.fillRect(390,60,120,160);
+  ctx.fillStyle='rgba(200,180,150,.4)';ctx.font='8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('Holger Tornøe',450,235);ctx.textAlign='left';
+
+  // An old desk
+  ctx.fillStyle='#2a1a0a';ctx.strokeStyle='#5a3a10';ctx.lineWidth=2;
+  ctx.fillRect(100,350,200,80);ctx.strokeRect(100,350,200,80);
+  // Paper on desk
+  ctx.fillStyle='rgba(220,200,170,.6)';ctx.fillRect(120,360,80,50);
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.font='6px monospace';ctx.textAlign='left';
+  ctx.fillText('"...FDF skal aldrig',125,375);
+  ctx.fillText('blive for stort til',125,385);
+  ctx.fillText('at kende sit navn..."',125,395);
+  ctx.fillText('— H.T.',125,408);
+
+  // Candle
+  ctx.fillStyle='#e8d080';
+  ctx.fillRect(290,340,8,30);
+  const flame=.7+.3*Math.sin(Date.now()/150);
+  ctx.fillStyle=`rgba(255,180,0,${flame})`;
+  ctx.beginPath();ctx.ellipse(294,338,4,8,0,0,Math.PI*2);ctx.fill();
+  // Candle glow
+  const g=ctx.createRadialGradient(294,340,2,294,340,80);
+  g.addColorStop(0,'rgba(255,180,0,.12)');g.addColorStop(1,'transparent');
+  ctx.fillStyle=g;ctx.fillRect(0,0,900,560);
+
+  // Door back to Aros (top-left area)
+  const arosT=Date.now()/500;
+  ctx.strokeStyle=`rgba(255,204,2,${.4+.3*Math.sin(arosT)})`;
+  ctx.lineWidth=2;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.roundRect(50,60,80,120,6);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=`rgba(45,53,97,${.5+.2*Math.sin(arosT)})`;
+  ctx.fillRect(50,60,80,120);
+  ctx.fillStyle='rgba(255,204,2,.8)';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('← AROS',90,125);ctx.textAlign='left';
+
+  // Door forward to KBH (right side — glowing portal)
+  const kbhT=Date.now()/400;
+  const pg=ctx.createRadialGradient(820,280,10,820,280,80);
+  pg.addColorStop(0,`rgba(100,80,255,${.4+.3*Math.sin(kbhT)})`);
+  pg.addColorStop(1,'transparent');
+  ctx.fillStyle=pg;ctx.fillRect(700,150,200,300);
+  ctx.strokeStyle=`rgba(100,80,255,${.6+.4*Math.sin(kbhT)})`;
+  ctx.lineWidth=3;ctx.setLineDash([6,3]);
+  ctx.beginPath();ctx.roundRect(760,160,100,240,8);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=`rgba(30,10,60,${.7+.2*Math.sin(kbhT)})`;
+  ctx.fillRect(760,160,100,240);
+  ctx.fillStyle=`rgba(150,130,255,${.8+.2*Math.sin(kbhT*.7)})`;
+  ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('KØPMANNÆHAFN',810,275);
+  ctx.fillText('→',810,295);ctx.textAlign='left';
+
+  // Hint for nearby doors
+  const dAros=Math.hypot(player.x-90,player.y-120);
+  const dKbh=Math.hypot(player.x-810,player.y-280);
+  if(dAros<70||dKbh<80){
+    const label=dAros<70?'[E] Tilbage til Aros':'[E] Ind til Køpmannæhafn';
+    const hx=dAros<70?90:810, hy=dAros<70?60:160;
+    ctx.fillStyle='rgba(255,204,2,.95)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    const hw=label.length*5.5+16;
+    ctx.beginPath();ctx.roundRect(hx-hw/2,hy-28,hw,18,6);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#222';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(label,hx,hy-15);ctx.textAlign='left';
+  }
+}
+
+
+// ── KBH / SECRET HINT + ACTIVATION ──────────────────────────────────────────
+function updateKbhHint(){
+  const el=document.getElementById('hint');
+  const mobileE=document.getElementById('mobile-e');
+  const n=nearbyKbhNPC();
+  if(n){
+    mobileE.classList.add('visible');
+    el.style.display='block';
+    el.textContent='[E] Tal med '+n.name;
+    el.style.left=(n.x+5)+'px';
+    el.style.top=(n.y-50)+'px';
+  } else {
+    mobileE.classList.remove('visible');
+    el.style.display='none';
+  }
+}
+
+// ── KBH DIALOG TREES ─────────────────────────────────────────────────────────
+const kbhTrees={
+  Tia:{
+    start:[
+      {label:'🍺 Hvad laver du her?',next:'tia_job'},
+      {label:'🎉 Fest næste fredag?',next:'tia_fest'},
+      {label:'🏙️ Nyder du Sydhavn?',next:'tia_sydhavn'},
+    ],
+    tia_job:{text:'Hej! Jeg er Tia — al kommunikation. Budskabet ud til kredse, fedt og engagerende. Det er mig.',choices:[{label:'Hvad er det sværeste?',next:'tia_svaer'},{label:'Fest næste fredag?',next:'tia_fest'}]},
+    tia_svaer:{text:'At ramme alle 340 kredse på én gang. De er alle forskellige. Men det er også det sjove.',choices:[{label:'Hvad med sociale medier?',next:'tia_social'},{label:'Tilbage',next:'__start'}]},
+    tia_social:{text:'Instagram, Facebook, nyhedsbrev. Og ja, shots i Sydhavn bagefter. Du er inviteret.',choices:[{label:'Ja tak!',next:'__close'}]},
+    tia_fest:{text:'SELVFØLGELIG! Næste fredag — kontoret, musik, bajere. Jeg ordner det.',choices:[{label:'Jeg er der! 🎉',next:'__close'}]},
+    tia_sydhavn:{text:'Det er bare det fedeste sted i Køpmannæhafn. Havnebad, streetfood, mine venner. Alt er der.',choices:[{label:'Lyder godt.',next:'__close'}]},
+  },
+  Sarap:{
+    start:[
+      {label:'🩰 Ballet og FDF?',next:'sara_ballet'},
+      {label:'💼 Hvad laver du her?',next:'sara_job'},
+      {label:'🏆 FDFs VM i ballet?',next:'sara_vm'},
+    ],
+    sara_ballet:{text:'Ja! Ballet er ALT for mig. Men FDF er næstbedste. Disciplin, fællesskab, bevægelse — det hænger perfekt.',choices:[{label:'FDFs VM?',next:'sara_vm'},{label:'Hvad laver du her?',next:'sara_job'}]},
+    sara_job:{text:'Jeg hjælper til med det hele. Og er frivillig i FDF på siden. Begge verdener fuldt ud.',choices:[{label:'Hvordan når du det?',next:'sara_tid'},{label:'VM i ballet?',next:'sara_vm'}]},
+    sara_tid:{text:'Jeg sover lidt mindre end alle andre. Balletten giver energi tilbage.',choices:[{label:'Imponerende. Tak!',next:'__close'}]},
+    sara_vm:{text:'Jeg arrangerer FDFs eget VM i ballet. Fem lande er med allerede.',choices:[{label:'Hvornår?',next:'sara_vm2'},{label:'Imponerende!',next:'__close'}]},
+    sara_vm2:{text:'Næste år. Sletten. Don er allerede i gang med birketræsdekoration til scenen.',choices:[{label:'Naturligvis er han det.',next:'__close'}]},
+  },
+  Bennette:{
+    start:[
+      {label:'⚽ Pigefodbold i FDF?',next:'benn_fodbold'},
+      {label:'🏕️ Hvad er kredsstart?',next:'benn_kreds'},
+      {label:'📞 Tarkob nævnte dig...',next:'benn_tarkob'},
+    ],
+    benn_fodbold:{text:'Ja! Hvis en kreds vil starte et pigefodboldhold er jeg HELT på.',choices:[{label:'Hvad er kredsstart?',next:'benn_kreds'}]},
+    benn_kreds:{text:'Kredsstart er når nogen vil starte en ny FDF-kreds fra bunden. Jeg holder dem i hånden hele vejen.',choices:[{label:'Hvad er det sværeste?',next:'benn_svaer'},{label:'Tarkob nævnte dig...',next:'benn_tarkob'}]},
+    benn_svaer:{text:'At finde de første frivillige. Én er nok. Men de skal tro på det.',choices:[{label:'Det er smukt.',next:'__close'}]},
+    benn_tarkob:{text:'Ha! Tarkob sender folk herned. Det er hans måde at hjælpe på.',choices:[{label:'😄 Klassisk Tarkob.',next:'__close'}]},
+  },
+  Rime:{
+    start:[
+      {label:'📋 Hvad ved du om kurser?',next:'rime_kurser'},
+      {label:'🖥️ Hvad er Medlemsorganisatoren?',next:'rime_mo'},
+    ],
+    rime_kurser:{text:'Hej! Rime her. Jeg ved BOGSTAVELIGT TALT alt om FDFs kurser. Alt.',choices:[{label:'Hvad er det bedste?',next:'rime_bedst'},{label:'Hvad er MO?',next:'rime_mo'}]},
+    rime_bedst:{text:'Afhænger af hvad du søger. Hvad drømmer din kreds om?',choices:[{label:'Det ved jeg ikke endnu.',next:'rime_ved_ikke'}]},
+    rime_ved_ikke:{text:'Start med en weekendlejr. Det afklarer altid hvad folk vil have mere af.',choices:[{label:'Godt råd. Tak!',next:'__close'}]},
+    rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',choices:[{label:'Tak, Rime!',next:'__close'}]},
+  },
+  Emse:{
+    start:[
+      {label:'🧶 Strik og FDF?',next:'emse_strik'},
+      {label:'📅 Dine kurser?',next:'emse_kurser'},
+      {label:'🎂 Snart 30?',next:'emse_30'},
+    ],
+    emse_strik:{text:'Emse Thoftmår! Strik og strategi. Jeg strikker under møder. Det hjælper koncentrationen.',choices:[{label:'Kurser?',next:'emse_kurser'},{label:'Snart 30?',next:'emse_30'}]},
+    emse_kurser:{text:'Jeg har idéer der er helt revolutionerende. Seriøst. Kurser som ingen har set før.',choices:[{label:'Som hvad?',next:'emse_kurser2'}]},
+    emse_kurser2:{text:'Endnu hemmeligt. Men det involverer natur, kreativitet og sandsynligvis strik.',choices:[{label:'Det gør jeg!',next:'__close'}]},
+    emse_30:{text:'NÆSTEN 30. Det er bare et tal. Et meget rundt tal. Men bare et tal.',choices:[{label:'Tillykke — snart!',next:'__close'}]},
+  },
+  Tonatan:{
+    start:[
+      {label:'💰 FDFs økonomi?',next:'ton_job'},
+      {label:'🇸🇪 Sverige og fjeldet?',next:'ton_sverige'},
+    ],
+    ton_job:{text:'Yo! Tonatan. Jeg holder styr på FDFs økonomi. Budgetter, regnskaber. Mastermind.',choices:[{label:'Hvad er sværest?',next:'ton_svaer'},{label:'Sverige?',next:'ton_sverige'}]},
+    ton_svaer:{text:'At forklare folk at penge ikke er ubegrænsede. Men vi klarer os godt.',choices:[{label:'Betryggende.',next:'__close'}]},
+    ton_sverige:{text:'Sverige er mit andet hjem. Fjeldene, stilheden. Helt anderledes end Køpmannæhafn.',choices:[{label:'Lyder vidunderligt.',next:'__close'}]},
+  },
+  Amers:{
+    start:[
+      {label:'🖥️ Hvad er Medlemsorganisatoren?',next:'amers_mo'},
+      {label:'⚖️ Overretsdommer i fritiden?',next:'amers_dom'},
+    ],
+    amers_mo:{text:'Amers Klosterkant. ULTRA-bruger på Medlemsorganisatoren. Alle snarvejetaster. Alle tricks.',choices:[{label:'Bedste trick?',next:'amers_trick'},{label:'Overretsdommer?',next:'amers_dom'}]},
+    amers_trick:{text:'Ctrl+Shift+Alt+E. Masseeksport. Ingen kender den. Du er velkommen.',choices:[{label:'Tak!',next:'__close'}]},
+    amers_dom:{text:'Til rettersfester. Det giver perspektiv på hverdagen. Orden er vigtigt.',choices:[{label:'Unik kombination.',next:'__close'}]},
+  },
+  Simona:{
+    start:[
+      {label:'📱 Content?',next:'simo_content'},
+      {label:'📰 FDFMedlederen?',next:'simo_magasin'},
+    ],
+    simo_content:{text:'Hej! Simona. Kommunikation og content. Jeg skaber ting der rammer målgruppen. Content er kongen.',choices:[{label:'Din strategi?',next:'simo_strategi'},{label:'FDFMedlederen?',next:'simo_magasin'}]},
+    simo_strategi:{text:'Autenticitet. FDF har en god historie — vi skal bare fortælle den rigtigt.',choices:[{label:'Det er sandt.',next:'__close'}]},
+    simo_magasin:{text:'FDFMedlederen er vores magasin. Hvert nummer er en kærlighed til kredse i hele landet.',choices:[{label:'Imponerende!',next:'__close'}]},
+  },
+  Asfriodr:{
+    start:[
+      {label:'🌐 Landsdele?',next:'asf_job'},
+      {label:'🆘 Krisehåndtering?',next:'asf_krise'},
+      {label:'📛 Ásfríðr — hvad betyder det?',next:'asf_navn'},
+    ],
+    asf_job:{text:'Ásfríðr. Landsdele, netværk og krisehåndtering. Jeg holder landet samlet.',choices:[{label:'Sværest?',next:'asf_svaer'},{label:'Kriser?',next:'asf_krise'}]},
+    asf_svaer:{text:'At nå alle landsdele på én gang. Netværket er mit vigtigste redskab.',choices:[{label:'Kriser?',next:'asf_krise'}]},
+    asf_krise:{text:'Kriser sker. En lejr der går galt, en kreds i problemer. Jeg er der. Det er det jeg er trænet til.',choices:[{label:'Krævende.',next:'asf_kraev'}]},
+    asf_kraev:{text:'Det er det. Men meningsfyldt. Netværk hjælper hinanden. Det er kernen i FDF.',choices:[{label:'Smukt formuleret.',next:'__close'}]},
+    asf_navn:{text:'Oldnordisk. Gudernes fred. Mine forældre var entusiaster.',choices:[{label:'Det passer dig.',next:'__close'}]},
+  },
+  Sumsar:{
+    start:[
+      {label:'👶 Er du på barsel?',next:'sums_barsel'},
+      {label:'🌀 Hvad laver du i kopirummet?',next:'sums_kopi'},
+      {label:'📠 Maskinen kører af sig selv?',next:'sums_maskine'},
+    ],
+    sums_barsel:{text:'*kigger op* ...Ja. Jeg er på barsel. Jeg er også her. Begge ting er sande.',choices:[{label:'Hvordan?',next:'sums_hvordan'},{label:'Hvad laver du her?',next:'sums_kopi'}]},
+    sums_hvordan:{text:'*lang pause* Kopirummet er ikke bundet af normale regler.',choices:[{label:'Hvad printer maskinen?',next:'sums_maskine'},{label:'Okay...',next:'__close'}]},
+    sums_kopi:{text:'Jeg passer på rummet. Maskinen gør hvad den vil — jeg sørger for det ikke går for galt.',choices:[{label:'Hvad printer den?',next:'sums_maskine'}]},
+    sums_maskine:{text:'*tænker* Ting. Navne. Tal. En gang printede den en opskrift på æbleskiver. Vi spiste dem. De var gode.',choices:[{label:'😮 Okay.',next:'sums_ok'}]},
+    sums_ok:{text:'Ja. *vender tilbage til sit papir* God tur videre.',choices:[{label:'...Tak, Sumsar.',next:'__close'}]},
+  },
+};
+
+function openKbhDialog(npc){
+  if(npc.useArosDialog){
+    const arosNpc=npcs.find(n=>n.id===npc.id);
+    if(arosNpc){openDialog(arosNpc);return;}
+  }
+  const tree=kbhTrees[npc.id];
+  if(!tree){flash('💬 '+npc.name+' nikker venligt.');return;}
+  dlgOpen=true; activeNPC=npc;
+  const c=KBH_COLORS[npc.id]||{shirt:'#555',emoji:'👤'};
+  document.getElementById('dlg-portrait').textContent=c.emoji||'👤';
+  document.getElementById('dlg-portrait').style.background=c.shirt||'#555';
+  document.getElementById('dlg-name').textContent=npc.name;
+  document.getElementById('dlg-name').style.color='#222';
+  document.getElementById('dlg').classList.add('on');
+  document.getElementById('dlg-row').style.display='none';
+  document.getElementById('dlg-thinking').classList.remove('on');
+  const greetings={
+    Tia:'Hej! Sydhavn-Tia her. Hvad kan jeg gøre for dig?',
+    Sarap:'Hej! Jeg er Sarap — ballet og FDF. Hvad vil du vide?',
+    Bennette:'Hej! Bennette. Kredsstart eller fodbold?',
+    Rime:'Hej! Rime Bindberg. Kursusekspert. Spørg løs.',
+    Emse:'Emse Thoftmår! Kursus, strik og strategi.',
+    Tonatan:'Yo! Tonatan. Økonomi-mastermind.',
+    Amers:'Amers Klosterkant. ULTRA-bruger. Hvad vil du vide?',
+    Simona:'Hej! Simona. Content er kongen.',
+    Asfriodr:'Ásfríðr. Hvad bringer dig hertil?',
+    Sumsar:'*ser op* ...Ja?',
+  };
+  document.getElementById('dlg-text').textContent=greetings[npc.id]||'Hej!';
+  showKbhChoices(tree.start, tree);
+}
+
+function showKbhChoices(choices, tree){
+  const dc=document.getElementById('dlg-choices');
+  dc.innerHTML='';
+  (choices||[]).forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='dlg-choice';
+    btn.textContent=ch.label;
+    btn.addEventListener('click',()=>{
+      if(ch.next==='__close'){closeDialog();return;}
+      if(ch.next==='__start'){
+        document.getElementById('dlg-text').textContent='';
+        showKbhChoices(tree.start,tree);return;
+      }
+      const node=tree[ch.next];
+      if(!node){closeDialog();return;}
+      document.getElementById('dlg-text').textContent=node.text;
+      showKbhChoices(node.choices||[],tree);
+    });
+    dc.appendChild(btn);
+  });
+  if(!choices||!choices.length){
+    const btn=document.createElement('button');
+    btn.className='dlg-choice';btn.textContent='Farvel.';
+    btn.addEventListener('click',closeDialog);
+    dc.appendChild(btn);
+  }
+}
+
+function activateKbh(){
+  const n=nearbyKbhNPC();
+  if(n){openKbhDialog(n);}
+}
+
+// activateSecret/updateSecretHint removed — kopi is now a physical room
+
+
 function render(){
-  ctx.clearRect(0,0,W,H);
+  ctx.clearRect(0,0,900,560);
   ctx.save();
   ctx.translate(-camX,-camY);
-  drawRoom();
-  drawFridayBar();
-  // sparkles on undiscovered items
-  drawSparkles();
-  // NPCs
-  visibleNPCs().forEach(n=>drawNPC(n));
-  drawSudokuBubble();
-  drawMeetingLaptop();
-  drawCoffeeBubbles();
-  drawTarkob();
-  drawPlayer();
-  drawTapTarget();
-  drawNotes();
-  // NPC interaction ring
-  const n=nearbyNPC();
-  if(n){
-    ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);
-    ctx.beginPath();ctx.arc(n.x,n.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+
+  if(currentZone==='aros'){
+    drawRoom();
+    drawFridayBar();
+    drawSparkles();
+    visibleNPCs().forEach(n=>drawNPC(n));
+    drawSudokuBubble();
+    drawMeetingLaptop();
+    drawCoffeeBubbles();
+    drawTarkob();
+    drawPlayer();
+    drawTapTarget();
+    drawNotes();
+    const n=nearbyNPC();
+    if(n){ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(n.x,n.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
+  } else if(currentZone==='kbh'){
+    drawKbhRoom();
+    drawPlayer();
+    drawNotes();
+    const kn=nearbyKbhNPC();
+    if(kn){ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(kn.x,kn.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   }
-  ctx.restore(); // end camera transform
+
+  ctx.restore();
   drawMinimap();
 }
 
 function loop(){
   update();
-  updateTarkob();
-  updateWander();
+  if(currentZone==='aros'){
+    updateTarkob();
+    updateWander();
+  } else if(currentZone==='kbh'){
+    updateKbhWander();
+  }
   updateCamera();
   updateNotes();
   render();
@@ -3634,11 +5212,17 @@ cvs.addEventListener('touchstart',e=>{
   // if dialog/phone open, ignore movement taps
   if(dlgOpen||phoneOpen) return;
 
-  // check for nearby interactive before moving
-  const oldX=player.x, oldY=player.y;
-  // temporarily check if tap is near an NPC/phone/calendar/item
   const tmpDist=(obj)=>Math.hypot(pos.x-obj.x,pos.y-obj.y);
-  // Use unified activation — same logic as keyboard E
+
+  // ── KBH zone ──────────────────────────────────────────────────────────────
+  if(currentZone==='kbh'){
+    const kn=kbhNpcs.find(n=>n.id!=='Sumsar'&&(!n.days||n.days.includes(currentDay))&&tmpDist(n)<70);
+    if(kn&&tmpDist(kn)<90){openKbhDialog(kn);return;}
+    tapTarget={x:pos.x,y:pos.y};
+    return;
+  }
+
+  // ── AROS + KOPI zone ─────────────────────────────────────────────────────
   const npcNear=visibleNPCs().find(n=>tmpDist(n)<70);
   if(npcNear&&tmpDist(npcNear)<90){openDialog(npcNear);return;}
   const objNear=nearbyWorldObject();
@@ -3689,14 +5273,8 @@ function scaleGame(){
 
 
 function updateCamera(){
-  // only scroll camera if screen is smaller than game world
-  const vw=window.innerWidth, vh=window.innerHeight;
-  if(vw>=900 && vh>=560){ camX=0; camY=0; return; }
-  const scale=Math.min(vw/900, vh/600);
-  const visW=vw/scale, visH=vh/scale;
-  // center camera on player with clamping
-  camX=Math.max(0, Math.min(W-visW, player.x - visW/2));
-  camY=Math.max(0, Math.min(H-visH, player.y - visH/2));
+  // No scrolling — each zone fills the screen
+  camX=0; camY=0;
 }
 
 function drawMinimap(){
@@ -3813,7 +5391,7 @@ document.querySelectorAll('.cal-day-btn').forEach(btn=>{
     document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
     if(currentDay===DAY.FRI){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
     else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
-    else if(currentDay===DAY.WED)flash('📅 ONSDAG — Mødedag! 💻');
+    else if(currentDay===DAY.WED){flash('📅 ONSDAG — Mødedag! 💻');setTimeout(startTarkobWedVisit,8000);}
     else if(currentDay===DAY.THU)flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
     else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
   });
@@ -3853,7 +5431,7 @@ const dayMap=['SØNDAG',...DAY.ALL.slice(0,4),DAY.FRI,DAY.FRI];
 currentDay = dayMap[new Date().getDay()];
 document.getElementById('day-badge').textContent = currentDay;
 // Trigger day-specific setup
-if(currentDay===DAY.WED) meetT=80;
+if(currentDay===DAY.WED){meetT=80;setTimeout(startTarkobWedVisit,10000);}
 if(currentDay===DAY.THU) coffeeT=400;
 if(currentDay===DAY.FRI) setTimeout(()=>{triggerFriday();},1500);
 
