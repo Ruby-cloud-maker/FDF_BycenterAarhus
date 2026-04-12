@@ -148,6 +148,32 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
 /* friday overlay */
 #friday{display:none;position:absolute;inset:30px 0 0 0;pointer-events:none;border-radius:0 0 12px 12px;background:radial-gradient(ellipse at 20% 80%,rgba(255,100,150,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(120,80,255,.12) 0%,transparent 60%);animation:fpulse 3s ease-in-out infinite;z-index:2}
 @keyframes fpulse{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* ── TOAST TORSDAG ─────────────────────────── */
+#toast-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(2px);z-index:15;align-items:center;justify-content:center}
+#toast-overlay.on{display:flex}
+#toast-box{background:linear-gradient(160deg,#1a1005,#2a1a08);border:2px solid #c8803a;border-radius:20px;padding:18px 22px 16px;width:580px;box-shadow:0 0 0 1px rgba(255,180,50,.12),0 20px 60px rgba(0,0,0,.7)}
+#toast-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(200,128,58,.35);padding-bottom:10px}
+#toast-title{font-family:'Bangers',cursive;color:#f0a030;font-size:1.5rem;letter-spacing:3px}
+#toast-close{background:none;border:1.5px solid #554;color:#776;border-radius:6px;padding:2px 9px;cursor:pointer;font-size:.95rem;transition:all .12s}
+#toast-close:hover{border-color:#f0a030;color:#f0a030}
+#toast-menu-area{display:grid;grid-template-columns:1fr 170px;gap:14px;margin-bottom:12px}
+#toast-menu{display:flex;flex-direction:column;gap:8px}
+.toast-section{font-family:'Bangers',cursive;color:rgba(240,160,48,.55);font-size:.78rem;letter-spacing:2px;margin-top:2px}
+.toast-items{display:flex;flex-wrap:wrap;gap:5px}
+.toast-item{padding:6px 11px;background:#0d0a05;border:1.5px solid #3a2810;color:#c8a060;font-family:'Work Sans',sans-serif;font-size:.8rem;border-radius:8px;cursor:pointer;transition:all .12s}
+.toast-item:hover{border-color:#f0a030;color:#f0a030;background:#1a1205}
+.toast-item.selected{background:#2c1a05;border-color:#f0a030;color:#f0a030;font-weight:600}
+#toast-serve-area{display:flex;flex-direction:column;gap:6px;border-left:1px solid rgba(200,128,58,.25);padding-left:14px}
+#toast-serve-label{font-family:'Bangers',cursive;color:rgba(240,160,48,.55);font-size:.78rem;letter-spacing:2px}
+#toast-npc-list{display:flex;flex-direction:column;gap:4px;flex:1}
+.toast-npc{padding:5px 10px;background:#0d0a05;border:1.5px solid #3a2810;color:#aaa;font-family:'Work Sans',sans-serif;font-size:.8rem;border-radius:8px;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:6px}
+.toast-npc:hover{border-color:#c8803a;color:#fff}
+.toast-npc.selected{background:#1a0d05;border-color:#f0a030;color:#f0a030;font-weight:600}
+#toast-serve-btn{padding:9px;background:linear-gradient(135deg,#c8803a,#e09040);color:#fff;border:none;border-radius:10px;font-family:'Bangers',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;transition:all .12s;box-shadow:0 3px 0 #8a5010}
+#toast-serve-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 0 #8a5010}
+#toast-serve-btn:disabled{opacity:.35;cursor:not-allowed}
+#toast-reaction{min-height:36px;background:#0d0a05;border-radius:8px;padding:8px 12px;font-family:'Work Sans',sans-serif;font-size:.85rem;color:#c8a060;line-height:1.5;border:1px solid rgba(200,128,58,.25);font-style:italic}
 </style>
 </head>
 <body>
@@ -155,7 +181,7 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
   <div id="hud">
     <div id="hud-left">
       <span id="hud-emblem">🏕️</span>
-      <h1>FDF BYCENTER AROS</h1>
+      <h1 id="hud-title">FDF BYCENTER AROS</h1>
     </div>
     <span id="day-badge">MANDAG</span>
     <span id="ctrl-hint">WASD · E = tal · T = dag</span>
@@ -251,6 +277,30 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
         </div>
       </div>
       <div id="bar-reaction"></div>
+    </div>
+  </div>
+
+  <!-- calendar -->
+  <div id="toast-overlay">
+    <div id="toast-box">
+      <div id="toast-header">
+        <span id="toast-title">🍞 TOAST TORSDAG</span>
+        <button id="toast-close">✕</button>
+      </div>
+      <div id="toast-menu-area">
+        <div id="toast-menu">
+          <div class="toast-section">BRØD</div>
+          <div class="toast-items" id="toast-breads"></div>
+          <div class="toast-section">PÅLÆG</div>
+          <div class="toast-items" id="toast-toppings"></div>
+        </div>
+        <div id="toast-serve-area">
+          <div id="toast-serve-label">Server til:</div>
+          <div id="toast-npc-list"></div>
+          <button id="toast-serve-btn" disabled>Server 🍞</button>
+        </div>
+      </div>
+      <div id="toast-reaction">Vælg brød, pålæg og en kollega...</div>
     </div>
   </div>
 
@@ -1029,10 +1079,10 @@ const obstacles=[
   {x:690,y:35,w:170,h:60},   // coffee counter
   {x:50,y:430,w:180,h:60},   // sofa
   {x:30,y:148,w:20,h:30},    // phone
-  {x:650,y:175,w:90,h:55},    // Gune desk
-  {x:750,y:155,w:90,h:55},   // Anne desk
-  {x:650,y:245,w:90,h:55},   // Jas desk
-  {x:750,y:315,w:90,h:55},   // Delisateth desk
+  {x:615,y:190,w:90,h:55},   // Gune desk   (venstre kolonne, øverst)
+  {x:615,y:325,w:90,h:55},   // Anne desk   (venstre kolonne, underneden)
+  {x:760,y:190,w:90,h:55},   // Jas desk    (højre kolonne, øverst)
+  {x:760,y:325,w:90,h:55},   // Delisateth desk (højre kolonne, underneden)
   {x:45,y:195,w:90,h:55},    // Neter desk
   {x:45,y:295,w:90,h:55},    // Heresa desk
   {x:232,y:413,w:32,h:24},   // boombox
@@ -1076,13 +1126,13 @@ const items=[
    foundMsg:'Stenen sidder tungt i lommen.',item:'🔮 Runesten',emoji:'🌿'},
 
   // ── DESK ITEMS ──────────────────────────────────────────
-  {id:'desk_jas',label:'Kig på Jas\' bord',x:695,y:300,r:75,found:false,
+  {id:'desk_jas',label:'Kig på Jas\' bord',x:805,y:217,r:75,found:false,
    msgs:['På bordet ligger en halvt løst Sudoku-blok, tre tomme kaffekrus og en lille koalabamse i blå FDF-trøje.',
          'Under Sudoku-blokken finder du en seddel: "Solen er jo over en anden ø et sted 🌴 — Jas". Ved siden af: en flaske portvin. Den er ikke lukket.'],
    foundMsg:'Sudokuen er stadig ikke løst. Kaffekrusen er stadig tom.',
    item:'🐨 Koalabamse i FDF-trøje',emoji:'☕'},
 
-  {id:'desk_gune',label:'Kig på Gunes bord',x:695,y:245,r:75,found:false,
+  {id:'desk_gune',label:'Kig på Gunes bord',x:660,y:217,r:75,found:false,
    msgs:['En RGB gaming-mus, to energidrikke (én tom, én halvt), og en KÆMPE FDF-historiebog fra 1952 dækket i Post-its.',
          'Du bladrer i bogen. Gune har understreget alt med tre farver og skrevet i marginen: "INEFFEKTIVT", "DIGITALISÉR" og én gang bare "???"'],
    foundMsg:'Bogen er der stadig. "INEFFEKTIVT" er stadig understreget.',
@@ -1100,17 +1150,37 @@ const items=[
    foundMsg:'Frugtskålen er fyldt op igen. Heresa holder øje.',
    item:'🍎 Kreditstart-protokol V.7',emoji:'🍎'},
 
-  {id:'desk_delisateth',label:'Kig på Delisateths bord',x:795,y:370,r:75,found:false,
+  {id:'desk_delisateth',label:'Kig på Delisateths bord',x:805,y:352,r:75,found:false,
    msgs:['Et printout af et Excelark så stort at det folder sig ud over hele bordet. En lille Colosseum-figur i plast. Og tre tekandler — én tom, én halvt, én fuld.',
          'Du kigger på Excelark. 47 faneblade. Et hedder "28 RECEPTIONER — WORST CASE SCENARIER". Et andet: "BORINGER — status". Øverst: "Boring nr. 2402 — AFSLUTTET". I marginen en håndskrevet note: "02 — HUSK!"'],
    foundMsg:'Colosseum-figuren kigger bebrejdende på dig.',
    item:'🏛️ Colosseum-figur (8 cm)',emoji:'🍵'},
 
-  {id:'desk_anne',label:'Kig på Annes bord',x:795,y:210,r:75,found:false,
+  {id:'desk_anne',label:'Kig på Annes bord',x:660,y:352,r:75,found:false,
    msgs:['En lilla kaffekop med teksten "DATA > MAVEFORNEMMELSE", en asymmetrisk stak bøger (bevidst skæv), og en The Office DVD-boks — sæson 2 er halvt ude af æsken.',
          'På skærmen kører et regneark: "Kollega-sammenligning: FDF vs Dunder Mifflin (n=8)". Jas scorer 94% Creed. Nederst sidder en gul Post-it: "94 — Holger ville aldrig forstå det."'],
    foundMsg:'Regnearket er stadig åbent. Jas scorer stadig 94% Creed.',
    item:'📊 FDF vs Dunder Mifflin-analyse',emoji:'📊'},
+
+  // ── SKJULTE TELEFONNUMRE ─────────────────────────────────────────────────────
+
+  {id:'num_don',label:'Kig på opslagstavlen',x:116,y:55,r:55,found:false,
+   msgs:['En opslagstavle ved kopimaskinen. Halvt dækkede papirer, en tegning af en FDF-trop og et visitkort stukket ind i hjørnet.',
+         'Du trækker visitkortet ud. "Don Tilstrup — Friluftscenter Sletten". Et telefonnummer er skrevet i hånden på bagsiden: 86 84 57 59. Nogen har skrevet "RING VED NØDSITUATIONER + MOUNTAINBIKE" ved siden af.'],
+   foundMsg:'Visitkortet er stadig der. Don ved endnu ikke at du har hans nummer.',
+   item:'📇 Don Tilstrups visitkort',emoji:'📌'},
+
+  {id:'num_crisdan',label:'Kig på plakaten i sofaen',x:100,y:442,r:40,found:false,
+   msgs:['Du sætter dig på sofaen. Under armlænet stikker en farverig plakat ud.',
+         'Flyeren: "LANDSLEJR 2026 — Crisdan Callas, Landslejrchef". Et nummer er skrevet i marginen med blyant: 40 68 01 06. Under nummeret: "Ring HVIS du har en rigtig god idé. Ikke ellers."'],
+   foundMsg:'Plakaten er der stadig. 2026 nærmer sig.',
+   item:'📋 Landslejrplakat 2026',emoji:'🛋️'},
+
+  {id:'num_sauna',label:'Kig bag energidrikken',x:645,y:217,r:55,found:false,
+   msgs:['Du kigger nærmere på Gunes bord. Bag den halvtomme energidrik sidder et lille lamineret kort.',
+         'Kortet: "FDF SAUNA — Sletten 🌿 | 86 84 60 28 | Ring kun hvis du mener det." Og nederst med anden håndskrift: "Don er der. Altid. — G"'],
+   foundMsg:'Kortet er stadig der bag energidrikken. G er sandsynligvis Gune.',
+   item:'🃏 Sauna-kontaktkort',emoji:'🎮'},
 ];
 
 // phone
@@ -1257,6 +1327,211 @@ const BAR_REACTIONS = {
     fdf_spec: '✨ "FDF Special! Jeg vil gerne kende opskriften. Åbenhed frem for alt."',
   },
 };
+
+// ═══════════════════════════════════════════
+// TOAST TORSDAG
+// ═══════════════════════════════════════════
+let toastThursdayActive = false;
+let toastSelectedBread  = null;
+let toastSelectedTopping = null;
+let toastSelectedNPC    = null;
+
+const TOAST_BREADS = [
+  {id:'hvid',   label:'🍞 Hvidt franskbrød', emoji:'🍞'},
+  {id:'rug',    label:'🌾 Rugbrød',           emoji:'🌾'},
+  {id:'croissant', label:'🥐 Croissant',      emoji:'🥐'},
+];
+const TOAST_TOPPINGS = [
+  {id:'ost',      label:'🧀 Ost',            emoji:'🧀'},
+  {id:'tomat',    label:'🍅 Tomat + ost',    emoji:'🍅'},
+  {id:'avocado',  label:'🥑 Avocado',        emoji:'🥑'},
+  {id:'nutella',  label:'🍫 Nutella',         emoji:'🍫'},
+];
+
+const TOAST_REACTIONS = {
+  Tia:{
+    croissant_any:  '🥐 "JA! Endelig nogen der forstår det. Croissant er ikke til forhandling."',
+    hvid_ost:       '😊 "Klassisk. Solid. Ingen overraskelser. Det respekterer jeg."',
+    rug_any:        '😬 "Rugbrød... til toast? Det er modigt. Det er meget modigt."',
+    any_avocado:    '🍺 "Avocado! Sydhavn-vibes. Det er perfekt til torsdag."',
+    any_nutella:    '🤩 "NUTELLA?! Hvem har købt Nutella?! Er det Tonatan?!"',
+  },
+  Sarap:{
+    any_any:        '🩰 "Tak! Jeg spiser det hurtigt — jeg har øvelse om ti minutter."',
+    croissant_any:  '🥐 "En croissant! Det er som en mini-balletforestilling for munden."',
+    any_nutella:    '🍫 "Nutella giver energi til pointe-øvelser. Det er videnskab."',
+  },
+  Bennette:{
+    any_avocado:    '⚽ "ENDELIG. Avocado. Det er det eneste rigtige valg. ENDELIG."',
+    any_ost:        '🧀 "Ost er fin. Men avocado er bedre. Det ved du godt."',
+    croissant_any:  '⚽ "Croissant er svær at spise inden træning. Men tak, det er sødt."',
+    any_nutella:    '😮 "Nutella?? Jeg troede det var Tonatans hemmelighed...?"',
+  },
+  Rime:{
+    hvid_ost:       '📋 "Klassiker. Forudsigelig. Optimal. Ligesom et velplanlagt kursus."',
+    any_any:        '📋 "Tak. Jeg spiser det mens jeg gennemgår kursusplanen for Q3."',
+    rug_any:        '📋 "Rugbrød! Det er sund fornuft i brødform. Godt valg."',
+    any_nutella:    '😯 "Er det Nutella? ...Én gang om torsdag. Det kan forsvares."',
+  },
+  Emse:{
+    any_any:        '🧶 "*strikker videre* Tak. Jeg sætter det ved siden af garnet."',
+    any_nutella:    '🍫 "Nutella! *strikketøjet stopper* ...Hvem ved at Tonatan køber Nutella?"',
+    croissant_any:  '🥐 "Croissant! Det føles som en lille fest. En meget lille fest."',
+  },
+  Tonatan:{
+    any_nutella:    '😳 "*hvidsker* Det er IKKE min Nutella. Jeg ved ikke hvad du snakker om. *spiser hurtigt*"',
+    any_avocado:    '💰 "Avocado. Det er en investering i produktivitet. Smart."',
+    hvid_ost:       '💰 "Hvidt brød med ost. Stabilt. Som en god obligation."',
+    any_any:        '💰 "Tak! Jeg spiser det inden mødet. Budgettet venter ikke."',
+  },
+  Amers:{
+    any_ost:        '🖥️ "Ost. Præcist to minutters ristning. Ikke tre. To. Har du husket det?"',
+    any_any:        '🖥️ "Tak. Jeg analyserer toastmaskine nr. 2 — den rister uensartet. Det er et problem."',
+    rug_ost:        '🖥️ "Rugbrød med ost. Det er optimal kombination. CTRL+SHIFT+TOAST."',
+    any_nutella:    '🖥️ "*pause* ...Der er en fejl i systemet. Nogen har tastet Nutella ind i frokostprotokollen."',
+  },
+  Simona:{
+    any_any:        '📱 "Tak! Jeg laver et Instagram-opslag om Toast Torsdag. Det er content GULD."',
+    croissant_any:  '📱 "Croissant! Det ser FANTASTISK ud på et billede. Vent—" *tager telefon frem*',
+    any_nutella:    '📱 "NUTELLA-toast til Torsdag! Det er viral. Det er VIRAL. Tak Tonatan—" "Det er IKKE min Nutella!"',
+  },
+  Asfriodr:{
+    any_any:        '🌐 "Tak. Toast er som krisehåndtering — bedst når det er enkelt."',
+    rug_any:        '🌐 "Rugbrød. Det minder mig om feltrationerne. Gode minder."',
+    any_nutella:    '🌐 "*lang pause* ...I en krise ville vi ikke have Nutella. Men dette er ikke en krise."',
+  },
+  Tfan:{
+    any_any:        '🚗 "Tak, bror. I Sverige spiser de ikke toast. Det er et kulturelt underskud."',
+    any_avocado:    '🚗 "Avocado! Det minder mig om en café i Göteborg. Perfekt, bror."',
+    any_nutella:    '🚗 "Nutella til toast! Det er nordisk fusion, bror. Jeg godkender."',
+  },
+  Tentriette:{
+    hvid_ost:       '✨ "Hvidt brød med ost. Det giver mening. Det hænger logisk sammen."',
+    any_any:        '✨ "Tak. Toast Torsdag giver mening som teamritual. Det skaber sammenhæng."',
+    croissant_any:  '✨ "Croissant... *pause* ...Det giver faktisk mening som festlig variant."',
+    any_nutella:    '✨ "Nutella. Hmm. Det giver mening som sødt modspil til ugens struktur."',
+  },
+  Tarkob:{
+    any_any:        '🎖️ "TOAST! Det er det BEDSTE ved torsdag! Server mig endnu en!"',
+    hvid_ost:       '🎖️ "Hvidt brød med ost — ligesom de serverede det til AaB\'s tredje etage! KLASSIKER!"',
+    any_nutella:    '🎖️ "NUTELLA-TOAST?! Det er HISTORISK! Rådhusklokkerne ringer for NUTELLA!"',
+  },
+};
+
+function getToastReaction(npcId, breadId, toppingId){
+  const r = TOAST_REACTIONS[npcId];
+  if(!r) return '"Tak! Det smager dejligt."';
+  return r[`${breadId}_${toppingId}`]
+      || r[`any_${toppingId}`]
+      || r[`${breadId}_any`]
+      || r.any_any
+      || '"Tak!"';
+}
+
+function openKbhOpslagstavle(){
+  dlgOpen=true;
+  document.getElementById('dlg-portrait').textContent='📌';
+  document.getElementById('dlg-portrait').style.background='#6a4a20';
+  document.getElementById('dlg-name').textContent='Opslagstavle — Møderum A';
+  document.getElementById('dlg-name').style.color='#222';
+  document.getElementById('dlg-text').textContent='En korkbeklædt tavle med to opslag. Til venstre: et lamineret sauna-kort — "FDF SAUNA, Sletten 🌿, 86 84 60 28". Til højre: et gulnet opslag — "Don Tilstrup, Sletten ⛰️, 86 84 57 59". Og et lille stykke papir i bunden med en tegning af en mountainbike.';
+  document.getElementById('dlg-row').style.display='none';
+  document.getElementById('dlg-thinking').classList.remove('on');
+  document.getElementById('dlg').classList.add('on');
+  const dc=document.getElementById('dlg-choices');
+  dc.innerHTML='';
+  const btn=document.createElement('button');
+  btn.className='dlg-choice';btn.textContent='Luk';
+  btn.addEventListener('click',closeDialog);
+  dc.appendChild(btn);
+}
+
+function openToast(){
+  if(currentZone!=='kbh'||currentDay!==DAY.THU||!toastThursdayActive){
+    flash('🍞 Toast Torsdag er kun torsdag i Køpmannæhafn!'); return;
+  }
+  toastSelectedBread=null; toastSelectedTopping=null; toastSelectedNPC=null;
+  document.getElementById('toast-overlay').classList.add('on');
+  document.getElementById('toast-reaction').textContent='Vælg brød, pålæg og en kollega...';
+  document.getElementById('toast-serve-btn').disabled=true;
+  buildToastMenu();
+  buildToastNPCList();
+}
+
+function closeToast(){
+  document.getElementById('toast-overlay').classList.remove('on');
+}
+
+function buildToastMenu(){
+  const bEl=document.getElementById('toast-breads');
+  bEl.innerHTML='';
+  TOAST_BREADS.forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='toast-item';
+    btn.textContent=b.label;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#toast-breads .toast-item').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      toastSelectedBread=b;
+      checkToastReady();
+    });
+    bEl.appendChild(btn);
+  });
+  const tEl=document.getElementById('toast-toppings');
+  tEl.innerHTML='';
+  TOAST_TOPPINGS.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='toast-item';
+    btn.textContent=t.label;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#toast-toppings .toast-item').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      toastSelectedTopping=t;
+      checkToastReady();
+    });
+    tEl.appendChild(btn);
+  });
+}
+
+function buildToastNPCList(){
+  const list=document.getElementById('toast-npc-list');
+  list.innerHTML='';
+  const npcsHere=kbhNpcs.filter(n=>n.id!=='Sumsar'&&(!n.days||n.days.includes(currentDay)));
+  npcsHere.forEach(npc=>{
+    const col=KBH_COLORS[npc.id]||{shirt:'#555',emoji:'👤'};
+    const btn=document.createElement('button');
+    btn.className='toast-npc';
+    btn.innerHTML=`<span style="background:${col.shirt};width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block"></span>${npc.name}`;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.toast-npc').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      toastSelectedNPC=npc;
+      checkToastReady();
+    });
+    list.appendChild(btn);
+  });
+}
+
+function checkToastReady(){
+  document.getElementById('toast-serve-btn').disabled=!(toastSelectedBread&&toastSelectedTopping&&toastSelectedNPC);
+}
+
+function serveToast(){
+  if(!toastSelectedBread||!toastSelectedTopping||!toastSelectedNPC) return;
+  const reaction=getToastReaction(toastSelectedNPC.id, toastSelectedBread.id, toastSelectedTopping.id);
+  document.getElementById('toast-reaction').textContent=reaction;
+  document.getElementById('toast-serve-btn').disabled=true;
+  document.querySelectorAll('.toast-item,.toast-npc').forEach(b=>b.classList.remove('selected'));
+  toastSelectedBread=null; toastSelectedTopping=null; toastSelectedNPC=null;
+  setTimeout(()=>{
+    document.getElementById('toast-reaction').textContent='Vælg brød, pålæg og en kollega...';
+  }, 4000);
+}
+
+function triggerToastThursday(){
+  toastThursdayActive=true;
+  flash('🍞 TOAST TORSDAG! Tre toastmaskiner er klar i fællesrummet!');
+}
 
 function getBarReaction(npcId, drinkId, drinkType){
   const r = BAR_REACTIONS[npcId];
@@ -1595,16 +1870,27 @@ function initWorldObjects(){
   radioObj   = {id:'radio',   x:248, y:425, r:60, label:'Slå radio til 📻',       hintPos:{left:'193px',top:'370px'},  onActivate:openRadio};
   generalBtn = {id:'general', x:405, y:50,  r:38, label:'Ring til Generalen 🔴',   hintPos:{left:'345px',top:'85px'},   onActivate:()=>{if(!tarkob.active)summonTarkob();}};
   paintingObj= {id:'painting',x:500, y:50,  r:45, label:'Se maleriet 🎨',          hintPos:{left:'450px',top:'85px'},   onActivate:activatePainting};
-
   barObj     = {id:'bar',     x:405, y:320, r:70, label:'FORBUNDSBAR 🍸',          hintPos:{left:'355px',top:'280px'},  onActivate:openBar};
   WORLD_OBJECTS.push(phoneObj, calObj, radioObj, generalBtn, paintingObj, barObj);
+
+  // KBH objects — same functions, different positions
+  WORLD_OBJECTS.push(
+    {id:'kbh_radio', x:kbhRadioX, y:kbhRadioY, r:50, label:'Slå radio til 📻', zone:'kbh', onActivate:openRadio},
+    {id:'kbh_cal',   x:kbhCalX,   y:kbhCalY,   r:55, label:'Åbn kalender 📅',  zone:'kbh', onActivate:openCalendar},
+    {id:'kbh_phone', x:kbhPhoneX, y:kbhPhoneY, r:55, label:'Ring til FDF 📞',  zone:'kbh', onActivate:openPhone},
+    {id:'kbh_toast', x:415,       y:185,        r:70, label:'🍞 Toast Torsdag!', zone:'kbh', onActivate:openToast},
+    {id:'kbh_ops',   x:100,       y:250,        r:55, label:'Kig på opslagstavlen 📌', zone:'kbh', onActivate:()=>openKbhOpslagstavle()},
+  );
 }
 
-// Single lookup: nearest world object in range (respects per-object conditions)
+// Single lookup: nearest world object in range (zone-aware)
 function nearbyWorldObject(){
   for(const obj of WORLD_OBJECTS){
+    if(obj.zone && obj.zone!==currentZone) continue;
+    if(!obj.zone && currentZone!=='aros') continue;
     if(obj.id==='general' && tarkob.active) continue;
     if(obj.id==='bar' && (currentDay!==DAY.FRI||!fridayBarActive)) continue;
+    if(obj.id==='kbh_toast' && (currentDay!==DAY.THU||!toastThursdayActive)) continue;
     const d=Math.hypot(player.x-obj.x, player.y-obj.y);
     if(d<obj.r) return obj;
   }
@@ -1621,7 +1907,7 @@ function collides(nx,ny){
   function hits(list){for(const o of list){if(nx-hw<o.x+o.w&&nx+hw>o.x&&ny-hh<o.y+o.h&&ny+hh>o.y)return true;}return false;}
   if(currentZone==='aros'){
     // Top wall: full unless unlocked + in door gap
-    const inDoorGap = secretDoorUnlocked && nx>350 && nx<550;
+    const inDoorGap = secretDoorUnlocked && nx>330 && nx<530;
     const activeWalls = inDoorGap
       ? walls.filter(w=>!(w.x===0&&w.y===0&&w.w===900&&w.h===30))
       : walls;
@@ -1713,16 +1999,16 @@ function endTarkobWedVisit(){
 // NPC WANDER + SUDOKU + MEETING + COFFEE
 // ═══════════════════════════════════════════
 const wander={
-  Jas:        {hx:695,hy:318,tx:695,ty:318,t:0,r:28},
-  Gune:       {hx:695,hy:260,tx:695,ty:260,t:0,r:24},
+  Jas:        {hx:805,hy:217,tx:800,ty:182,t:0,r:20},
+  Gune:       {hx:660,hy:217,tx:685,ty:182,t:0,r:20},
   Neter:      {hx:90, hy:268,tx:90, ty:268,t:0,r:32},
   Heresa:     {hx:90, hy:368,tx:90, ty:368,t:0,r:28},
-  Delisateth: {hx:795,hy:388,tx:795,ty:388,t:0,r:24},
-  Anne:       {hx:795,hy:228,tx:795,ty:228,t:0,r:32},
+  Delisateth: {hx:805,hy:352,tx:800,ty:262,t:0,r:20},
+  Anne:       {hx:660,hy:352,tx:685,ty:262,t:0,r:20},
   Tfan:       {hx:370,hy:230,tx:370,ty:230,t:0,r:38},
   Tentriette: {hx:480,hy:230,tx:480,ty:230,t:0,r:38},
 };
-const anneWP=[{x:795,y:228},{x:600,y:400},{x:300,y:420},{x:200,y:300},{x:400,y:200},{x:795,y:228}];
+const anneWP=[{x:660,y:352},{x:600,y:400},{x:300,y:420},{x:200,y:300},{x:400,y:200},{x:660,y:352}];
 let anneWPIdx=0,anneWPT=0;
 
 // sudoku
@@ -1905,7 +2191,7 @@ function drawRoom(){
   if(secretDoorUnlocked){
     const dt=Date.now()/600;
     ctx.fillStyle=`rgba(100,60,200,${.3+.2*Math.sin(dt)})`;
-    ctx.fillRect(350,0,200,30);
+    ctx.fillRect(330,0,200,30);
     ctx.fillStyle='rgba(180,150,255,.8)';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
     ctx.fillText('↑ KOPIRUM',450,20);ctx.textAlign='left';
   }
@@ -1918,7 +2204,45 @@ function drawRoom(){
   ctx.strokeStyle='#3d4571';ctx.lineWidth=2;
   for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(30,60+i*30);ctx.lineTo(870,60+i*30);ctx.globalAlpha=.12;ctx.stroke();ctx.globalAlpha=1;}
 
-  drawKaffe(); drawGroupTable(); drawSofa(); drawDesks(); drawPlants(); drawPhone(); drawCalendar(); drawRadioObj(); drawGeneralBtn(); drawPainting(); drawSecretDoor();
+  drawKaffe(); drawGroupTable(); drawSofa(); drawDesks(); drawPlants(); drawPhone(); drawCalendar(); drawRadioObj(); drawGeneralBtn(); drawPainting(); drawSecretDoor(); drawOpslagstavle();
+}
+
+function drawOpslagstavle(){
+  // Opslagstavle på væggen ved kopimaskinen, x:20-92, y:30-85
+  const x=80, y=32, w=72, h=54;
+  // Ramme
+  ctx.fillStyle='#6a4a20';rr(x-4,y-4,w+8,h+8,4);
+  ctx.fillStyle='#c8a870';rr(x,y,w,h,3);
+  // Baggrund — kork-farve
+  ctx.fillStyle='#d4a855';ctx.fillRect(x+2,y+2,w-4,h-4);
+  // Papirer i forskellige vinkler
+  ctx.save();
+  ctx.translate(x+15,y+18);ctx.rotate(-.08);
+  ctx.fillStyle='#fff';ctx.strokeStyle='#ccc';ctx.lineWidth=.5;
+  ctx.fillRect(-12,-10,28,22);ctx.strokeRect(-12,-10,28,22);
+  ctx.fillStyle='#aaa';ctx.font='5px Comic Neue';
+  ctx.fillText('FDF 2024',-9,0);ctx.fillText('program',-9,7);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(x+48,y+22);ctx.rotate(.06);
+  ctx.fillStyle='#fffde7';ctx.strokeStyle='#ccc';ctx.lineWidth=.5;
+  ctx.fillRect(-10,-12,22,20);ctx.strokeRect(-10,-12,22,20);
+  ctx.restore();
+  // Visitkort synligt i hjørnet (Don T.)
+  ctx.save();
+  ctx.translate(x+52,y+42);ctx.rotate(.04);
+  ctx.fillStyle='#fff';ctx.strokeStyle='#4a6a9a';ctx.lineWidth=1;
+  ctx.fillRect(-14,-9,28,18);ctx.strokeRect(-14,-9,28,18);
+  ctx.fillStyle='#2d3561';ctx.font='bold 4px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('Don T.',0,-2);
+  ctx.fillStyle='#555';ctx.font='4px Comic Neue';
+  ctx.fillText('Sletten',0,5);
+  ctx.restore();
+  // Tegnestifter
+  [[x+8,y+8],[x+64,y+8],[x+8,y+46],[x+64,y+46]].forEach(([px,py])=>{
+    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fill();
+  });
 }
 
 function drawKaffe(){
@@ -1953,15 +2277,24 @@ function drawSofa(){
   ctx.strokeStyle='#222';ctx.lineWidth=2.5;ctx.stroke();
   ctx.fillStyle='#c05a34';rr(50,430,180,18,8);ctx.stroke();
   ctx.fillStyle='#eb9264';rr(56,450,58,36,6);ctx.stroke();rr(120,450,58,36,6);ctx.stroke();
-  ctx.fillStyle='#fff';ctx.font='bold 10px Comic Neue';ctx.textAlign='center';
+  // Landslejr-flyer liggende på sofaen
+  ctx.save();
+  ctx.translate(95,445);ctx.rotate(-.12);
+  ctx.fillStyle='#fffde7';ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+  ctx.fillRect(-22,-14,44,28);ctx.strokeRect(-22,-14,44,28);
+  ctx.fillStyle='#c0392b';ctx.font='bold 5px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('LANDSLEJR',0,-6);
+  ctx.fillStyle='#555';ctx.font='4px Comic Neue';
+  ctx.fillText('2026',0,1);ctx.fillText('Crisdan Callas',0,8);
+  ctx.restore();
   ctx.textAlign='left';
 }
 
 function drawDesks(){
-  [{x:650,y:175,lbl:'Gune',ic:'🎮',c:'#9b59b6'},
-   {x:750,y:155,lbl:'Anne',ic:'📊',c:'#2980b9'},
-   {x:650,y:245,lbl:'Jas',ic:'☕',c:'#3498db'},
-   {x:750,y:315,lbl:'Delisateth',ic:'🏛',c:'#8e44ad'},
+  [{x:615,y:190,lbl:'Gune',ic:'🎮',c:'#9b59b6'},
+   {x:615,y:325,lbl:'Anne',ic:'📊',c:'#2980b9'},
+   {x:760,y:190,lbl:'Jas',ic:'☕',c:'#3498db'},
+   {x:760,y:325,lbl:'Delisateth',ic:'🏛',c:'#8e44ad'},
    {x:45,y:195,lbl:'Neter',ic:'🎲',c:'#27ae60'},
    {x:45,y:295,lbl:'Heresa',ic:'🍎',c:'#e74c3c'}].forEach(d=>{
     ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(d.x+4,d.y+4,90,55);
@@ -1972,6 +2305,23 @@ function drawDesks(){
     ctx.fillStyle=d.c;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
     ctx.fillText(d.lbl,d.x+45,d.y+52);ctx.textAlign='left';
   });
+  // Sauna-kontaktkort bag energidrik på Gunes bord (x:615, y:190)
+  const gx=615, gy=190;
+  // Energidrik (halvt tom)
+  ctx.fillStyle='#7dce13';rr(gx+62,gy+6,14,28,4);
+  ctx.strokeStyle='#5aaa00';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(gx+64,gy+8,4,12);
+  // Lamineret kort bag drikken
+  ctx.save();
+  ctx.translate(gx+52,gy+30);ctx.rotate(.05);
+  ctx.fillStyle='#e8f4f8';ctx.strokeStyle='#4a9ab0';ctx.lineWidth=1.5;
+  ctx.fillRect(-18,-12,36,22);ctx.strokeRect(-18,-12,36,22);
+  ctx.fillStyle='#1a6a80';ctx.font='bold 4px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('FDF SAUNA',0,-4);
+  ctx.fillStyle='#555';ctx.font='4px Comic Neue';
+  ctx.fillText('Sletten 🌿',0,4);
+  ctx.restore();
+  ctx.textAlign='left';
 }
 
 function drawPlants(){
@@ -2874,7 +3224,19 @@ const trees = {
       {label:'📊 Hvad arbejder du med?',          next:'gune_job'},
       {label:'🏛️ Hvad ved du om FDF\'s historie?', next:'gune_historie'},
       {label:'🔢 Hvad ved du om Holger Tornøe?',  next:'gune_holger'},
+      {label:'🧖 Du og saunaen?',                 next:'gune_sauna'},
     ],
+    gune_sauna:{
+      text:'*lyser op* Saunaen på Sletten. Fugtighed 18%, birkekviste, 80 grader. Optimalt. Nummeret er... jeg har skrevet det ned et sted herinde. Kig dig around. Det er lamineret.',
+      choices:[
+        {label:'Hvad laver I derinde egentlig?',   next:'gune_sauna_hvad'},
+        {label:'Jeg finder det!',                   next:'__close'},
+      ]
+    },
+    gune_sauna_hvad:{
+      text:'Personalemøder. Ingen mails. Ingen referat. Kun enighed og sved. Den mest effektive mødeform vi har fundet. Statistisk set.',
+      choices:[{label:'Genialt. Jeg finder nummeret.',  next:'__close'}]
+    },
     gune_spil:{
       text:'*suk* Det er ikke relevant for arbejdet. Men... lige nu: Factorio. Det er effektivitetssimulator. Meget realistisk.',
       choices:[
@@ -3335,7 +3697,42 @@ const trees = {
       {label:'🚗 Fortæl mig om Sverige-turen',          next:'tfan_sverige'},
       {label:'🏢 Hvad betyder FDF for dig?',             next:'tfan_fdf'},
       {label:'📧 Hvad er det med beredskabsmailene?',    next:'tfan_mail'},
+      {label:'📞 Hvad sker der ude i centrene?',         next:'tfan_don'},
+      {label:'🏙️ Hvad sker der i Køpmannæhafn?',         next:'tfan_kbh'},
     ],
+    tfan_kbh:{
+      text:'Åh — du skal møde holdet i Køpmannæhafn. Det er vores kolleger i kommunikation, kursus, økonomi. Rigtig gode mennesker. Tia er fantastisk. Amers kender alle systemerne. Og Tonatan... han har Nutella i skuffen, men det er hemmeligt.',
+      choices:[
+        {label:'Hvordan kommer jeg derover?',            next:'tfan_kbh_hvordan'},
+        {label:'Hvad laver de egentlig?',                next:'tfan_kbh_hvad'},
+      ]
+    },
+    tfan_kbh_hvordan:{
+      text:'*sænker stemmen* Der er en dør her på kontoret som ikke altid er åben. Du skal finde ud af hvad der gemmer sig. Spørg rundt. Og kig godt efter på væggene.',
+      choices:[{label:'Jeg undersøger det!',             next:'__close'}]
+    },
+    tfan_kbh_hvad:{
+      text:'Kommunikation, kursus, økonomi, landsdele. Det hele. Og torsdag laver de toast. Tre maskiner på fællesbordet. Det er en tradition jeg faktisk misunder dem.',
+      choices:[
+        {label:'Toast? Tre maskiner?',                   next:'tfan_kbh_toast'},
+        {label:'Hvordan kommer jeg derover?',            next:'tfan_kbh_hvordan'},
+      ]
+    },
+    tfan_kbh_toast:{
+      text:'Toast Torsdag. Brød, pålæg, kollegerne. Det er hygge på den rigtige måde. Simona laver Instagram-opslag om det. Tonatan nægter at indrømme at Nutella-toasten er hans idé.',
+      choices:[{label:'Det lyder ikke til at gå glip af.',next:'__close'}]
+    },
+    tfan_don:{
+      text:'Du skal finde Don Tilstrups nummer. Det flyder rundt et sted på kontoret — han uddeler visitkort som konfetti. Kig dig omkring. Når du har det, ring og spørg om projekterne.',
+      choices:[
+        {label:'Hvad handler han mest om?',            next:'tfan_don_om'},
+        {label:'Tak for tipset!',                      next:'__close'},
+      ]
+    },
+    tfan_don_om:{
+      text:'Mountainbike. Sletten. Banklån. I den rækkefølge. Men imellem dem — rigtig god indsigt i hvad der bevæger sig derude.',
+      choices:[{label:'Jeg finder nummeret!',          next:'__close'}]
+    },
     tfan_sverige:{
       text:'Sverige er... *sætter sig tilbage* ...Sverige er det tætteste jeg kommer på fred. Roligt. Smukt. Og elbilen kører bare og kører.',
       choices:[
@@ -3546,7 +3943,42 @@ const trees = {
       {label:'✨ Hvad er vigtigt for dig på jobbet?',   next:'tent_vigtig'},
       {label:'📍 Hvor er du egentlig fra?',              next:'tent_fra'},
       {label:'👥 Hvad tænker du om dit hold?',           next:'tent_hold'},
+      {label:'📞 Hvad gør man med en god idé?',          next:'tent_ide'},
+      {label:'🏙️ Hvad med kollegerne i Køpmannæhafn?',  next:'tent_kbh'},
     ],
+    tent_kbh:{
+      text:'De er dygtige. Det giver mening at besøge dem. Ásfríðr arbejder med landsdele og krisehåndtering — hun er utrolig rolig under pres. Og Emse... hun strikker under møder, men hun er skarpere end de fleste.',
+      choices:[
+        {label:'Hvordan kommer man derover?',            next:'tent_kbh_hvordan'},
+        {label:'Er der nogen jeg særligt skal tale med?',next:'tent_kbh_hvem'},
+      ]
+    },
+    tent_kbh_hvordan:{
+      text:'Der er en vej der åbner sig når man forstår kontoret her til fulde. Det giver mening at undersøge sine omgivelser grundigt. Kig på tingene. Lyt til folk. Tingene hænger sammen.',
+      choices:[{label:'Jeg finder ud af det.',           next:'__close'}]
+    },
+    tent_kbh_hvem:{
+      text:'Simona. Hun laver kommunikation og content — hun er god til at se hvad der virker. Og Bennette, hvis du vil vide noget om kredsstart eller pigefodbold. Begge dele med samme energi.',
+      choices:[
+        {label:'Og Emse?',                              next:'tent_kbh_emse'},
+        {label:'Hvordan kommer jeg derover?',            next:'tent_kbh_hvordan'},
+      ]
+    },
+    tent_kbh_emse:{
+      text:'Emse er... kompleks. Hun koordinerer kurser, hun strikker, og der er noget med Lejrcentrum Work som jeg ikke forstår fuldt ud. Men hun leverer. Det giver mening.',
+      choices:[{label:'Interessant. Tak!',               next:'__close'}]
+    },
+    tent_ide:{
+      text:'Man ringer til landslejrchefen. Crisdan Callas. Han er åben for idéer — det er faktisk hans foretrukne kommunikationsform. Hans nummer er... et sted her på kontoret. Folk gemmer det lidt underligt.',
+      choices:[
+        {label:'Hvad slags idéer?',                    next:'tent_ide_slags'},
+        {label:'Jeg finder nummeret!',                 next:'__close'},
+      ]
+    },
+    tent_ide_slags:{
+      text:'Lejridéer, programkoncepter, logistik. Alt hvad der løfter en landslejr. Find nummeret og ring. Det giver mening.',
+      choices:[{label:'Forstået. Tak!',                next:'__close'}]
+    },
     tent_vigtig:{
       text:'At tingene giver mening. Fra bund til top. Værdier, opgaver, struktur — det hele skal hænge sammen. Ellers er det bare støj.',
       choices:[
@@ -3922,6 +4354,22 @@ async function askNPC(npc,question){
 // PHONE DIALOG TREES
 // ═══════════════════════════════════════════
 const phoneTrees={
+  tasmus:{
+    greeting:'*statisk støj* ...HEJ?! ER DER NOGEN?! JEG ER TASMUS TRYDENSDAHL — JEG ER BORTFØRT—',
+    start:[
+      {label:'Tasmus — hvad sker der?!', next:'tasmus_hvad'},
+      {label:'Hvor er du?',               next:'tasmus_hvor'},
+      {label:'Hvem har taget dig?',       next:'tasmus_hvem'},
+    ],
+    tasmus_hvad:{text:'*hviskende* De er her... de er her hele tiden. Jeg kan ikke sige mere. Send hjælp. Og kaffe. Der er INGEN KAFFE her—',choices:[{label:'Hvem er "de"?',next:'tasmus_hvem'},{label:'Hvor er du?',next:'tasmus_hvor'}]},
+    tasmus_hvor:{text:'Jeg ved det ikke! Der er ingen vinduer. Der er en printer der kører hele natten. Den printer bare... blanke sider. BLANKE SIDER, SIGER JEG—',choices:[{label:'En printer...?',next:'tasmus_printer'},{label:'Vi finder dig, Tasmus!',next:'tasmus_farvel'}]},
+    tasmus_hvem:{text:'*lang pause* ...Jeg tror... det er nogen fra regnskabsafdelingen. Men det giver ingen mening. INTET GIVER MENING—',choices:[{label:'Regnskab?',next:'tasmus_regnskab'},{label:'Hold ud, Tasmus!',next:'tasmus_farvel'}]},
+    tasmus_printer:{text:'Den printer en side hvert 7. minut. Jeg har talt dem. 847 blanke sider. Det er et BUDSKAB—',choices:[{label:'Hvad slags budskab?',next:'tasmus_budskab'},{label:'Vi finder dig!',next:'tasmus_farvel'}]},
+    tasmus_budskab:{text:'Det ved jeg IKKE! Det er derfor det er et budskab! *lyd af trin* De kommer— HUSK MIG—',choices:[{label:'*Forbindelsen brydes*',next:'__close'}]},
+    tasmus_regnskab:{text:'De nikkede altid så... præcist. For præcist. Som en metronom. Det burde have advaret mig— *støj* —DE KAN HØRE MIG—',choices:[{label:'Vi ringer til politiet!',next:'tasmus_politi'},{label:'*Forbindelsen brydes*',next:'__close'}]},
+    tasmus_politi:{text:'POLITIET KAN IKKE HJÆLPE MOD REGNSKABSFOLK— *klik*',choices:[{label:'...Tasmus?',next:'__close'}]},
+    tasmus_farvel:{text:'Tak. SEND HJÆLP. Og kaffe. *forbindelsen brydes*',choices:[{label:'*Læg på*',next:'__close'}]},
+  },
   lt:{
     greeting:'FDF, LT — Lokalt Engagement, goddag! Hvad kan jeg hjælpe med?',
     start:[
@@ -4126,6 +4574,8 @@ function showPhoneMenu(){
     if(v===SECRET_CODE){
       screen.textContent='Ringer til: '+v+'\n\n☎ ...';
       setTimeout(unlockSecretDoor, 800);
+    } else if(v==='41731170'){
+      dialPhoneTree('tasmus');
     } else if(v==='86845759'){
       dialPhoneTree('don');
     } else if(v==='40680106'){
@@ -4346,6 +4796,8 @@ function activateNearest(){
   if(currentZone==='kbh'){
     const kn=nearbyKbhNPC();
     if(kn){openKbhDialog(kn);return;}
+    const obj=nearbyWorldObject();
+    if(obj){obj.onActivate();return;}
     if(player.y>510&&player.x>340&&player.x<560) enterArosFromKopi();
     return;
   }
@@ -4455,7 +4907,7 @@ function update(){
   if(!collides(player.x,player.y+dy)){
     player.y=Math.max(20,Math.min(540,player.y+dy));
     // Zone boundary triggers
-    if(currentZone==='aros'&&secretDoorUnlocked&&player.y<30&&player.x>350&&player.x<550) enterKopi('aros');
+    if(currentZone==='aros'&&secretDoorUnlocked&&player.y<30&&player.x>330&&player.x<530) enterKopi('aros');
     if(currentZone==='kbh'&&player.y>530)  enterArosFromKopi();
   }
   if(discOpen&&(Math.abs(player.x-discPlayerPos.x)>8||Math.abs(player.y-discPlayerPos.y)>8))closeDisc();
@@ -4484,6 +4936,10 @@ function enterZone(zone, px, py){
     player.y = py || 280;
     tapTarget = null;
     closeDialog(); closeBar();
+    // Opdater HUD-titel
+    const titles={aros:'FDF BYCENTER AROS', kbh:'FDF BYCENTER KØPMANNÆHAFN'};
+    const hudTitle=document.getElementById('hud-title');
+    if(hudTitle) hudTitle.textContent=titles[zone]||'FDF';
     requestAnimationFrame(()=>{
       overlay.style.opacity='0';
       setTimeout(()=>{ document.body.removeChild(overlay); locationTransitioning=false; }, 550);
@@ -4492,14 +4948,15 @@ function enterZone(zone, px, py){
 }
 
 function enterKopi(fromZone){
-  // Kopi is the dark center of KBH — go straight there
   if(fromZone==='aros'){
-    enterZone('kbh', 450, 470); // appear at bottom of KBH kopirummet
+    enterZone('kbh', 530, 460);
     setTimeout(()=>flash('🕯️ Du træder ind... luften er anderledes her.'), 600);
     setTimeout(()=>flash('📜 Du er i kopirummet. Gå opad for at nå fællesrummet.'), 3000);
+    if(currentDay===DAY.THU) setTimeout(triggerToastThursday, 4500);
   } else {
-    enterZone('kbh', 450, 400); // appear in middle of KBH kopirummet
+    enterZone('kbh', 530, 380);
     setTimeout(()=>flash('🚪 Tilbage i kopirummet.'), 600);
+    if(currentDay===DAY.THU && !toastThursdayActive) setTimeout(triggerToastThursday, 2000);
   }
 }
 
@@ -4576,9 +5033,6 @@ const KBH_UNIFIED_WALLS = [
 
   // Kopirum / Kontor LT divider (x:580), from y:290 to y:540
   {x:576,y:294,w:8,h:246},
-
-  // Kopirum top wall (y:360), gap in middle at x:420-480
-  {x:324,y:356,w:96,h:8},  {x:484,y:356,w:96,h:8},
 ];
 
 const KBH_UNIFIED_OBSTACLES = [
@@ -4605,56 +5059,71 @@ const KBH_UNIFIED_OBSTACLES = [
 // KBH_BACK_DOOR removed — player walks back through kopi physically
 
 
+// ── KBH OBJECT POSITIONS ─────────────────────────────────────────────────────
+const kbhKaffeX=630, kbhKaffeY=40;   // Fællesrum (right side)
+const kbhRadioX=88,  kbhRadioY=260;  // Møderum A bottom wall
+const kbhCalX=792,   kbhCalY=15;     // Møderum B top wall
+const kbhPhoneX=100, kbhPhoneY=445;  // Kontor NT
+
 // ── KBH COLLISION (local 0-900, 0-560) ───────────────────────────────────────
 
 const kbhOuterWalls = [
+  // Ydre perimeter
   {x:0,  y:0,  w:900,h:20 }, // top
-  {x:0,  y:540,w:350,h:20 }, // bottom left of south door
-  {x:550,y:540,w:350,h:20 }, // bottom right of south door
-  {x:0,  y:0,  w:20, h:560}, // left
-  {x:880,y:0,  w:20, h:560}, // right
-  // Internal: Møderum A right wall (x:200), gap y:100-200
-  {x:196,y:20, w:8,h:80 },{x:196,y:205,w:8,h:60},
-  // Møderum B left wall (x:700), gap y:100-200
-  {x:696,y:20, w:8,h:80 },{x:696,y:205,w:8,h:60},
-  // Møderum A bottom
-  {x:20, y:230,w:176,h:8},
-  // Møderum B bottom
-  {x:704,y:230,w:176,h:8},
-  // Horizontal divider fællesrum/offices (y:295)
-  {x:20, y:291,w:100,h:8},{x:204,y:291,w:492,h:8},{x:776,y:291,w:104,h:8},
-  // NT/kopi divider
+  {x:0,  y:540,w:350,h:20 }, // bund venstre (syd-dør åbning 350-550)
+  {x:550,y:540,w:350,h:20 }, // bund højre
+  {x:0,  y:0,  w:20, h:560}, // venstre
+  {x:880,y:0,  w:20, h:560}, // højre
+
+  // Møderum A / Fællesrum (x:200) — bred åbning y:55-245 (190px)
+  {x:196,y:20, w:8,h:35 },   // top-stub (minimalt hjørne)
+  {x:196,y:245,w:8,h:50 },   // bund-stub (over horisontal skillevæg)
+
+  // Møderum B / Fællesrum (x:700) — bred åbning y:55-245
+  {x:696,y:20, w:8,h:35 },
+  {x:696,y:245,w:8,h:50 },
+
+  // Horisontal skillevæg y:295
+  // MA-bund (smal): x:20-120 — trækkes tilbage for bred NT-åbning
+  {x:20, y:291,w:100,h:8},
+  // MB-bund (smal): x:780-880
+  {x:780,y:291,w:100,h:8},
+  // NT åbning: x:120-316 = 196px — bred nok til NPC-vandring
+  // Kopi åbning: x:316-584 = 268px — ÅBEN
+  // LT åbning: x:584-780 = 196px — bred
+
+  // NT / Kopirum skillevæg (x:316)
   {x:316,y:299,w:8,h:241},
-  // kopi/LT divider
+  // Kopirum / LT skillevæg (x:584)
   {x:576,y:299,w:8,h:241},
 ];
 const kbhObstacles = [
-  {x:310,y:75, w:280,h:100}, // fællesrum table
-  {x:50, y:55, w:90, h:70 }, // reception
-  {x:30, y:95, w:130,h:140}, // Møderum A table
-  {x:740,y:95, w:130,h:140}, // Møderum B table
-  {x:40, y:335,w:90, h:55 }, // Kontor NT desk 1
-  {x:150,y:335,w:90, h:55 }, // Kontor NT desk 2
-  {x:40, y:425,w:90, h:55 }, // Kontor NT desk 3
-  {x:380,y:385,w:140,h:70 }, // Kopirum machine (in middle column)
-  {x:620,y:335,w:90, h:55 }, // Kontor LT desk 1
-  {x:730,y:335,w:90, h:55 }, // Kontor LT desk 2
+  {x:280,y:60, w:280,h:100}, // fællesrum bord
+  {x:40, y:85, w:120,h:120}, // Møderum A rundt bord (cirkel approx)
+  {x:733,y:105,w:110,h:100}, // Møderum B bord
+  {x:35, y:340,w:85, h:50 }, // NT desk 1
+  {x:145,y:340,w:85, h:50 }, // NT desk 2
+  {x:35, y:430,w:85, h:50 }, // NT desk 3
+  {x:350,y:420,w:100,h:60 }, // Kopirum maskine
+  {x:700,y:330,w:85, h:50 }, // LT desk 3 (Ásfríðr)
+  {x:605,y:410,w:85, h:50 }, // LT desk 1 (Amers, 80px ned)
+  {x:730,y:410,w:85, h:50 }, // LT desk 2 (Simona, 80px ned)
 ];
 
 // ── KBH NPCs ──────────────────────────────────────────────────────────────────
 const kbhNpcs=[
-  {id:'Tia',      name:'Tia Sydhavn',       title:'Kommunikation & Brand',       x:300,y:170, emoji:'🍺'},
-  {id:'Sarap',    name:'Sarap',             title:'Studentermedhjælper',          x:580,y:170, emoji:'🩰'},
-  {id:'Bennette', name:'Bennette',          title:'Kredsstart Co-Manager',        x:440,y:240, emoji:'⚽'},
-  {id:'Rime',     name:'Rime Bindberg',     title:'Kursus & Medlemsekspert',      x:70,y:370, emoji:'📋'},
-  {id:'Emse',     name:'Emse Thoftmår',    title:'Kursus & Strik Queen',         x:180,y:370, emoji:'🧶'},
-  {id:'Tonatan',  name:'Tonatan',           title:'Økonomi',                      x:270,y:460, emoji:'💰'},
-  {id:'Amers',    name:'Amers Klosterkant', title:'Medlemsorganisator',           x:660,y:370, emoji:'🖥️'},
-  {id:'Simona',   name:'Simona',            title:'Content & Kommunikation',      x:780,y:370, emoji:'📱'},
-  {id:'Asfriodr', name:'Ásfríðr',           title:'Landsdele & Krise',            x:108,y:140, emoji:'🌐'},
-  {id:'Sumsar',   name:'Sumsar Dnil',       title:'På barsel (tilsyneladende)',   x:450, y:430, emoji:'👶'},
-  {id:'Tfan',       name:'Tfan',       title:'Chef NT',         x:350,y:200, emoji:'🚗', days:[DAY.TUE,DAY.WED,DAY.THU,DAY.FRI], useArosDialog:true},
-  {id:'Tentriette', name:'Tentriette', title:'Chef LT',         x:540,y:240, emoji:'✨', days:[DAY.TUE,DAY.WED],                  useArosDialog:true},
+  {id:'Tia',      name:'Tia Sydhavn',       title:'Kommunikation & Brand',       x:360,y:160, emoji:'🍺'},
+  {id:'Sarap',    name:'Sarap',             title:'Studentermedhjælper',          x:560,y:160, emoji:'🩰'},
+  {id:'Bennette', name:'Bennette',          title:'Kredsstart Co-Manager',        x:450,y:240, emoji:'⚽'},
+  {id:'Rime',     name:'Rime Bindberg',     title:'Kursus & Medlemsekspert',      x:80, y:380, emoji:'📋'},
+  {id:'Emse',     name:'Emse Thoftmår',    title:'Kursus & Strik Queen',         x:180,y:380, emoji:'🧶'},
+  {id:'Tonatan',  name:'Tonatan',           title:'Økonomi',                      x:260,y:470, emoji:'💰'},
+  {id:'Amers',    name:'Amers Klosterkant', title:'Medlemsorganisator',           x:650,y:460, emoji:'🖥️'},
+  {id:'Simona',   name:'Simona',            title:'Content & Kommunikation',      x:780,y:460, emoji:'📱'},
+  {id:'Asfriodr', name:'Ásfríðr',           title:'Landsdele & Krise',            x:745,y:360, emoji:'🌐'},
+  {id:'Sumsar',   name:'Sumsar Dnil',       title:'På barsel (tilsyneladende)',   x:450,y:430, emoji:'👶'},
+  {id:'Tfan',       name:'Tfan',       title:'Chef NT',         x:340,y:180, emoji:'🚗', days:[DAY.TUE,DAY.WED,DAY.THU,DAY.FRI], useArosDialog:true},
+  {id:'Tentriette', name:'Tentriette', title:'Chef LT',         x:560,y:210, emoji:'✨', days:[DAY.TUE,DAY.WED],                  useArosDialog:true},
   {id:'Tarkob',     name:'Tarkob',     title:'Generalsekretær', x:450,y:120, emoji:'🎖️', days:[DAY.MON,DAY.TUE,DAY.THU,DAY.FRI], useArosDialog:true},
 ];
 const KBH_COLORS={
@@ -4671,19 +5140,19 @@ const KBH_COLORS={
   Tfan:COLORS.Tfan, Tentriette:COLORS.Tentriette, Tarkob:COLORS.Tarkob,
 };
 const kbhWander={
-  Tia:{hx:300,hy:170,tx:300,ty:170,t:0,r:60,spd:.55},
-  Sarap:{hx:580,hy:170,tx:580,ty:170,t:0,r:50,spd:.55},
-  Bennette:{hx:440,hy:240,tx:440,ty:240,t:0,r:60,spd:.55},
-  Rime:{hx:70,hy:370,tx:70,ty:370,t:0,r:30,spd:.55},
-  Emse:{hx:180,hy:370,tx:180,ty:370,t:0,r:30,spd:.55},
-  Tonatan:{hx:270,hy:460,tx:270,ty:460,t:0,r:30,spd:.55},
-  Amers:{hx:660,hy:370,tx:660,ty:370,t:0,r:30,spd:.55},
-  Simona:{hx:780,hy:370,tx:780,ty:370,t:0,r:30,spd:.55},
-  Asfriodr:{hx:108,hy:140,tx:108,ty:140,t:0,r:70,spd:.55},
-  Sumsar:{hx:450, hy:430,tx:450, ty:430,t:0,r:15,spd:.2},
-  Tfan:{hx:350,hy:200,tx:350,ty:200,t:0,r:80,spd:.65},
-  Tentriette:{hx:540,hy:240,tx:540,ty:240,t:0,r:70,spd:.65},
-  Tarkob:{hx:450,hy:120,tx:450,ty:120,t:0,r:100,spd:.7},
+  Tia:        {hx:360,hy:160,tx:360,ty:160,t:0,r:70,spd:.55},
+  Sarap:      {hx:560,hy:160,tx:560,ty:160,t:0,r:50,spd:.55},
+  Bennette:   {hx:450,hy:240,tx:450,ty:240,t:0,r:70,spd:.55},
+  Rime:       {hx:80, hy:380,tx:80, ty:380,t:0,r:30,spd:.55},
+  Emse:       {hx:180,hy:380,tx:180,ty:380,t:0,r:30,spd:.55},
+  Tonatan:    {hx:260,hy:470,tx:260,ty:460,t:0,r:30,spd:.55},
+  Amers:      {hx:650,hy:460,tx:650,ty:380,t:0,r:30,spd:.55},
+  Simona:     {hx:780,hy:460,tx:780,ty:380,t:0,r:30,spd:.55},
+  Asfriodr:   {hx:745,hy:360,tx:745,ty:360,t:0,r:40,spd:.55},
+  Sumsar:     {hx:450,hy:430,tx:450,ty:430,t:0,r:15,spd:.2},
+  Tfan:       {hx:340,hy:180,tx:340,ty:180,t:0,r:80,spd:.65},
+  Tentriette: {hx:560,hy:210,tx:560,ty:210,t:0,r:70,spd:.65},
+  Tarkob:     {hx:450,hy:120,tx:450,ty:120,t:0,r:100,spd:.7},
 };
 function visibleKbhNpcs(){
   return kbhNpcs.filter(n=>!n.days||n.days.includes(currentDay)||n.id==='Sumsar');
@@ -4694,6 +5163,82 @@ function nearbyKbhNPC(){
     if(Math.hypot(player.x-n.x,player.y-n.y)<70) return n;
   }
   return null;
+}
+
+
+// ── KBH MØDESYSTEM ───────────────────────────────────────────────────────────
+// Møder sker med jævne mellemrum og skaber bevægelse på tværs af rum
+const kbhMeetings = [
+  // Møderum A: Tfan, Tentriette, Tarkob — TIR, TOR, FRE
+  {
+    id:'modeA_chefs',
+    room:'modeA',
+    npcs:['Tfan','Tentriette','Tarkob'],
+    days:[DAY.TUE,DAY.THU,DAY.FRI],
+    target:{x:100,y:145},
+    spreadR:30,
+    duration:600, // frames i møde
+    gap:900,      // frames mellem møder
+    timer:200,    // start hurtigt første gang
+    active:false,
+  },
+  // Møderum B: Amers, Simona, Ásfríðr — lokalt team alle dage
+  {
+    id:'modeB_lt',
+    room:'modeB',
+    npcs:['Amers','Simona','Asfriodr'],
+    days:DAY.ALL,
+    target:{x:790,y:145},
+    spreadR:30,
+    duration:500,
+    gap:1100,
+    timer:600,
+    active:false,
+  },
+  // Fællesrum: Tia, Sarap, Bennette — spontane møder
+  {
+    id:'faelles_brief',
+    room:'faelles',
+    npcs:['Tia','Sarap','Bennette'],
+    days:DAY.ALL,
+    target:{x:450,y:220},
+    spreadR:40,
+    duration:400,
+    gap:1400,
+    timer:900,
+    active:false,
+  },
+];
+
+function updateKbhMeetings(){
+  kbhMeetings.forEach(m=>{
+    // Kun på relevante dage
+    if(m.days!==DAY.ALL && !m.days.includes(currentDay)) return;
+    m.timer--;
+    if(!m.active && m.timer<=0){
+      // Start møde — send NPCs til møderummet
+      m.active=true;
+      m.timer=m.duration;
+      m.npcs.forEach((id,i)=>{
+        const w=kbhWander[id]; if(!w) return;
+        const angle=(i/m.npcs.length)*Math.PI*2;
+        w.tx=m.target.x+Math.cos(angle)*m.spreadR;
+        w.ty=m.target.y+Math.sin(angle)*m.spreadR;
+        w.locked=true;
+      });
+    } else if(m.active && m.timer<=0){
+      // Afslut møde — send NPCs hjem
+      m.active=false;
+      m.timer=m.gap+Math.random()*400;
+      m.npcs.forEach(id=>{
+        const w=kbhWander[id]; if(!w) return;
+        w.tx=w.hx+(Math.random()-.5)*20;
+        w.ty=w.hy+(Math.random()-.5)*20;
+        w.locked=false;
+        w.t=60+Math.random()*120;
+      });
+    }
+  });
 }
 
 function updateKbhWander(){
@@ -4719,41 +5264,68 @@ function getCurrentObstacles(){ return obstacles; }
 
 
 // ── KOPI CORRIDOR DRAW ───────────────────────────────────────────────────────
+function drawKbhNPC(npc){
+  if(npc.useArosDialog){drawNPC(npc);return;}
+  const col=KBH_COLORS[npc.id]||{skin:'#f5c897',hair:'#555',shirt:'#3498db',emoji:'👤',male:false};
+  const x=npc.x, y=npc.y;
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(x,y+17,13,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=col.shirt;ctx.strokeStyle='#222';ctx.lineWidth=2.5;rr(x-10,y+2,20,20,4);ctx.stroke();
+  ctx.fillStyle=col.skin;ctx.beginPath();ctx.arc(x,y-2,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=col.hair;
+  if(col.male){ctx.beginPath();ctx.arc(x,y-2,12,Math.PI,0);ctx.fill();ctx.stroke();ctx.fillRect(x-12,y-8,4,8);ctx.fillRect(x+8,y-8,4,8);}
+  else{ctx.beginPath();ctx.arc(x,y-10,10,Math.PI,0);ctx.fill();ctx.stroke();}
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(x-4,y-2,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+4,y-2,2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#222';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y+2,4,.2,Math.PI-.2);ctx.stroke();
+  const nw=npc.name.length*6+8;
+  ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;rr(x-nw/2,y+23,nw,14,4);ctx.stroke();
+  ctx.fillStyle='#222';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText(npc.name,x,y+33);ctx.textAlign='left';
+  ctx.font='13px serif';ctx.fillText(col.emoji,x+10,y-12);
+}
+
 function drawKbhRoom(){
   ctx.save(); // no offset — KBH is its own full-screen zone
   const t=Date.now()/1000;
 
   // ── ROOM FLOORS ─────────────────────────────────────────────────────────────
-  // Fællesrum — warm cream
-  ctx.fillStyle='#f2ede3'; ctx.fillRect(20,20,680,270);
-  // Møderum A — soft blue-grey
-  ctx.fillStyle='#e8ecf0'; ctx.fillRect(20,20,176,206);
-  // Møderum B — soft green-grey
-  ctx.fillStyle='#e8f0eb'; ctx.fillRect(704,20,176,206);
-  // Kontor NT — warm beige
-  ctx.fillStyle='#ede8e0'; ctx.fillRect(20,294,296,246);
-  // Kontor LT — light blue
-  ctx.fillStyle='#e5eaf2'; ctx.fillRect(584,294,296,246);
-  // Kopirum — DARK and mysterious
-  ctx.fillStyle='#12090f'; ctx.fillRect(324,294,252,246);
+  ctx.fillStyle='#f2ede3'; ctx.fillRect(204,20,492,279); // fællesrum
+  ctx.fillStyle='#e8ecf0'; ctx.fillRect(20, 20,176,279); // møderum A
+  ctx.fillStyle='#e8f0eb'; ctx.fillRect(704,20,176,279); // møderum B
+  ctx.fillStyle='#ede8e0'; ctx.fillRect(20, 299,296,241); // kontor NT
+  ctx.fillStyle='#12090f'; ctx.fillRect(324,299,252,241); // kopirum
+  ctx.fillStyle='#e5eaf2'; ctx.fillRect(584,299,296,241); // kontor LT
 
   // ── FLOOR GRID LINES ────────────────────────────────────────────────────────
   ctx.strokeStyle='rgba(0,0,0,.04)'; ctx.lineWidth=1;
   for(let x=20;x<900;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,560);ctx.stroke();}
   for(let y=20;y<560;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(900,y);ctx.stroke();}
 
-  // ── INTERNAL WALLS ───────────────────────────────────────────────────────────
-  // Internal walls drawn in local coords (translate already applied)
+  // ── VÆGGE ────────────────────────────────────────────────────────────────────
   ctx.fillStyle='#4a4560';
-  KBH_UNIFIED_WALLS.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h)); // local 0-900 coords, OK inside translate
+  kbhOuterWalls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
 
-  // ── ROOM LABELS ──────────────────────────────────────────────────────────────
+  // ── ÅBNINGS-MARKERING (grønne streger) ───────────────────────────────────────
+  ctx.strokeStyle='rgba(80,200,80,.2)'; ctx.lineWidth=4; ctx.setLineDash([6,4]);
+  // MA åbning (190px bred)
+  ctx.beginPath();ctx.moveTo(200,55);ctx.lineTo(200,245);ctx.stroke();
+  // MB åbning
+  ctx.beginPath();ctx.moveTo(700,55);ctx.lineTo(700,245);ctx.stroke();
+  // NT åbning (196px bred, x:120-316)
+  ctx.beginPath();ctx.moveTo(120,295);ctx.lineTo(316,295);ctx.stroke();
+  // LT åbning (196px bred, x:584-780)
+  ctx.beginPath();ctx.moveTo(584,295);ctx.lineTo(780,295);ctx.stroke();
+  // Kopi åbning (268px bred)
+  ctx.strokeStyle='rgba(150,80,255,.25)';
+  ctx.beginPath();ctx.moveTo(316,295);ctx.lineTo(584,295);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── RUMLABELS ────────────────────────────────────────────────────────────────
   const labels=[
-    {txt:'MØDERUM A',x:108,y:238,col:'rgba(80,80,120,.4)'},
-    {txt:'FÆLLESRUM',x:450,y:14,col:'rgba(80,80,120,.5)'},
-    {txt:'MØDERUM B',x:792,y:238,col:'rgba(80,80,120,.4)'},
-    {txt:'KONTOR NT',x:168,y:548,col:'rgba(80,60,40,.4)'},
-    {txt:'KONTOR LT',x:732,y:548,col:'rgba(60,80,120,.4)'},
+    {txt:'MØDERUM A', x:108,y:14, col:'rgba(80,80,120,.4)'},
+    {txt:'FÆLLESRUM', x:450,y:14, col:'rgba(80,80,120,.5)'},
+    {txt:'MØDERUM B', x:792,y:14, col:'rgba(80,80,120,.4)'},
+    {txt:'KONTOR NT', x:168,y:548,col:'rgba(80,60,40,.4)'},
+    {txt:'KONTOR LT', x:732,y:548,col:'rgba(60,80,120,.4)'},
   ];
   ctx.font='bold 9px Comic Neue'; ctx.textAlign='center';
   labels.forEach(l=>{ctx.fillStyle=l.col;ctx.fillText(l.txt,l.x,l.y);});
@@ -4766,42 +5338,220 @@ function drawKbhRoom(){
   ctx.textAlign='left';
 
   // ── FURNITURE ────────────────────────────────────────────────────────────────
-  // Møderum A table (round)
-  ctx.fillStyle='#b8a888'; ctx.strokeStyle='#8a6a40'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.ellipse(115,135,55,45,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  // Chairs around MA table
-  [[115,82],[160,110],[160,160],[115,185],[70,160],[70,110]].forEach(([cx,cy])=>{
-    ctx.fillStyle='#6a5030'; ctx.beginPath(); ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2); ctx.fill();
+
+  // ── OPSLAGSTAVLE MØDERUM A ──────────────────────────────────────────────────
+  {const ox=30, oy=220, ow=140, oh=60;
+    // Ramme
+    ctx.fillStyle='#6a4a20';rr(ox-4,oy-4,ow+8,oh+8,4);
+    ctx.fillStyle='#d4a855';rr(ox,oy,ow,oh,3); // kork
+    // Sauna-opslag (venstre del)
+    ctx.save();ctx.translate(ox+12,oy+14);ctx.rotate(-.05);
+    ctx.fillStyle='#e8f4f8';ctx.strokeStyle='#4a9ab0';ctx.lineWidth=1;
+    ctx.fillRect(-16,-12,36,28);ctx.strokeRect(-16,-12,36,28);
+    ctx.fillStyle='#1a6a80';ctx.font='bold 5px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('FDF SAUNA',4,-4);
+    ctx.fillStyle='#555';ctx.font='4px Comic Neue';
+    ctx.fillText('Sletten 🌿',4,3);ctx.fillText('86 84 60 28',4,10);
+    ctx.restore();
+    // Don T. opslag (højre del)
+    ctx.save();ctx.translate(ox+96,oy+18);ctx.rotate(.04);
+    ctx.fillStyle='#fffde7';ctx.strokeStyle='#c0a030';ctx.lineWidth=1;
+    ctx.fillRect(-18,-14,40,28);ctx.strokeRect(-18,-14,40,28);
+    ctx.fillStyle='#8a5000';ctx.font='bold 5px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('Don Tilstrup',4,-6);
+    ctx.fillStyle='#555';ctx.font='4px Comic Neue';
+    ctx.fillText('Sletten ⛰️',4,1);ctx.fillText('86 84 57 59',4,8);
+    ctx.restore();
+    // Lille mountainbike-tegning
+    ctx.save();ctx.translate(ox+75,oy+42);ctx.rotate(.02);
+    ctx.fillStyle='#f5f0e0';ctx.strokeStyle='#ccc';ctx.lineWidth=.5;
+    ctx.fillRect(-14,-10,28,18);ctx.strokeRect(-14,-10,28,18);
+    ctx.fillStyle='#888';ctx.font='5px serif';ctx.textAlign='center';
+    ctx.fillText('🚵',0,4);
+    ctx.restore();
+    // Tegnestifter
+    [[ox+4,oy+4],[ox+ow-4,oy+4],[ox+4,oy+oh-4],[ox+ow-4,oy+oh-4]].forEach(([px,py])=>{
+      ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fill();
+    });
+  }
+
+  // Møderum A — RUNDT BORD (Aros-stil men cirkulært)
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(103,145,48,38,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c8956c';ctx.strokeStyle='#222';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.ellipse(100,142,58,48,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#d4a67a';ctx.beginPath();ctx.ellipse(100,142,52,42,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#8B5E3C';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('MØDERUM A',100,146);ctx.textAlign='left';
+  // Stole rundt om
+  [[100,87],[143,100],[158,142],[143,185],[100,198],[57,185],[42,142],[57,100]].forEach(([cx,cy])=>{
+    ctx.fillStyle='#e07b54';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(cx,cy,9,7,0,0,Math.PI*2);ctx.fill();ctx.stroke();
   });
 
-  // Fællesrum reception
-  ctx.fillStyle='#a08060'; ctx.strokeStyle='#6a4020'; ctx.lineWidth=2;
-  ctx.fillRect(220,35,80,55); ctx.strokeRect(220,35,80,55);
-  // Fællesrum big table
-  ctx.fillStyle='#c8b078'; ctx.strokeStyle='#8a6a20'; ctx.lineWidth=2;
-  ctx.fillRect(330,60,280,110); ctx.strokeRect(330,60,280,110);
-  // Chairs around big table
-  [[350,50],[430,50],[510,50],[590,50],[610,80],[610,130],[590,180],[510,180],[430,180],[350,180],[330,130],[330,80]].forEach(([cx,cy])=>{
-    ctx.fillStyle='#6a5030'; ctx.beginPath(); ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2); ctx.fill();
+  // Fællesrum STORT BORD — Aros-stil
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(306,66,230,110);
+  ctx.fillStyle='#c8956c';rr(300,60,230,105,8);
+  ctx.strokeStyle='#222';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.fillStyle='#d4a67a';rr(306,66,218,93,6);
+  ctx.fillStyle='#8B5E3C';ctx.font='bold 10px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('FÆLLESRUM',415,115);ctx.textAlign='left';
+  // Stole
+  [[320,50],[390,50],[460,50],[530,50],[540,80],[540,130],[525,172],[455,172],[385,172],[315,172],[300,130],[300,80]].forEach(([cx,cy])=>{
+    ctx.fillStyle='#e07b54';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
   });
-  // FDF logo faint on fællesrum wall
-  ctx.fillStyle='rgba(45,53,97,.06)'; ctx.font='bold 80px Bangers'; ctx.textAlign='center';
-  ctx.fillText('FDF',550,270); ctx.textAlign='left';
+  // FDF logo
+  ctx.fillStyle='rgba(45,53,97,.06)';ctx.font='bold 80px Bangers';ctx.textAlign='center';
+  ctx.fillText('FDF',450,270);ctx.textAlign='left';
 
-  // NT desks
-  [[30,330],[140,330],[230,420]].forEach(([dx,dy])=>{
-    ctx.fillStyle='#c8b898'; ctx.strokeStyle='#8a6a40'; ctx.lineWidth=1.5;
-    ctx.fillRect(dx,dy,80,50); ctx.strokeRect(dx,dy,80,50);
-    ctx.fillStyle='#2a2a3a'; ctx.fillRect(dx+10,dy+8,30,20);
-    ctx.fillStyle='rgba(0,150,255,.2)'; ctx.fillRect(dx+12,dy+10,26,16);
+  // Toast Torsdag — tre toastmaskiner på fællesbordet (kun torsdag)
+  if(currentDay===DAY.THU && toastThursdayActive){
+    [310,415,520].forEach((tx,i)=>{
+      const ty=155, heat=.4+.4*Math.sin(t*2+i);
+      ctx.fillStyle='#c8956c';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+      rr(tx,ty,45,35,4);ctx.stroke();
+      ctx.fillStyle='#d4a67a';rr(tx+3,ty+3,39,29,3);
+      ctx.fillStyle='#1a1010';ctx.fillRect(tx+10,ty+5,25,8);
+      ctx.fillStyle=`rgba(255,${100+i*30},0,${heat*.8})`;ctx.fillRect(tx+11,ty+6,23,6);
+      ctx.fillStyle='#e8c88a';ctx.strokeStyle='#b8934a';ctx.lineWidth=1;
+      ctx.fillRect(tx+13,ty-10,8,14);ctx.strokeRect(tx+13,ty-10,8,14);
+      ctx.fillRect(tx+24,ty-10,8,14);ctx.strokeRect(tx+24,ty-10,8,14);
+      if(heat>.6){
+        ctx.strokeStyle=`rgba(255,150,0,${(heat-.6)*1.5})`;ctx.lineWidth=1;ctx.setLineDash([2,2]);
+        ctx.beginPath();ctx.moveTo(tx+17,ty-12);ctx.lineTo(tx+17,ty-20);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(tx+28,ty-12);ctx.lineTo(tx+28,ty-20);ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+    ctx.fillStyle='rgba(240,160,48,.7)';ctx.font='bold 8px Bangers';ctx.textAlign='center';
+    ctx.fillText('🍞 TOAST TORSDAG',415,210);ctx.textAlign='left';
+  }
+
+  // Møderum B bord (Aros-stil)
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(739,111,110,100);
+  ctx.fillStyle='#c8956c';rr(735,107,110,96,8);
+  ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#d4a67a';rr(739,111,102,88,6);
+  ctx.fillStyle='#8B5E3C';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('MØDERUM B',790,155);ctx.textAlign='left';
+  // Stole
+  [[745,93],[800,93],[845,93],[858,115],[858,165],[845,215],[800,215],[745,215],[730,165],[730,115]].forEach(([cx,cy])=>{
+    ctx.fillStyle='#e07b54';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(cx,cy,9,7,0,0,Math.PI*2);ctx.fill();ctx.stroke();
   });
-  // LT desks
-  [[620,330],[740,330]].forEach(([dx,dy])=>{
-    ctx.fillStyle='#b8c8d8'; ctx.strokeStyle='#607090'; ctx.lineWidth=1.5;
-    ctx.fillRect(dx,dy,80,50); ctx.strokeRect(dx,dy,80,50);
-    ctx.fillStyle='#2a2a3a'; ctx.fillRect(dx+10,dy+8,30,20);
-    ctx.fillStyle='rgba(0,150,255,.2)'; ctx.fillRect(dx+12,dy+10,26,16);
+
+  // NT desks — Aros stil
+  [[30,330,'Rime','📋','#9b59b6'],[140,330,'Emse','🧶','#e67e22'],[230,430,'Tonatan','💰','#2ecc71']].forEach(([dx,dy,lbl,ic,col])=>{
+    ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(dx+4,dy+4,90,55);
+    ctx.fillStyle='#c8956c';rr(dx,dy,90,55,6);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d4a67a';rr(dx+4,dy+4,82,47,4);
+    ctx.font='20px serif';ctx.fillText(ic,dx+10,dy+32);
+    ctx.fillStyle=col;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(lbl,dx+45,dy+52);ctx.textAlign='left';
   });
+  // LT desks — 80px ned (y:410)
+  [[620,410,'Amers','🖥️','#2980b9'],[740,410,'Simona','📱','#e74c3c']].forEach(([dx,dy,lbl,ic,col])=>{
+    ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(dx+4,dy+4,90,55);
+    ctx.fillStyle='#c8956c';rr(dx,dy,90,55,6);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d4a67a';rr(dx+4,dy+4,82,47,4);
+    ctx.font='20px serif';ctx.fillText(ic,dx+10,dy+32);
+    ctx.fillStyle=col;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+    ctx.fillText(lbl,dx+45,dy+52);ctx.textAlign='left';
+  });
+  // Ásfríðr bord — Kontor LT (lokalt team rum)
+  {const dx=700,dy=330;
+    ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(dx+4,dy+4,90,55);
+    ctx.fillStyle='#c8956c';rr(dx,dy,90,55,6);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d4a67a';rr(dx+4,dy+4,82,47,4);
+    ctx.font='20px serif';ctx.fillText('🌐',dx+10,dy+32);
+    ctx.fillStyle='#16a085';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('Ásfríðr',dx+45,dy+52);ctx.textAlign='left';
+  }
+
+  // ── KAFFEMASKINE (Fællesrum, højre side) ─────────────────────────────────────
+  {const kx=kbhKaffeX-65,ky=kbhKaffeY-5;
+    ctx.fillStyle='#c8956c';rr(kx,ky,130,55,6);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.strokeRect(kx,ky,130,55);
+    ctx.fillStyle='#222';rr(kx+8,ky+3,35,45,4);
+    ctx.fillStyle='#555';rr(kx+13,ky+8,25,22,3);
+    ctx.fillStyle='#00ff88';ctx.fillRect(kx+15,ky+10,20,10);
+    ctx.font='18px serif';ctx.fillText('☕',kx+55,ky+38);
+    ctx.fillStyle='#555';rr(kx+78,ky+5,28,38,4);
+    ctx.fillStyle='#333';ctx.fillRect(kx+82,ky+3,18,7);
+    ctx.fillStyle='#ffcc02';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('KAFFE',kx+65,ky+52);ctx.textAlign='left';
+  }
+
+  // ── RADIO (Møderum A) ────────────────────────────────────────────────────────
+  {const rx=kbhRadioX, ry=kbhRadioY-10;
+    const on=radioChannel>0;
+    ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(rx,ry+22,28,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a2e';ctx.strokeStyle='#ffcc02';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.roundRect(rx-26,ry-12,52,26,5);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#2d3561';ctx.strokeStyle='#ffcc02';ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(rx-24,ry-10,18,22,3);ctx.fill();ctx.stroke();
+    for(let i=0;i<4;i++)for(let j=0;j<3;j++){
+      ctx.fillStyle=on?`rgba(0,255,136,${.3+.3*Math.sin(t+i+j)})` :'#334';
+      ctx.beginPath();ctx.arc(rx-20+j*5,ry-7+i*5,1.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#0a0a1a';ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(rx-4,ry-9,22,12,2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=on?'#00ff88':'#334';ctx.font='bold 5px monospace';ctx.textAlign='center';
+    ctx.fillText(on?RADIO_CHANNELS[radioChannel].emoji:'OFF',rx+5,ry-1);ctx.textAlign='left';
+    ctx.strokeStyle='#ffcc02';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(rx+20,ry-12);ctx.lineTo(rx+26,ry-30);ctx.stroke();
+    ctx.fillStyle='#ffcc02';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('📻 RADIO',rx,ry+22);ctx.textAlign='left';
+    if(Math.hypot(player.x-kbhRadioX,player.y-kbhRadioY)<45){
+      const p=.35+.35*Math.sin(Date.now()/300);
+      ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.arc(kbhRadioX,kbhRadioY,38,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+
+  // ── KALENDER (Møderum B) ─────────────────────────────────────────────────────
+  {const cx=kbhCalX, cy=kbhCalY;
+    const w=70,h=58,x=cx-w/2;
+    ctx.fillStyle='#888';ctx.beginPath();ctx.arc(cx,cy+2,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x+3,cy+6,w,h);
+    ctx.fillStyle='#fff';ctx.strokeStyle='#222';ctx.lineWidth=2;
+    ctx.fillRect(x,cy+4,w,h);ctx.strokeRect(x,cy+4,w,h);
+    ctx.fillStyle='#e74c3c';ctx.fillRect(x,cy+4,w,16);ctx.strokeRect(x,cy+4,w,16);
+    ctx.fillStyle='#fff';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('FDF KBH',cx,cy+14);
+    const dayShort={MANDAG:'MAN',TIRSDAG:'TIR',ONSDAG:'ONS',TORSDAG:'TOR',FREDAG:'FRE'}[currentDay]||currentDay.slice(0,3);
+    ctx.fillStyle='#2d3561';ctx.font='bold 18px Bangers,cursive';ctx.fillText(dayShort,cx,cy+36);
+    ctx.fillStyle='#555';ctx.font='bold 7px Comic Neue';ctx.fillText(currentDay,cx,cy+46);
+    ctx.textAlign='left';
+    if(Math.hypot(player.x-kbhCalX,player.y-kbhCalY)<55){
+      const p=.4+.4*Math.sin(Date.now()/300);
+      ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.arc(kbhCalX,kbhCalY,55,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+
+  // ── TELEFON (Kontor NT) ───────────────────────────────────────────────────────
+  {const px=kbhPhoneX,py=kbhPhoneY;
+    ctx.fillStyle='#c8956c';rr(px-4,py-2,30,36,4);
+    ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#1a1a2e';rr(px,py+2,22,26,3);
+    ctx.strokeStyle='#444';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#00ff88';ctx.fillRect(px+3,py+4,16,8);
+    ctx.fillStyle='#888';
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++){ctx.beginPath();ctx.arc(px+5+c*5,py+16+r*4,1.2,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle='#333';ctx.beginPath();ctx.ellipse(px+11,py+1,7,3,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffcc02';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('📞 FDF',px+11,py+36);ctx.textAlign='left';
+    if(Math.hypot(player.x-kbhPhoneX,player.y-kbhPhoneY)<45){
+      const p=.4+.4*Math.sin(Date.now()/300);
+      ctx.strokeStyle=`rgba(255,204,2,${p})`;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.arc(kbhPhoneX,kbhPhoneY,32,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
 
   // ── KOPIRUM MAGIC ────────────────────────────────────────────────────────────
   // Copy machine
@@ -4813,7 +5563,7 @@ function drawKbhRoom(){
   ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fillRect(370,476,60,6);
   // Shelves
   ctx.fillStyle='#2a1a30'; ctx.strokeStyle='#4a2a50'; ctx.lineWidth=1.5;
-  [390,420,450].forEach(sy=>{ ctx.fillRect(480,sy,80,8); ctx.strokeRect(480,sy,80,8); });
+  // (shelves removed — blocked player path)
   // Flying paper
   [[340,320],[500,350],[380,370],[550,400],[420,300]].forEach(([px,py],i)=>{
     const fx=px+Math.sin(t*.7+i)*10, fy=py+Math.cos(t*.5+i)*8;
@@ -4826,6 +5576,56 @@ function drawKbhRoom(){
   const eg=ctx.createRadialGradient(400,450,5,400,450,120);
   eg.addColorStop(0,`rgba(100,60,200,${sc*.12})`); eg.addColorStop(1,'transparent');
   ctx.fillStyle=eg; ctx.fillRect(324,294,252,246);
+
+  // ── NARNIA REFERENCER ────────────────────────────────────────────────────────
+  // Gadelygte (hjørne, ingen kollision)
+  {const lx=332,ly=310;
+    // Stolpe
+    ctx.fillStyle='#3a3050';ctx.strokeStyle='#555070';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(lx,ly+180);ctx.lineTo(lx,ly);ctx.stroke();
+    // Arm
+    ctx.beginPath();ctx.moveTo(lx,ly);ctx.bezierCurveTo(lx,ly-20,lx+22,ly-20,lx+22,ly-30);ctx.stroke();
+    // Lygte-kasse
+    ctx.fillStyle='#2a2040';ctx.strokeStyle='#6060a0';ctx.lineWidth=1.5;
+    ctx.fillRect(lx+10,ly-50,24,20);ctx.strokeRect(lx+10,ly-50,24,20);
+    // Lys — flimrende
+    const lf=.7+.3*Math.sin(t*2.3+Math.random()*.1);
+    ctx.fillStyle=`rgba(255,240,180,${lf*.9})`;
+    ctx.beginPath();ctx.arc(lx+22,ly-40,6,0,Math.PI*2);ctx.fill();
+    // Glød på gulvet
+    const lg=ctx.createRadialGradient(lx+22,ly-40,2,lx+22,ly-40,50);
+    lg.addColorStop(0,`rgba(255,240,180,${lf*.18})`);lg.addColorStop(1,'transparent');
+    ctx.fillStyle=lg;ctx.fillRect(lx-28,ly-90,100,100);
+    // Sne-antydning (hvide prikker under lygten)
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    [[lx+8,ly+20],[lx+18,ly+35],[lx+30,ly+15],[lx+5,ly+48],[lx+25,ly+55]].forEach(([sx,sy])=>{
+      ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fill();
+    });
+  }
+
+  // Jakkerække ved indgangen (bunden, ingen kollision)
+  {const jy=520;
+    // Knagerække
+    ctx.fillStyle='#3a2030';ctx.fillRect(340,jy-4,220,6);
+    // Jakker — hængende, let svajende
+    [360,395,430,465,500,535].forEach((jx,i)=>{
+      const sway=Math.sin(t*.4+i*.8)*2;
+      ctx.save();ctx.translate(jx,jy);ctx.rotate(sway*.015);
+      // Knappe
+      ctx.fillStyle='#555';ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();
+      // Jakke silhuet
+      const cols=['#1a1528','#2a1530','#1e2038','#251a20','#1a2030','#20182a'];
+      ctx.fillStyle=cols[i%cols.length];ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(-10,4);ctx.lineTo(-14,38);ctx.lineTo(14,38);ctx.lineTo(10,4);
+      ctx.bezierCurveTo(10,0,6,-4,0,-4);ctx.bezierCurveTo(-6,-4,-10,0,-10,4);
+      ctx.fill();ctx.stroke();
+      // Krave
+      ctx.fillStyle='rgba(255,255,255,.06)';
+      ctx.beginPath();ctx.moveTo(-5,4);ctx.lineTo(0,10);ctx.lineTo(5,4);ctx.fill();
+      ctx.restore();
+    });
+  }
 
   // South door back to kopi (x:350-550, bottom)
   const kbhDoorT=Date.now()/600;
@@ -4950,15 +5750,22 @@ function updateKbhHint(){
   const el=document.getElementById('hint');
   const mobileE=document.getElementById('mobile-e');
   const n=nearbyKbhNPC();
+  const obj=nearbyWorldObject();
   if(n){
     mobileE.classList.add('visible');
     el.style.display='block';
     el.textContent='[E] Tal med '+n.name;
     el.style.left=(n.x+5)+'px';
     el.style.top=(n.y-50)+'px';
+  } else if(obj){
+    mobileE.classList.add('visible');
+    el.style.display='block';
+    el.textContent='[E] '+obj.label;
+    el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
   } else {
     mobileE.classList.remove('visible');
     el.style.display='none';
+    el.style.transform='translateX(-50%)';
   }
 }
 
@@ -5014,7 +5821,11 @@ const kbhTrees={
       {label:'🧶 Strik og FDF?',next:'emse_strik'},
       {label:'📅 Dine kurser?',next:'emse_kurser'},
       {label:'🎂 Snart 30?',next:'emse_30'},
+      {label:'🕵️ Er du agent for Lejrcentrum Work?',next:'emse_agent'},
     ],
+    emse_agent:{text:'*strikketøjet stopper øjeblikkeligt* ...Hvad? Nej. Det er der ingen grund til at tro. Jeg er kursuskoordinator. Det er alt.',choices:[{label:'Du svarer meget hurtigt.',next:'emse_agent2'},{label:'Okay, undskyld!',next:'__close'}]},
+    emse_agent2:{text:'Det gør man når man har et rent samvittighed. ...Lejrcentrum Work er et godt center. Don Tilstrup er en god mand. Det er offentlig information.',choices:[{label:'Du kender Don personligt?',next:'emse_agent3'},{label:'Jeg forstår det.',next:'__close'}]},
+    emse_agent3:{text:'*tager strikkepindene op igen* Alle kender Don. Han er meget... til stede. Vi er færdige med det emne nu.',choices:[{label:'...Okay, Emse.',next:'__close'}]},
     emse_strik:{text:'Emse Thoftmår! Strik og strategi. Jeg strikker under møder. Det hjælper koncentrationen.',choices:[{label:'Kurser?',next:'emse_kurser'},{label:'Snart 30?',next:'emse_30'}]},
     emse_kurser:{text:'Jeg har idéer der er helt revolutionerende. Seriøst. Kurser som ingen har set før.',choices:[{label:'Som hvad?',next:'emse_kurser2'}]},
     emse_kurser2:{text:'Endnu hemmeligt. Men det involverer natur, kreativitet og sandsynligvis strik.',choices:[{label:'Det gør jeg!',next:'__close'}]},
@@ -5042,17 +5853,31 @@ const kbhTrees={
     start:[
       {label:'📱 Content?',next:'simo_content'},
       {label:'📰 FDFMedlederen?',next:'simo_magasin'},
+      {label:'🫥 Hvad skete der med Tasmus?',next:'simo_tasmus'},
     ],
     simo_content:{text:'Hej! Simona. Kommunikation og content. Jeg skaber ting der rammer målgruppen. Content er kongen.',choices:[{label:'Din strategi?',next:'simo_strategi'},{label:'FDFMedlederen?',next:'simo_magasin'}]},
     simo_strategi:{text:'Autenticitet. FDF har en god historie — vi skal bare fortælle den rigtigt.',choices:[{label:'Det er sandt.',next:'__close'}]},
     simo_magasin:{text:'FDFMedlederen er vores magasin. Hvert nummer er en kærlighed til kredse i hele landet.',choices:[{label:'Imponerende!',next:'__close'}]},
+    simo_tasmus:{text:'*ser sig om* ...Tasmus Trydensdahl. Han sad ved det bord dér. En tirsdag var stolen bare... tom. Kaffen stadig varm.',choices:[{label:'Ingen så noget?',next:'simo_tasmus2'},{label:'Hvornår var det?',next:'simo_tasmus_hvornaar'}]},
+    simo_tasmus2:{text:'Amers siger hun hørte en printer køre hele natten. Men det gør den altid. Ingen ringede hjem til ham. Det er det mærkeligste.',choices:[{label:'Hans nummer er 41 73 11 70.',next:'simo_tasmus3'},{label:'Er han meldt savnet?',next:'simo_tasmus_savnet'}]},
+    simo_tasmus3:{text:'*bliver bleg* Du har... ringet til ham? Hvad sagde han??',choices:[{label:'Han råber om hjælp.',next:'simo_tasmus4'},{label:'Det var svært at høre.',next:'simo_tasmus4'}]},
+    simo_tasmus4:{text:'*stille* Jeg vidste det. Jeg vidste det fra den dag stolen var tom. *åbner sin notesbog* Jeg skriver en artikel om det. Content er kongen — men sandheden er vigtigere.',choices:[{label:'Vær forsigtig, Simona.',next:'__close'}]},
+    simo_tasmus_hvornaar:{text:'Tre uger siden. En helt normal tirsdag. Han havde endda pakket frokost med. Den stod stadig i køleskabet i en uge.',choices:[{label:'Ingen så noget?',next:'simo_tasmus2'}]},
+    simo_tasmus_savnet:{text:'IT sagde hans computer var låst udefra kl. 03:47 om natten. Politiet sagde "intet mistænkeligt". Politiet har aldrig mødt Tasmus.',choices:[{label:'Hans nummer er 41 73 11 70.',next:'simo_tasmus3'}]},
   },
   Asfriodr:{
     start:[
       {label:'🌐 Landsdele?',next:'asf_job'},
       {label:'🆘 Krisehåndtering?',next:'asf_krise'},
       {label:'📛 Ásfríðr — hvad betyder det?',next:'asf_navn'},
+      {label:'🧗 Hvad laver du i fritiden?',next:'asf_fritid'},
+      {label:'🎈 Ballondyr?',next:'asf_ballon'},
     ],
+    asf_fritid:{text:'Klatring. Altid klatring. Det eneste der minder om krisehåndtering — du kan ikke slippe taket, du kan kun gå op eller ned. Og så slaglinjen på weekender. Det ligner fred.',choices:[{label:'Hvad er slagline?',next:'asf_slagline'},{label:'Ballondyr?',next:'asf_ballon'}]},
+    asf_slagline:{text:'Du spænder en line mellem to træer og går hen ad den. Langsomt. Det kræver total fokus. Ingen krisemails. Ingen landsdele. Bare linen.',choices:[{label:'Det lyder meditativt.',next:'asf_slagline2'},{label:'Ballondyr?',next:'asf_ballon'}]},
+    asf_slagline2:{text:'Det er det. Og hvis man falder — og det gør man — så starter man forfra. Det er en god livsfilosofi.',choices:[{label:'Ballondyr?',next:'asf_ballon'},{label:'Tak, Ásfríðr.',next:'__close'}]},
+    asf_ballon:{text:'*kort pause* ...Ja. Jeg laver ballondyr. Hunde, giraffer, sværd. Det startede på en teamdag. Ingen kan tage mig seriøst under krisehåndtering bagefter. Det er problemet.',choices:[{label:'😄 Det er faktisk charmerende.',next:'asf_ballon2'}]},
+    asf_ballon2:{text:'Det ved jeg godt. Det er derfor jeg stadig gør det.',choices:[{label:'Fair nok. Tak!',next:'__close'}]},
     asf_job:{text:'Ásfríðr. Landsdele, netværk og krisehåndtering. Jeg holder landet samlet.',choices:[{label:'Sværest?',next:'asf_svaer'},{label:'Kriser?',next:'asf_krise'}]},
     asf_svaer:{text:'At nå alle landsdele på én gang. Netværket er mit vigtigste redskab.',choices:[{label:'Kriser?',next:'asf_krise'}]},
     asf_krise:{text:'Kriser sker. En lejr der går galt, en kreds i problemer. Jeg er der. Det er det jeg er trænet til.',choices:[{label:'Krævende.',next:'asf_kraev'}]},
@@ -5068,8 +5893,12 @@ const kbhTrees={
     sums_barsel:{text:'*kigger op* ...Ja. Jeg er på barsel. Jeg er også her. Begge ting er sande.',choices:[{label:'Hvordan?',next:'sums_hvordan'},{label:'Hvad laver du her?',next:'sums_kopi'}]},
     sums_hvordan:{text:'*lang pause* Kopirummet er ikke bundet af normale regler.',choices:[{label:'Hvad printer maskinen?',next:'sums_maskine'},{label:'Okay...',next:'__close'}]},
     sums_kopi:{text:'Jeg passer på rummet. Maskinen gør hvad den vil — jeg sørger for det ikke går for galt.',choices:[{label:'Hvad printer den?',next:'sums_maskine'}]},
-    sums_maskine:{text:'*tænker* Ting. Navne. Tal. En gang printede den en opskrift på æbleskiver. Vi spiste dem. De var gode.',choices:[{label:'😮 Okay.',next:'sums_ok'}]},
+    sums_maskine:{text:'*tænker* Ting. Navne. Tal. En gang printede den en opskrift på æbleskiver. Vi spiste dem. De var gode.',choices:[{label:'😮 Okay.',next:'sums_ok'},{label:'🍬 Hvad er det i æsken?',next:'sums_delight'}]},
     sums_ok:{text:'Ja. *vender tilbage til sit papir* God tur videre.',choices:[{label:'...Tak, Sumsar.',next:'__close'}]},
+    sums_delight:{text:'*trækker en lyserød æske frem uden at se op* Tyrkisk Delight. Tag en. Det er ikke gratis — men prisen er uklar endnu.',choices:[{label:'Jeg tager en. Tak.',next:'sums_delight2'},{label:'Nej tak...',next:'sums_delight3'}]},
+    sums_delight2:{text:'*nikker meget langsomt* God. *pause* Du vil have mere. Det gør de alle sammen.',choices:[{label:'Hvad mener du med det?',next:'sums_delight4'},{label:'...Farvel, Sumsar.',next:'__close'}]},
+    sums_delight3:{text:'Klogt. *lægger æsken væk* Meget klogt.',choices:[{label:'...Tak, Sumsar.',next:'__close'}]},
+    sums_delight4:{text:'*ser endelig op* Ingenting. *æsken forsvinder* Det var dejligt at du besøgte kopirummet.',choices:[{label:'...',next:'__close'}]},
   },
 };
 
@@ -5178,6 +6007,7 @@ function loop(){
     updateTarkob();
     updateWander();
   } else if(currentZone==='kbh'){
+    updateKbhMeetings();
     updateKbhWander();
   }
   updateCamera();
@@ -5381,6 +6211,8 @@ document.getElementById('mobile-e').addEventListener('touchstart',e=>{
 // bar events
 document.getElementById('bar-close').addEventListener('click',closeBar);
 document.getElementById('bar-serve-btn').addEventListener('click',serveAtBar);
+document.getElementById('toast-close').addEventListener('click',closeToast);
+document.getElementById('toast-serve-btn').addEventListener('click',serveToast);
 
 // calendar events
 document.getElementById('cal-close').addEventListener('click',closeCalendar);
@@ -5396,10 +6228,14 @@ document.querySelectorAll('.cal-day-btn').forEach(btn=>{
     sudokuState='home'; sudokuT=300+Math.random()*400;
     Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
     document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
+    toastThursdayActive=false;
     if(currentDay===DAY.FRI){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
     else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
     else if(currentDay===DAY.WED){flash('📅 ONSDAG — Mødedag! 💻');setTimeout(startTarkobWedVisit,8000);}
-    else if(currentDay===DAY.THU)flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+    else if(currentDay===DAY.THU){
+      flash('📅 TORSDAG — Eftermiddagskaffe venter! ☕');
+      if(currentZone==='kbh') setTimeout(triggerToastThursday,1500);
+    }
     else flash('📅 '+currentDay+' — Tfan & Tentriette er ikke her i dag!');
   });
 });
