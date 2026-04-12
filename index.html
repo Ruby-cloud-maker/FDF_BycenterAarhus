@@ -1004,7 +1004,7 @@ Kolleger: Jas(NT, kontorets hjerte), Gune(dit hold LT), Neter(NT), Heresa(dit ho
 // ROOM
 // ═══════════════════════════════════════════
 const walls=[
-  {x:0,y:0,w:350,h:30},{x:550,y:0,w:350,h:30}, // top with door gap 350-550
+  {x:0,y:0,w:900,h:30}, // top — full wall (gap added dynamically after unlock)
   {x:0,y:0,w:30,h:560},{x:870,y:0,w:30,h:560},
   {x:0,y:530,w:370,h:30},{x:530,y:530,w:370,h:30}
 ];
@@ -1619,7 +1619,14 @@ const player={x:440,y:480,spd:3};
 function collides(nx,ny){
   const hw=14,hh=14;
   function hits(list){for(const o of list){if(nx-hw<o.x+o.w&&nx+hw>o.x&&ny-hh<o.y+o.h&&ny+hh>o.y)return true;}return false;}
-  if(currentZone==='aros') return hits(obstacles)||hits(walls);
+  if(currentZone==='aros'){
+    // Top wall: full unless unlocked + in door gap
+    const inDoorGap = secretDoorUnlocked && nx>350 && nx<550;
+    const activeWalls = inDoorGap
+      ? walls.filter(w=>!(w.x===0&&w.y===0&&w.w===900&&w.h===30))
+      : walls;
+    return hits(activeWalls)||hits(obstacles);
+  }
   if(currentZone==='kbh')  return hits(kbhOuterWalls)||hits(kbhObstacles);
   return false;
 }
@@ -4448,7 +4455,7 @@ function update(){
   if(!collides(player.x,player.y+dy)){
     player.y=Math.max(20,Math.min(540,player.y+dy));
     // Zone boundary triggers
-    if(currentZone==='aros'&&player.y<30) enterKopi('aros');
+    if(currentZone==='aros'&&secretDoorUnlocked&&player.y<30&&player.x>350&&player.x<550) enterKopi('aros');
     if(currentZone==='kbh'&&player.y>530)  enterArosFromKopi();
   }
   if(discOpen&&(Math.abs(player.x-discPlayerPos.x)>8||Math.abs(player.y-discPlayerPos.y)>8))closeDisc();
