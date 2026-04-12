@@ -1156,6 +1156,12 @@ const items=[
    foundMsg:'Colosseum-figuren kigger bebrejdende på dig.',
    item:'🏛️ Colosseum-figur (8 cm)',emoji:'🍵'},
 
+  {id:'tmon_card',label:'Kig på gruppebordet',x:405,y:220,r:55,found:false,
+   msgs:['Du ser et lyserødt visitkort liggende på gruppebordet. Nogen har glemt det.',
+         'Visitkortet: "TMON POWERSJOV 😎 — 312-Gæst. Book sjove mennesker til sjove steder. Ring: 312-Gæst på din telefon. Vi kører til dig!" Bagsiden: en tegning af en gul bus.'],
+   foundMsg:'Visitkortet sidder nu i lommen. 312-Gæst.',
+   item:'🩷 Tmon POWERSJOV visitkort',emoji:'🎸'},
+
   {id:'desk_anne',label:'Kig på Annes bord',x:660,y:352,r:75,found:false,
    msgs:['En lilla kaffekop med teksten "DATA > MAVEFORNEMMELSE", en asymmetrisk stak bøger (bevidst skæv), og en The Office DVD-boks — sæson 2 er halvt ude af æsken.',
          'På skærmen kører et regneark: "Kollega-sammenligning: FDF vs Dunder Mifflin (n=8)". Jas scorer 94% Creed. Nederst sidder en gul Post-it: "94 — Holger ville aldrig forstå det."'],
@@ -1426,6 +1432,87 @@ function getToastReaction(npcId, breadId, toppingId){
       || r[`${breadId}_any`]
       || r.any_any
       || '"Tak!"';
+}
+
+// ── TMON DIALOG ───────────────────────────────────────────────────────────────
+const TMON_TREE = {
+  start:[
+    {label:'🎸 Guitar-trioen?',              next:'tmon_guitar'},
+    {label:'🎙️ Podcasten med Simona?',        next:'tmon_podcast'},
+    {label:'🚐 312-Gæst — hvem kan bookes?', next:'tmon_312'},
+    {label:'😄 Hvad er din mission?',         next:'tmon_mission'},
+    {label:'🌐 Kredsudvikling + web?',        next:'tmon_kreds'},
+    {label:'👻 Kender du Tasmus?',            next:'tmon_tasmus'},
+    {label:'🚐 Tak for besøget — kør videre!',next:'tmon_farvel'},
+  ],
+  tmon_farvel:{text:'*springer op* MED FORNØJELSE! Det har været FANTASTISK! Ring igen på 312-Gæst! WB-Buzzen venter! *griber guitar og løber*',choices:[{label:'👋 Farvel, Tmon!',next:'__tmon_dismiss'}]},
+  tmon_guitar:{text:'Guitar-trioen! Tmon på guitar, Jas Bach på mundharpe. Og den tredje... *smiler bredt* ...det er hemmeligt. Men jeg kan sige at det er nogen med en meget unik approach til rytme.',choices:[{label:'Hvornår spiller I?',next:'tmon_guitar2'},{label:'Hvem er den tredje??',next:'tmon_guitar3'}]},
+  tmon_guitar2:{text:'Spontant. Det er kunsten. Man fornemmer det i luften — der er behov for musik — og så sker det. Jas er ALTID klar. Mundharpe sidder altid i lommen.',choices:[{label:'Hvem er den tredje??',next:'tmon_guitar3'},{label:'Podcasten?',next:'tmon_podcast'}]},
+  tmon_guitar3:{onEnter:()=>{guitarTrioKnown=true;},text:'*whisper* ...Det er Delisateth. På tamburin. Hun nægter at nogen ved det. Vi kalder det internt for "Den Stille Treenighed". Det er SUBLIM.',choices:[{label:'😂 Det er perfekt.',next:'tmon_guitar4'}]},
+  tmon_guitar4:{text:'Romersk rytme på tamburin, nordisk folkemelodi på mundharpe, moderne fingerpicking på guitar. Det er enten genialt eller forfærdeligt. Publikum er altid uenigt. Det er det bedste.',choices:[{label:'Podcasten?',next:'tmon_podcast'},{label:'312-Gæst?',next:'tmon_312'}]},
+
+  tmon_podcast:{text:'FDF POWER PODCAST! Jeg og Simona. Jeg laver lyd — mikrofoner, mixning, intro-jingle — hun laver content og distribution. Vi er uenige om ALT. Det giver god radio.',choices:[{label:'Hvad er I uenige om?',next:'tmon_podcast2'},{label:'Hvad handler den om?',next:'tmon_podcast3'}]},
+  tmon_podcast2:{text:'Format. Jeg vil have 90-minutters dybdedyk. Hun vil have 12-minutters snackable content. Vi laver 45 minutter og kalder det en sejr for begge.',choices:[{label:'Hvad handler den om?',next:'tmon_podcast3'}]},
+  tmon_podcast3:{text:'FDF-liv. Kredse, lejre, friluftsliv, de menneskelige historier bag. Sidste episode interviewede vi Crisdan om tog-systemet. Det var uventet fascinerende.',choices:[{label:'Hvem er den bedste gæst?',next:'tmon_podcast4'},{label:'Tasmus?',next:'tmon_tasmus'}]},
+  tmon_podcast4:{text:'Tarkob. Han sagde "FDF er ikke en organisation, det er en virus — den gode slags" og så råbte han RÅDHUSKLOKKERNE RINGER på direkte lyd. Vi måtte clippe det ud. Det var vores bedste episode.',choices:[{label:'😄 Selvfølgelig.',next:'tmon_podcast5'}]},
+  tmon_podcast5:{text:'Og Tasmus var faktisk med engang. Talte om regnskaber i 40 minutter. Det var uventet god radio. Lytterne elskede det. Og nu er han... borte.',choices:[{label:'Tasmus?',next:'tmon_tasmus'},{label:'312-Gæst?',next:'tmon_312'}]},
+
+  tmon_312:{text:'312-Gæst! Mit underholdningsselskab — 132% ejerandel. Det er matematisk umuligt men juridisk korrekt. Vi booker sjove mennesker til at besøge steder der har brug for energi.',choices:[{label:'Hvem kan man booke?',next:'tmon_312b'},{label:'132%?!',next:'tmon_312_pct'}]},
+  tmon_312_pct:{text:'Det er en lang historie med en advokat, et komma og tre kopper kaffe. Pointen er: jeg ejer det hele og lidt til. Det er filosofisk tilfredsstillende.',choices:[{label:'Hvem kan man booke?',next:'tmon_312b'}]},
+  tmon_312b:{text:'Glade musikere, energiske foredragsholdere, en mand der laver ballondyr på rekordtid, og en kvinde der kan forklare kvantemekanik med Lego. Og mig selvfølgelig.',choices:[{label:'Hvad er din specialitet?',next:'tmon_312c'},{label:'Mission?',next:'tmon_mission'}]},
+  tmon_312c:{text:'Sjov lyd. Podcast-workshops. Guitarkoncerter. Og generelt at ankomme i en WB-Buzz og gøre tingene 40% mere festlige. Det er et konservativt estimat.',choices:[{label:'Det kan vi godt lide.',next:'__close'},{label:'Mission?',next:'tmon_mission'}]},
+
+  tmon_mission:{text:'At gøre FDF sjovere. Ikke på bekostning af det seriøse — sjov OG seriøs. Det er ikke modsætninger. Kredsudvikling er sjovt. Lyd er sjovt. Gæster er sjovt. ALT er sjovt hvis man gør det rigtigt.',choices:[{label:'Kredsudvikling?',next:'tmon_kreds'},{label:'Lyd?',next:'tmon_lyd'}]},
+  tmon_lyd:{text:'Lyd er alt. En kreds med et godt lydsystem holder bedre møder. En podcast giver FDF en stemme. En guitar i fællesrummet giver fred. Lyd er infrastruktur. Det forstår folk ikke.',choices:[{label:'Guitartrioen?',next:'tmon_guitar'},{label:'Podcasten?',next:'tmon_podcast'}]},
+
+  tmon_kreds:{text:'Foreningsudvikling! Jeg hjælper kredse med at blomstre. Grafik, web, podcast-setup, energi. En kreds der ser professionel ud og lyder godt — den tiltrækker folk.',choices:[{label:'Web og grafik?',next:'tmon_web'},{label:'Hvad er sværest?',next:'tmon_kreds2'}]},
+  tmon_web:{text:'Jeg bygger websites til kredse der ikke har én. Og laver logoer. Og opretter sociale medier. Og underviser i det. Og laver intro-jingles til deres nyhedsbrev. Jeg er et one-man-band — bogstaveligt talt.',choices:[{label:'😄 Det lyder overvældende.',next:'tmon_kreds2'}]},
+  tmon_kreds2:{text:'Det sværeste er at overbevise kredse om at de fortjener at se professionelle ud. De tror det er for store foreninger. Det er det ikke. Alle fortjener et godt logo og en god podcast.',choices:[{label:'Flot mission!',next:'__close'},{label:'Tasmus?',next:'tmon_tasmus'}]},
+
+  tmon_tasmus:{text:'Tasmus Trydensdahl. Han var på vores podcast. Han ankom med en mappe med 847 dias om regnskabsoptimering. Vi brugte 3. Resten var guld. Og nu er han... ikke her.',choices:[{label:'Han er bortført.',next:'tmon_tasmus2'},{label:'Hvad tror du?',next:'tmon_tasmus3'}]},
+  tmon_tasmus2:{text:'*pause* ...Det vidste jeg godt et sted. Manden printede blanke sider om natten. Ingen gør det af god vilje. Har du ringet til ham?',choices:[{label:'Han råber kun om hjælp.',next:'tmon_tasmus4'},{label:'Hans nummer er 41 73 11 70.',next:'tmon_tasmus4'}]},
+  tmon_tasmus3:{text:'Jeg tror at Tasmus vidste noget. Om regnskaberne. Om økonomifolkene. Om hvad der sker i kopirummet. Han er for organiseret til at bare forsvinde. Der er en forklaring.',choices:[{label:'Han er bortført.',next:'tmon_tasmus2'}]},
+  tmon_tasmus4:{text:'*rejser sig* Okay. Nu booker jeg en WB-Buzz til kopirummet. Hvis nogen ved hvad der sker derinde — er det en mand med 847 dias om regnskaber. Og jeg har en guitar.',choices:[{label:'Forsigtig derinde, Tmon.',next:'__close'}]},
+};
+
+function openTmonDialog(){
+  dlgOpen=true;
+  tmon._node='__start';
+  function showNode(nodeId){
+    tmon._node=nodeId;
+    const port=document.getElementById('dlg-portrait');
+    port.style.background='#e91e8c'; port.textContent='😎';
+    document.getElementById('dlg-name').textContent='Tmon POWERSJOV — 312-Gæst';
+    document.getElementById('dlg-name').style.color='#e91e8c';
+    document.getElementById('dlg-thinking').classList.remove('on');
+    document.getElementById('dlg-row').style.display='none';
+    document.getElementById('dlg').classList.add('on');
+    const dc=document.getElementById('dlg-choices');
+    dc.innerHTML='';
+    if(nodeId==='__start'||nodeId==='__close'||nodeId==='__tmon_dismiss'){
+      if(nodeId==='__close'){closeDialog();return;}
+      if(nodeId==='__tmon_dismiss'){closeDialog();setTimeout(dismissTmon,400);return;}
+      document.getElementById('dlg-text').textContent='*springer ud af WB-Buzz\'en med en guitar* HEJ! Tmon POWERSJOV er landet! Hvad kan jeg gøre for dig?';
+      TMON_TREE.start.forEach(ch=>{
+        const btn=document.createElement('button');
+        btn.className='dlg-choice';btn.textContent=ch.label;
+        btn.addEventListener('click',()=>showNode(ch.next));
+        dc.appendChild(btn);
+      });
+    } else {
+      const node=TMON_TREE[nodeId];
+      if(!node){closeDialog();return;}
+      if(node.onEnter)node.onEnter();
+      document.getElementById('dlg-text').textContent=node.text;
+      node.choices.forEach(ch=>{
+        const btn=document.createElement('button');
+        btn.className='dlg-choice';btn.textContent=ch.label;
+        btn.addEventListener('click',()=>showNode(ch.next));
+        dc.appendChild(btn);
+      });
+    }
+  }
+  showNode('__start');
 }
 
 function openKbhOpslagstavle(){
@@ -2913,6 +3000,150 @@ function drawTarkob(){
   ctx.fillText('TARKOB',x,y+35);ctx.textAlign='left';
 }
 
+// ═══════════════════════════════════════════
+// TMON POWERSJOV
+// ═══════════════════════════════════════════
+let guitarTrioKnown=false, jasTrioKnown=false;
+let tmon={active:false,visible:false,x:-200,y:310,tx:350,ty:310,walking:false,phase:0,buzzX:-300,buzzArriving:false,buzzDone:false};
+
+function summonTmon(){
+  if(tmon.active)return;
+  tmon.active=true;tmon.visible=true;
+  tmon.buzzX=-280;tmon.buzzArriving=true;tmon.buzzDone=false;
+  tmon.leavingRight=false;
+  // Zone-aware spawn row
+  tmon.y = currentZone==='kbh' ? 220 : 310;
+  tmon.buzzY = tmon.y - 30;
+  tmon.x=-200;
+  playTmonJingle();
+  flash('🚐 EN WB-BUZZ NÆRMER SIG KONTORET!!');
+  setTimeout(()=>flash('🎉 TMON POWERSJOV ER LANDET!'), 3200);
+}
+
+function dismissTmon(){
+  if(!tmon.active||!tmon.buzzDone)return;
+  tmon.leavingRight=false;
+  tmon.buzzArriving=false;
+  tmon.buzzDone=false;
+  tmon.buzzLeaving=true;
+  tmon.walking=false;
+  flash('🚐 WB-Buzzen bakker ud...');
+  setTimeout(()=>{
+    tmon.active=false;tmon.visible=false;
+    tmon.buzzLeaving=false;tmon.buzzX=-300;
+    flash('👋 Tmon POWERSJOV er kørt videre! Ring igen på 312-Gæst!');
+  }, 2800);
+}
+
+function playTmonJingle(){
+  try{
+    const a=new (window.AudioContext||window.webkitAudioContext)();
+    const melody=[
+      {f:523,t:0,d:.12},{f:659,t:.13,d:.12},{f:784,t:.26,d:.12},
+      {f:1047,t:.39,d:.25},{f:784,t:.65,d:.1},{f:880,t:.76,d:.1},
+      {f:1047,t:.87,d:.35}
+    ];
+    melody.forEach(({f,t,d})=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='square';o.frequency.value=f;
+      g.gain.setValueAtTime(0.18,a.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+t+d);
+      o.connect(g);g.connect(a.destination);
+      o.start(a.currentTime+t);o.stop(a.currentTime+t+d+.05);
+    });
+  }catch(e){}
+}
+
+function updateTmon(){
+  if(!tmon.active)return;
+  if(tmon.buzzLeaving){
+    // Bus drives back out to left
+    tmon.buzzX-=5;
+    return;
+  }
+  if(tmon.buzzArriving){
+    tmon.buzzX+=4.5;
+    if(tmon.buzzX>=80){
+      tmon.buzzArriving=false;tmon.buzzDone=true;
+      tmon.x=140;tmon.y=tmon.buzzY+30;
+      tmon.tx=currentZone==='kbh'?350:350;
+      tmon.ty=tmon.buzzY+30;
+      tmon.walking=true;
+    }
+    return;
+  }
+  if(tmon.walking){
+    const dx=tmon.tx-tmon.x,dy=tmon.ty-tmon.y,d=Math.hypot(dx,dy);
+    if(d<3){tmon.x=tmon.tx;tmon.y=tmon.ty;tmon.walking=false;}
+    else{tmon.x+=dx/d*2;tmon.y+=dy/d*2;tmon.phase+=.22;}
+  }
+}
+
+function drawTmon(){
+  if(!tmon.visible)return;
+  const t=Date.now()/600;
+  // Draw WB-Buzz arriving
+  if(tmon.buzzArriving||tmon.buzzLeaving||tmon.buzzX>-280){
+    const bx=tmon.buzzX,by=tmon.buzzY||280;
+    // Bus body
+    ctx.fillStyle='#ffcc02';ctx.strokeStyle='#222';ctx.lineWidth=2.5;
+    rr(bx,by,180,55,10);ctx.stroke();
+    ctx.fillStyle='#ff6600';rr(bx,by,60,55,10);ctx.stroke();
+    // Windows
+    [[bx+68,by+8],[bx+98,by+8],[bx+128,by+8],[bx+158,by+8]].forEach(([wx,wy])=>{
+      ctx.fillStyle='#b8e8ff';ctx.strokeStyle='#444';ctx.lineWidth=1;rr(wx,wy,22,20,3);ctx.stroke();
+    });
+    // Passenger emojis in windows
+    const emojis=['😄','🤩','😎','🥳'];
+    ctx.font='14px serif';ctx.textAlign='center';
+    emojis.forEach((e,i)=>ctx.fillText(e,bx+79+i*30,by+23));
+    ctx.textAlign='left';
+    // Wheels
+    [bx+28,bx+148].forEach(wx=>{
+      ctx.fillStyle='#222';ctx.beginPath();ctx.arc(wx,by+55,14,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#888';ctx.beginPath();ctx.arc(wx,by+55,8,0,Math.PI*2);ctx.fill();
+    });
+    // "312-GÆST" on side
+    ctx.fillStyle='#222';ctx.font='bold 10px Bangers';ctx.textAlign='center';
+    ctx.fillText('312-GÆST',bx+130,by+42);ctx.textAlign='left';
+    // Headlights
+    ctx.fillStyle='rgba(255,255,180,.7)';ctx.beginPath();ctx.ellipse(bx+178,by+20,15,8,-0.2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(bx+178,by+40,15,8,0.2,0,Math.PI*2);ctx.fill();
+  }
+  if(!tmon.buzzDone)return;
+  // Draw Tmon NPC
+  const x=tmon.x,bob=tmon.walking?Math.sin(tmon.phase)*3:0,y=tmon.y+bob;
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(x,y+19,14,5,0,0,Math.PI*2);ctx.fill();
+  // Shirt — pink/magenta
+  ctx.fillStyle='#e91e8c';ctx.strokeStyle='#111';ctx.lineWidth=2.5;rr(x-12,y+2,24,22,5);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('312',x,y+17);ctx.textAlign='left';
+  // Head
+  ctx.fillStyle='#d4956a';ctx.strokeStyle='#111';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(x,y-3,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // Sunglasses
+  ctx.fillStyle='#222';
+  ctx.beginPath();ctx.ellipse(x-5,y-4,5,3.5,-.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+5,y-4,5,3.5,.2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-10,y-4);ctx.lineTo(x-13,y-5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+10,y-4);ctx.lineTo(x+13,y-5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y-4);ctx.lineTo(x,y-4);ctx.stroke();
+  // Hair
+  ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(x,y-11,10,Math.PI,.2);ctx.fill();
+  // Smile
+  ctx.strokeStyle='#7a4a2a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y-1,5,.2,Math.PI-.2);ctx.stroke();
+  // Guitar emoji in hand
+  ctx.font='15px serif';ctx.textAlign='center';ctx.fillText('🎸',x+16,y+10);ctx.textAlign='left';
+  // Bouncing star
+  const star=.5+.5*Math.sin(t*3);
+  ctx.font=`${10+star*4}px serif`;ctx.textAlign='center';ctx.fillText('⭐',x,y-28);ctx.textAlign='left';
+  // Badge
+  ctx.fillStyle='rgba(255,255,255,.95)';ctx.strokeStyle='#222';ctx.lineWidth=1.5;rr(x-28,y+26,56,14,3);ctx.stroke();
+  ctx.fillStyle='#e91e8c';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('TMON POWERSJOV',x,y+36);ctx.textAlign='left';
+}
+
 function drawPlayer(){
   const x=player.x,y=player.y;
   ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(x,y+16,13,5,0,0,Math.PI*2);ctx.fill();
@@ -3048,6 +3279,16 @@ function nearbyNPC(){
     const d=Math.hypot(player.x-n.x,player.y-n.y);
     if(d<min){min=d;best=n;}
   });
+  // Check Tmon
+  if(tmon.visible&&tmon.buzzDone){
+    const d=Math.hypot(player.x-tmon.x,player.y-tmon.y);
+    if(d<70&&d<min){min=d;best={id:'Tmon',name:'Tmon POWERSJOV',x:tmon.x,y:tmon.y,isTmon:true};}
+  }
+  // Check Tarkob
+  if(tarkob.visible){
+    const d=Math.hypot(player.x-tarkob.x,player.y-tarkob.y);
+    if(d<70&&d<min){min=d;best={id:'Tarkob',name:'Tarkob',x:tarkob.x,y:tarkob.y,isTarkob:true};}
+  }
   return best;
 }
 function nearbyPhone(){return Math.hypot(player.x-phoneObj.x,player.y-phoneObj.y)<phoneObj.r?phoneObj:null;}
@@ -3066,13 +3307,56 @@ function nearbyItem(){
 const trees = {
   Jas: {
     start: [
-      {label:'💬 Hvad laver du egentlig her?',    next:'jas_job'},
-      {label:'☕ Fortæl mig om kaffen',            next:'jas_kaffe'},
-      {label:'🧩 Er du god til Sudoku?',           next:'jas_sudoku'},
-      {label:'🎲 Spiller du D&D?',                 next:'jas_dnd'},
-      {label:'🗣️ Historisk lingvistik?',           next:'jas_lingvistik'},
-      {label:'🎵 Synger du nogensinde?',            next:'jas_sang'},
+      {label:'💬 Hvad laver du egentlig her?',           next:'jas_job'},
+      {label:'☕ Fortæl mig om kaffen',                   next:'jas_kaffe'},
+      {label:'🧩 Er du god til Sudoku?',                  next:'jas_sudoku'},
+      {label:'🎲 Spiller du D&D?',                        next:'jas_dnd'},
+      {label:'🗣️ Historisk lingvistik?',                  next:'jas_lingvistik'},
+      {label:'🎵 Synger du nogensinde?',                   next:'jas_sang'},
+      {label:'🎸 Guitar-trioen — jeg ved alt om det.',     next:'jas_trio', hidden:()=>!guitarTrioKnown},
     ],
+
+    jas_trio:{
+      text:'*lang pause* ...*ser op fra sudokuen* ...Tmon fortalte dig det. *sætter pennen ned* ...Det er okay. Det er faktisk okay.',
+      choices:[
+        {label:'Tamburin. Delisateth.',              next:'jas_trio2'},
+        {label:'Det er smukt.',                      next:'jas_trio3'},
+      ]
+    },
+    jas_trio2:{
+      text:'Ja. Hun er bedre end hun vil indrømme. Det er det med tamburin — det lyder simpelt. Det er det ikke. Ikke når man spiller Delisateth.',
+      choices:[
+        {label:'Og mundharpen?',                     next:'jas_trio3'},
+      ]
+    },
+    jas_trio3:{
+      text:'Mundharpe er et undervurderet instrument, min ven. Den sidder altid i lommen. Altid. Jeg har spillet den siden jeg var syv år. *pause* Jeg har spillet den på Smukfest.',
+      choices:[
+        {label:'Smukfest?!',                         next:'jas_trio4'},
+      ]
+    },
+    jas_trio4:{
+      onEnter:()=>{jasTrioKnown=true;},
+      text:'To gange. Under navnet "J. Bach & The Resonators". Vi spillede fire sange. Ingen i FDF ved det. *ser dig i øjnene* Ingen i FDF ved det.',
+      choices:[
+        {label:'Din hemmelighed er tryg.',           next:'jas_trio5'},
+        {label:'Hvem er The Resonators?',            next:'jas_trio5b'},
+      ]
+    },
+    jas_trio4b:{
+      text:'Folk i publikum troede det var performance art. Én mand græd. Jeg ved ikke om det var af glæde. Det var et af de bedste øjeblikke i mit liv.',
+      choices:[
+        {label:'Og Tmon og Delisateth ved det?',     next:'jas_trio4c'},
+      ]
+    },
+    jas_trio5:{
+      text:'*nikker langsomt og tager mundharpen frem* Tak, min ven. *spiller tre toner* Det lyder som foråret i Aarhus. Det var de tre toner vi sluttede med. På Smukfest.',
+      choices:[{label:'Smukt.',                      next:'__close'}]
+    },
+    jas_trio5b:{
+      text:'Tmon på guitar. Og den tredje — det fortæller jeg dig en anden dag. Men vi var gode, min ven. Vi var faktisk gode.',
+      choices:[{label:'Jeg tror dig.',               next:'jas_trio5'}]
+    },
     jas_job: {
       text:'Jas. Jas Bach. Foreningskonsulent — frivilligkoordinering. Kaffen er frisk. Hvad bringer dig hertil, min ven?',
       choices:[
@@ -3512,7 +3796,55 @@ const trees = {
       {label:'🏛️ Hvad har romerne med FDF at gøre?',    next:'deli_rom'},
       {label:'🍵 Kan du ikke bare hente noget te?',      next:'deli_te'},
       {label:'🔧 Teknisk Tjeneste — hvad siger de?',     next:'deli_tt'},
+      {label:'🥁 Den Stille Treenighed — jeg ved alt.',  next:'deli_trio', hidden:()=>!(guitarTrioKnown&&jasTrioKnown)},
     ],
+
+    deli_trio:{
+      text:'*fryser midt i et Excel-ark* ...Jeg ved ikke hvad du taler om.',
+      choices:[
+        {label:'Tamburinen. Tmon og Jas fortalte mig.',  next:'deli_trio2'},
+        {label:'Den Stille Treenighed.',                  next:'deli_trio2'},
+      ]
+    },
+    deli_trio2:{
+      text:'*lang pause* ...Det er en tavshedspligt. Det er som tredje triumvirat — Caesar, Pompejus og Crassus delte magten i hemmelighed. Vi deler musikken.',
+      choices:[
+        {label:'I er ikke ligefrem hemmelige...',         next:'deli_trio3'},
+        {label:'Hvad spiller du på?',                     next:'deli_trio3'},
+      ]
+    },
+    deli_trio3:{
+      text:'Tamburin. Og det er IKKE enkelt. Folk undervurderer tamburin. Romerne brugte den i processioner og religiøse ceremonier. Det er et instrument med VÆRDIGHED.',
+      choices:[
+        {label:'Hvad hedder den?',                        next:'deli_trio4'},
+        {label:'Har du spillet længe?',                   next:'deli_trio4b'},
+      ]
+    },
+    deli_trio4:{
+      text:'*pause* ...Cornelia. Hun hedder Cornelia. Efter Cornelia Minor, moder til Graccherne, en af Roms mest kultiverede kvinder. Det er et passende navn for et instrument.',
+      choices:[
+        {label:'Selvfølgelig hedder den Cornelia.',        next:'deli_trio5'},
+        {label:'Har du spillet på Smukfest?',             next:'deli_trio_smuk'},
+      ]
+    },
+    deli_trio4b:{
+      text:'Siden jeg var ni år. Min farmor spillede den. Hun sagde: "Delisateth, al stor musik starter med rytme." Hun havde ret. Hun havde altid ret.',
+      choices:[
+        {label:'Hvad hedder tamburinen?',                  next:'deli_trio4'},
+      ]
+    },
+    deli_trio_smuk:{
+      text:'*kigger væk* ...Jas talte. Ja. To gange. Jeg nægter at det tæller fordi vi ikke stod på hovedscenen. Men... *stille* ...det var det bedste.',
+      choices:[
+        {label:'Det lyder smukt, Delisateth.',             next:'deli_trio5'},
+      ]
+    },
+    deli_trio5:{
+      text:'*vender tilbage til Excel-arket* Dette er en samtale der aldrig fandt sted. Som Ciceros breve til Atticus — historisk vigtig, men ikke til offentlig distribution. Forstår vi hinanden?',
+      choices:[
+        {label:'Forstået. Hils Cornelia.',                 next:'__close'},
+      ]
+    },
     deli_rom:{
       text:'Et fremragende spørgsmål. Romerne byggede et imperium på tre ting: struktur, fællesskab og logistik. FDF bygger på det samme. Holger Tornøe vidste det nok bare ikke.',
       choices:[
@@ -3771,7 +4103,18 @@ const trees = {
     },
     tfan_kbh_toast:{
       text:'Toast Torsdag. Brød, pålæg, kollegerne. Det er hygge på den rigtige måde. Simona laver Instagram-opslag om det. Tonatan nægter at indrømme at Nutella-toasten er hans idé.',
-      choices:[{label:'Det lyder ikke til at gå glip af.',next:'__close'}]
+      choices:[
+        {label:'Det lyder ikke til at gå glip af.',next:'__close'},
+        {label:'Kender du Tmon?',                   next:'tfan_tmon'},
+      ]
+    },
+    tfan_tmon:{
+      text:'TMON POWERSJOV! *griner* Han er... unik. Foreningsudvikler, podcast-mand, guitarist. Og han driver 312-Gæst — ring 312-Gæst på telefonen hvis du vil have besøg. Han ankommer i en gul bus. Altid.',
+      choices:[{label:'En gul bus?',next:'tfan_tmon2'},{label:'Tak for tipset!',next:'__close'}]
+    },
+    tfan_tmon2:{
+      text:'WB-Buzz. Fyldt med sjove mennesker. Jeg har set det to gange. Begge gange gik produktiviteten ned men humøret op. Det er en svær ligning. Men Tmon løser den.',
+      choices:[{label:'Jeg ringer til 312-Gæst!',next:'__close'}]
     },
     tfan_don:{
       text:'Du skal finde Don Tilstrups nummer. Det flyder rundt et sted på kontoret — han uddeler visitkort som konfetti. Kig dig omkring. Når du har det, ring og spørg om projekterne.',
@@ -3895,7 +4238,33 @@ const trees = {
       {label:'🎲 Hvad laver du til daglig?',          next:'neter_job'},
       {label:'🍔 Bedste spisested her i nærheden?',    next:'neter_mad'},
       {label:'🎪 Status på legekonferencerne?',        next:'neter_konf'},
+      {label:'🤯 Hvad er det vildeste du har oplevet her?', next:'neter_vild'},
     ],
+    neter_vild:{
+      text:'Hmm. En dag ankom der en gul bus. Midt i en legekonference-planlægning — vi sad med fondsansøgningen foran os. En fyr sprang ud med en guitar og spillede i fællesrummet i to timer. Fondsansøgningen blev ikke færdig den dag. Det var den bedste undskyldning vi nogensinde har haft.',
+      choices:[
+        {label:'En gul bus?',                          next:'neter_vild_bus'},
+        {label:'Hvad skete der med fondsansøgningen?', next:'neter_vild_fond'},
+      ]
+    },
+    neter_vild_bus:{
+      text:'Gul. Der stod "312" og så noget mere på siden — men bussen kørte for hurtigt forbi vinduet til at jeg nåede at læse resten. Jeg nåede kun at se de tre cifre.',
+      choices:[
+        {label:'Hvad skete der med fondsansøgningen?', next:'neter_vild_fond'},
+        {label:'Hvem var fyren med guitaren?',          next:'neter_vild_fyr'},
+      ]
+    },
+    neter_vild_fond:{
+      text:'Den blev sendt næste dag. Vi nåede det. Men vi nævnte faktisk guitaren i indledningen. Fonden syntes det var charmerende. Vi fik pengene.',
+      choices:[
+        {label:'😄 Det er genialt.',                   next:'neter_vild_fyr'},
+        {label:'Hvem var fyren?',                      next:'neter_vild_fyr'},
+      ]
+    },
+    neter_vild_fyr:{
+      text:'Det ved jeg faktisk ikke. Han var væk igen inden vi nåede at spørge. Bussen kørte. Ingen sagde hans navn højt. Men det var den bedste tirsdag vi nogensinde har haft.',
+      choices:[{label:'Interessant...',                next:'__close'}]
+    },
     neter_job:{
       text:'Kommunikation og branding! Jeg laver content, kampagner, visuals — alt det der fanger unge. Og så planlægger jeg legekonferencer. Det er meget. Det er MEGET.',
       choices:[
@@ -4277,6 +4646,7 @@ const trees = {
 };
 
 function openDialog(npc){
+  if(npc.isTmon){openTmonDialog();return;}
   dlgOpen=true; activeNPC=npc;
   const c=COLORS[npc.id];
   document.getElementById('dlg').classList.add('on');
@@ -4313,6 +4683,7 @@ function showDlgNode(nodeId){
   if(nodeId==='__close'){ closeDialog(); return; }
   const node=tree[nodeId];
   if(!node){ closeDialog(); return; }
+  if(node.onEnter) node.onEnter();
   document.getElementById('dlg-text').textContent=node.text;
   if(node.onSelect) node.onSelect();
   showDlgChoices(node.choices||[]);
@@ -4321,8 +4692,8 @@ function showDlgNode(nodeId){
 function showDlgChoices(choices){
   const box=document.getElementById('dlg-choices');
   box.innerHTML='';
-  if(choices.length===0){
-    // just a close button
+  const visible=choices.filter(ch=>!ch.hidden||!ch.hidden());
+  if(visible.length===0){
     const btn=document.createElement('button');
     btn.className='dlg-choice';
     btn.textContent='Farvel 👋';
@@ -4330,7 +4701,7 @@ function showDlgChoices(choices){
     box.appendChild(btn);
     return;
   }
-  choices.forEach(ch=>{
+  visible.forEach(ch=>{
     const btn=document.createElement('button');
     btn.className='dlg-choice';
     btn.textContent=ch.label;
@@ -4621,10 +4992,15 @@ function showPhoneMenu(){
   secretBtn.style.cssText='padding:6px 12px;white-space:nowrap';
   const dialSecret=()=>{
     const v=secretInp.value.replace(/\s|-/g,'');
+    const vLow=v.toLowerCase();
     const screen=document.getElementById('phone-screen');
     if(v===SECRET_CODE){
       screen.textContent='Ringer til: '+v+'\n\n☎ ...';
       setTimeout(unlockSecretDoor, 800);
+    } else if(vLow==='312gæst'||vLow==='312gaest'||vLow==='312gast'||vLow==='312'){
+      screen.textContent='Ringer til: 312-Gæst\n\n☎ ...\n\n🎵 *ventemusik spiller*\n\n"Hej! Du har ringet til 312-Gæst!\nVi er i gang med at gøre noget sjovt...\nVi ringer dig op om lidt!"';
+      setTimeout(()=>{ screen.textContent='☎ *Klik*\n\n🚐 EN WB-BUZZ ER PÅ VEJ!!'; }, 2500);
+      setTimeout(summonTmon, 3500);
     } else if(v==='41731170'){
       dialPhoneTree('tasmus');
     } else if(v==='86845759'){
@@ -5910,7 +6286,8 @@ const kbhTrees={
     tia_job:{text:'Hej! Jeg er Tia — al kommunikation. Budskabet ud til kredse, fedt og engagerende. Det er mig.',choices:[{label:'Hvad er det sværeste?',next:'tia_svaer'},{label:'Fest næste fredag?',next:'tia_fest'}]},
     tia_svaer:{text:'At ramme alle 340 kredse på én gang. De er alle forskellige. Men det er også det sjove.',choices:[{label:'Hvad med sociale medier?',next:'tia_social'},{label:'Tilbage',next:'__start'}]},
     tia_social:{text:'Instagram, Facebook, nyhedsbrev. Og ja, shots i Sydhavn bagefter. Du er inviteret.',choices:[{label:'Ja tak!',next:'__close'}]},
-    tia_fest:{text:'SELVFØLGELIG! Næste fredag — kontoret, musik, bajere. Jeg ordner det.',choices:[{label:'Jeg er der! 🎉',next:'__close'}]},
+    tia_fest:{text:'SELVFØLGELIG! Næste fredag — kontoret, musik, bajere. Jeg ordner det.',choices:[{label:'Jeg er der! 🎉',next:'tia_tmon'},{label:'Inviterer du Tmon?',next:'tia_tmon'}]},
+    tia_tmon:{text:'TMON! Selvfølgelig! Han er på listen. Du kender ham? Ring 312-Gæst på en vilkårlig telefon — han ankommer i sin WB-Buzz inden du kan sige "podcast". Han er kontorets bedste overraskelse.',choices:[{label:'312-Gæst — noteret!',next:'__close'}]},
     tia_sydhavn:{text:'Det er bare det fedeste sted i Køpmannæhafn. Havnebad, streetfood, mine venner. Alt er der.',choices:[{label:'Lyder godt.',next:'__close'}]},
   },
   Sarap:{
@@ -5938,13 +6315,17 @@ const kbhTrees={
   },
   Rime:{
     start:[
-      {label:'📋 Hvad ved du om kurser?',next:'rime_kurser'},
-      {label:'🖥️ Hvad er Medlemsorganisatoren?',next:'rime_mo'},
+      {label:'📋 Hvad ved du om kurser?',        next:'rime_kurser'},
+      {label:'🖥️ Hvad er Medlemsorganisatoren?', next:'rime_mo'},
+      {label:'🎉 Du har booket gæster til en fest?', next:'rime_fest'},
     ],
     rime_kurser:{text:'Hej! Rime her. Jeg ved BOGSTAVELIGT TALT alt om FDFs kurser. Alt.',choices:[{label:'Hvad er det bedste?',next:'rime_bedst'},{label:'Hvad er MO?',next:'rime_mo'}]},
     rime_bedst:{text:'Afhænger af hvad du søger. Hvad drømmer din kreds om?',choices:[{label:'Det ved jeg ikke endnu.',next:'rime_ved_ikke'}]},
     rime_ved_ikke:{text:'Start med en weekendlejr. Det afklarer altid hvad folk vil have mere af.',choices:[{label:'Godt råd. Tak!',next:'__close'}]},
     rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',choices:[{label:'Tak, Rime!',next:'__close'}]},
+    rime_fest:{text:'*lyser op* Ja! Vi skulle have gæster til vores sommerfest. Jeg boede dem gennem et selskab — 312-Gæst hedder det. Super professionelt. De sendte en hel bus.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'},{label:'En hel bus?!',next:'rime_fest3'}]},
+    rime_fest2:{text:'Du ringer bare "312-Gæst" på telefonen — bogstaveligt talt, det er hvad du taster. Manden der ankommer hedder Tmon. Han er... meget. Men på den gode måde.',choices:[{label:'Tak, Rime!',next:'__close'}]},
+    rime_fest3:{text:'En gul WB-Buzz. Fuld af mennesker. De spillede guitar i fællesrummet i to timer. Den røde Post-it på min mappe sagde "NEJ" i tre dage bagefter. Af ren overvældelse.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'}]},
   },
   Emse:{
     start:[
@@ -6039,8 +6420,10 @@ const kbhTrees={
     asf_fritid:{text:'Klatring. Altid klatring. Det eneste der minder om krisehåndtering — du kan ikke slippe taket, du kan kun gå op eller ned. Og så slaglinjen på weekender. Det ligner fred.',choices:[{label:'Hvad er slagline?',next:'asf_slagline'},{label:'Ballondyr?',next:'asf_ballon'}]},
     asf_slagline:{text:'Du spænder en line mellem to træer og går hen ad den. Langsomt. Det kræver total fokus. Ingen krisemails. Ingen landsdele. Bare linen.',choices:[{label:'Det lyder meditativt.',next:'asf_slagline2'},{label:'Ballondyr?',next:'asf_ballon'}]},
     asf_slagline2:{text:'Det er det. Og hvis man falder — og det gør man — så starter man forfra. Det er en god livsfilosofi.',choices:[{label:'Ballondyr?',next:'asf_ballon'},{label:'Tak, Ásfríðr.',next:'__close'}]},
-    asf_ballon:{text:'*kort pause* ...Ja. Jeg laver ballondyr. Hunde, giraffer, sværd. Det startede på en teamdag. Ingen kan tage mig seriøst under krisehåndtering bagefter. Det er problemet.',choices:[{label:'😄 Det er faktisk charmerende.',next:'asf_ballon2'}]},
+    asf_ballon:{text:'*kort pause* ...Ja. Jeg laver ballondyr. Hunde, giraffer, sværd. Det startede på en teamdag. Ingen kan tage mig seriøst under krisehåndtering bagefter. Det er problemet.',choices:[{label:'😄 Det er faktisk charmerende.',next:'asf_ballon2'},{label:'Hvem lærte dig det?',next:'asf_ballon_tmon'}]},
     asf_ballon2:{text:'Det ved jeg godt. Det er derfor jeg stadig gør det.',choices:[{label:'Fair nok. Tak!',next:'__close'}]},
+    asf_ballon_tmon:{text:'Tmon POWERSJOV. Han kom på besøg en gang — via hans selskab 312-Gæst. Vi lavede ballondyr i to timer. Han er den eneste jeg kender der tager ballondyr lige så seriøst som krisehåndtering.',choices:[{label:'312-Gæst?',next:'asf_ballon_312'},{label:'Det er et stærkt team.',next:'asf_ballon2'}]},
+    asf_ballon_312:{text:'Ring "312-Gæst" på telefonen — det er hvad du taster. Han ankommer i en gul bus. Bring gerne kriser. Eller balloner. Han håndterer begge dele.',choices:[{label:'Noteret. Tak, Ásfríðr!',next:'__close'}]},
     asf_job:{text:'Ásfríðr. Landsdele, netværk og krisehåndtering. Jeg holder landet samlet.',choices:[{label:'Sværest?',next:'asf_svaer'},{label:'Kriser?',next:'asf_krise'}]},
     asf_svaer:{text:'At nå alle landsdele på én gang. Netværket er mit vigtigste redskab.',choices:[{label:'Kriser?',next:'asf_krise'}]},
     asf_krise:{text:'Kriser sker. En lejr der går galt, en kreds i problemer. Jeg er der. Det er det jeg er trænet til.',choices:[{label:'Krævende.',next:'asf_kraev'}]},
@@ -6147,6 +6530,7 @@ function render(){
     drawMeetingLaptop();
     drawCoffeeBubbles();
     drawTarkob();
+    drawTmon();
     drawPlayer();
     drawTapTarget();
     drawNotes();
@@ -6154,6 +6538,7 @@ function render(){
     if(n){ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(n.x,n.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   } else if(currentZone==='kbh'){
     drawKbhRoom();
+    drawTmon();
     drawPlayer();
     drawNotes();
     const kn=nearbyKbhNPC();
@@ -6166,6 +6551,7 @@ function render(){
 
 function loop(){
   update();
+  updateTmon();  // global — both zones
   if(currentZone==='aros'){
     updateTarkob();
     updateWander();
