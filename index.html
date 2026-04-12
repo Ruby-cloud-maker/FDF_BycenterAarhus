@@ -1864,6 +1864,55 @@ function drawSecretDoor(){
 
 
 
+
+// ── KBH DESK ITEMS ───────────────────────────────────────────────────────────
+const kbhDeskItems = [
+  {id:'ki_tia',    x:325, y:130, r:40, zone:'kbh',
+   msg:'En halvtom flaske Aperol og et par solbriller — ingen vet hvem de tilhører. Tia siger de er hendes. Sarap siger de ligner dem hun mistede i juni. Det er uafklaret.'},
+  {id:'ki_sarap',  x:555, y:158, r:40, zone:'kbh',
+   msg:'To hvide satinballetsko stikker ud under bordet. Spidserne er slidte og let beskidte. En lyserød sløjfe er ved at løsne sig. De er indeni mærket "SARAP — IKKE RØRE".'},
+  {id:'ki_benn',   x:440, y:240, r:45, zone:'kbh',
+   msg:'En grøn løbeseddel: "PIGEFODBOLD I FDF — BLIV EN DEL AF NOGET STØRRE". Under bordet ligger en fodbold. Den er blevet sparket et par gange for hårdt — der er et lille mærke på væggen.'},
+  {id:'ki_rime',   x:112, y:333, r:40, zone:'kbh',
+   msg:'En tyk mappe mærket "FORTROLIGT — Q4 KURSER". Tre Post-its falder ud: en gul siger "RING TIL DEM INDEN FREDAG", en orange siger "HUSK KAFFEMASKINEN", en rød siger bare "NEJ".'},
+  {id:'ki_emse',   x:222, y:333, r:40, zone:'kbh',
+   msg:'Et halvfærdigt strikkeprojekt i FDF-blå hænger ned fra bordet. Det ligner starten på en trøje. Eller en hat. Eller noget andet. En post-it på det: "ÉN MASKE TIL."'},
+  {id:'ki_ton',    x:312, y:433, r:40, zone:'kbh',
+   msg:'Skuffen er halvåben. Indeni, bag en rapport om Q2-regnskabet, gemmer sig en Nutella-krukke. Den er 3/4 tom. Der er ingen ske. Det er mystisk.'},
+  {id:'ki_amers',  x:702, y:413, r:40, zone:'kbh',
+   msg:'To ure på bordet: ét viser 09:41, ét viser 09:42. Et lille termometer viser 20.3°C. En Post-it: "TEMPERATUREN AFVIGER MED 0.4° — DETTE ER ET PROBLEM."'},
+  {id:'ki_simona', x:822, y:413, r:40, zone:'kbh',
+   msg:'En ringlys er sat op og peger mod et tomt stykke luft. En kaffekop med teksten "CONTENT IS KING". Og en liste over hashtags: #FDF #fdflife #ToastTorsdag #Tasmus??? Det sidste er overstreget.'},
+  {id:'ki_asf',    x:782, y:333, r:40, zone:'kbh',
+   msg:'Et gammelt bjergkort — linjer der viser terræn over Jotunheimen. Og en karabinhage brugt som papirclips. Den holder tre dokumenter om krisekommunikation. Og én opskrift på birkekvistsuppe.'},
+  {id:'ki_sumsar', x:472, y:408, r:45, zone:'kbh',
+   msg:'En tom sutteflaske — ren, ikke brugt. Og en stak blanke papirer med tal skrevet på: 3.14, ∞, 0, 847, ???. Det 847. tal er omcirklet tre gange. Under bunken: et print af en æbleskive-opskrift.'},
+];
+
+kbhDeskItems.forEach(item=>{
+  WORLD_OBJECTS.push({
+    id:item.id, x:item.x, y:item.y, r:item.r, zone:item.zone,
+    label:'Undersøg 🔍',
+    onActivate:()=>{
+      dlgOpen=true;
+      document.getElementById('dlg-portrait').textContent='🔍';
+      document.getElementById('dlg-portrait').style.background='#2d3561';
+      document.getElementById('dlg-name').textContent='Du kigger nærmere...';
+      document.getElementById('dlg-name').style.color='#222';
+      document.getElementById('dlg-text').textContent=item.msg;
+      document.getElementById('dlg-row').style.display='none';
+      document.getElementById('dlg-thinking').classList.remove('on');
+      document.getElementById('dlg').classList.add('on');
+      const dc=document.getElementById('dlg-choices');
+      dc.innerHTML='';
+      const btn=document.createElement('button');
+      btn.className='dlg-choice';btn.textContent='Interessant.';
+      btn.addEventListener('click',closeDialog);
+      dc.appendChild(btn);
+    }
+  });
+});
+
 function initWorldObjects(){
   phoneObj   = {id:'phone',   x:50,  y:163, r:40, label:'Ring til FDF 📞',       hintPos:{left:'60px',top:'120px'},   onActivate:openPhone};
   calObj     = {id:'calendar',x:580, y:50,  r:55, label:'Åbn kalender 📅',        hintPos:{left:'535px',top:'85px'},   onActivate:openCalendar};
@@ -1879,7 +1928,7 @@ function initWorldObjects(){
     {id:'kbh_cal',   x:kbhCalX,   y:kbhCalY,   r:55, label:'Åbn kalender 📅',  zone:'kbh', onActivate:openCalendar},
     {id:'kbh_phone', x:kbhPhoneX, y:kbhPhoneY, r:55, label:'Ring til FDF 📞',  zone:'kbh', onActivate:openPhone},
     {id:'kbh_toast', x:415,       y:185,        r:70, label:'🍞 Toast Torsdag!', zone:'kbh', onActivate:openToast},
-    {id:'kbh_ops',   x:100,       y:250,        r:55, label:'Kig på opslagstavlen 📌', zone:'kbh', onActivate:()=>openKbhOpslagstavle()},
+    {id:'kbh_ops',   x:100,       y:42,         r:45, label:'Kig på opslagstavlen 📌', zone:'kbh', onActivate:()=>openKbhOpslagstavle()},
   );
 }
 
@@ -2427,9 +2476,11 @@ const noteParticles=[];
 const NOTE_SYMBOLS=['♩','♪','♫','♬'];
 function spawnNote(){
   if(radioChannel===0)return;
+  const rx=currentZone==='kbh'?kbhRadioX:radioObj.x;
+  const ry=currentZone==='kbh'?kbhRadioY:radioObj.y;
   noteParticles.push({
-    x:radioObj.x+Math.random()*14-7,
-    y:radioObj.y-12,
+    x:rx+Math.random()*14-7,
+    y:ry-12,
     vx:(Math.random()-.5)*.6,
     vy:-(0.6+Math.random()*.5),
     life:1,
@@ -5099,7 +5150,7 @@ const kbhOuterWalls = [
 ];
 const kbhObstacles = [
   {x:280,y:60, w:280,h:100}, // fællesrum bord
-  {x:40, y:85, w:120,h:120}, // Møderum A rundt bord (cirkel approx)
+  {x:40, y:105,w:120,h:120}, // Møderum A rundt bord (cirkel approx)
   {x:733,y:105,w:110,h:100}, // Møderum B bord
   {x:35, y:340,w:85, h:50 }, // NT desk 1
   {x:145,y:340,w:85, h:50 }, // NT desk 2
@@ -5160,7 +5211,7 @@ function visibleKbhNpcs(){
 
 function nearbyKbhNPC(){
   for(const n of visibleKbhNpcs()){
-    if(Math.hypot(player.x-n.x,player.y-n.y)<70) return n;
+    if(Math.hypot(player.x-n.x,player.y-n.y)<50) return n;
   }
   return null;
 }
@@ -5340,7 +5391,7 @@ function drawKbhRoom(){
   // ── FURNITURE ────────────────────────────────────────────────────────────────
 
   // ── OPSLAGSTAVLE MØDERUM A ──────────────────────────────────────────────────
-  {const ox=30, oy=220, ow=140, oh=60;
+  {const ox=30, oy=28,  ow=140, oh=28;
     // Ramme
     ctx.fillStyle='#6a4a20';rr(ox-4,oy-4,ow+8,oh+8,4);
     ctx.fillStyle='#d4a855';rr(ox,oy,ow,oh,3); // kork
@@ -5377,14 +5428,14 @@ function drawKbhRoom(){
   }
 
   // Møderum A — RUNDT BORD (Aros-stil men cirkulært)
-  ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(103,145,48,38,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(103,165,48,38,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#c8956c';ctx.strokeStyle='#222';ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.ellipse(100,142,58,48,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#d4a67a';ctx.beginPath();ctx.ellipse(100,142,52,42,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(100,162,58,48,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#d4a67a';ctx.beginPath();ctx.ellipse(100,162,52,42,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#8B5E3C';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
-  ctx.fillText('MØDERUM A',100,146);ctx.textAlign='left';
+  ctx.fillText('MØDERUM A',100,166);ctx.textAlign='left';
   // Stole rundt om
-  [[100,87],[143,100],[158,142],[143,185],[100,198],[57,185],[42,142],[57,100]].forEach(([cx,cy])=>{
+  [[100,107],[143,120],[158,162],[143,205],[100,218],[57,205],[42,162],[57,120]].forEach(([cx,cy])=>{
     ctx.fillStyle='#e07b54';ctx.strokeStyle='#222';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.ellipse(cx,cy,9,7,0,0,Math.PI*2);ctx.fill();ctx.stroke();
   });
@@ -5451,6 +5502,25 @@ function drawKbhRoom(){
     ctx.fillStyle=col;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
     ctx.fillText(lbl,dx+45,dy+52);ctx.textAlign='left';
   });
+  // Rime — kursusmappe med Post-its
+  ctx.fillStyle='#7d3c98';rr(95,335,28,20,2);
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='5px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('FORT.',109,348);ctx.textAlign='left';
+  [[90,332,'#ffcc02'],[101,329,'#ff8c00'],[112,331,'#e74c3c']].forEach(([px,py,fc])=>{
+    ctx.fillStyle=fc;ctx.fillRect(px,py,8,6);
+  });
+  // Emse — strikkeprojekt der hænger ned
+  ctx.strokeStyle='#2980b9';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(196,335);ctx.bezierCurveTo(200,355,204,365,198,380);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(204,335);ctx.bezierCurveTo(208,355,212,365,206,380);ctx.stroke();
+  ctx.fillStyle='#3498db';ctx.font='10px serif';ctx.fillText('🧶',218,350);
+  // Tonatan — halvåben skuffe med Nutella-kant
+  ctx.fillStyle='#8B5E3C';ctx.fillRect(235,472,80,10);
+  ctx.fillStyle='#c8956c';ctx.fillRect(237,465,76,12);
+  ctx.fillStyle='#c0392b';ctx.fillRect(252,463,28,8); // nutella-krukke rød kant
+  ctx.fillStyle='#fff';ctx.font='4px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('Nutella',266,469);ctx.textAlign='left';
+
   // LT desks — 80px ned (y:410)
   [[620,410,'Amers','🖥️','#2980b9'],[740,410,'Simona','📱','#e74c3c']].forEach(([dx,dy,lbl,ic,col])=>{
     ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(dx+4,dy+4,90,55);
@@ -5461,6 +5531,19 @@ function drawKbhRoom(){
     ctx.fillStyle=col;ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
     ctx.fillText(lbl,dx+45,dy+52);ctx.textAlign='left';
   });
+  // Amers — to ure + termometer
+  ctx.fillStyle='#1a1a2e';rr(690,415,18,12,3);ctx.fillStyle='#00ff88';ctx.font='4px monospace';ctx.textAlign='center';ctx.fillText('09:41',699,423);
+  ctx.fillStyle='#2a2a3a';rr(714,415,18,12,3);ctx.fillStyle='#ffcc02';ctx.font='4px monospace';ctx.fillText('09:42',723,423);
+  ctx.fillStyle='#e74c3c';ctx.fillRect(700,432,4,14);ctx.fillStyle='#555';ctx.fillRect(699,431,6,2);
+  ctx.textAlign='left';
+  // Simona — ringlys + kaffekop
+  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(768,418,12,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(768,418,8,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#e74c3c';rr(780,428,20,14,3);
+  ctx.fillStyle='#fff';ctx.font='4px Comic Neue';ctx.textAlign='center';ctx.fillText('KING',790,437);ctx.textAlign='left';
+
   // Ásfríðr bord — Kontor LT (lokalt team rum)
   {const dx=700,dy=330;
     ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(dx+4,dy+4,90,55);
@@ -5471,6 +5554,44 @@ function drawKbhRoom(){
     ctx.fillStyle='#16a085';ctx.font='bold 9px Comic Neue';ctx.textAlign='center';
     ctx.fillText('Ásfríðr',dx+45,dy+52);ctx.textAlign='left';
   }
+  // Ásfríðr — bjergkort + karabinhage
+  ctx.fillStyle='#f0e8d0';ctx.strokeStyle='#8a7050';ctx.lineWidth=1;
+  ctx.fillRect(752,335,32,22);ctx.strokeRect(752,335,32,22);
+  ctx.strokeStyle='#8a9060';ctx.lineWidth=.5;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(752,338+i*6);ctx.bezierCurveTo(760,335+i*6,768,341+i*6,784,337+i*6);ctx.stroke();}
+  ctx.fillStyle='#555';ctx.font='4px Comic Neue';ctx.textAlign='center';ctx.fillText('⛰️',760,352);ctx.textAlign='left';
+  ctx.strokeStyle='#888';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(778,348,5,8,0.3,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(775,342);ctx.lineTo(781,342);ctx.stroke();
+
+  // Fællesrum — Tia, Sarap, Bennette bordgenstande (løse på fællesbordet)
+  // Tia — Aperol flaske + solbriller
+  ctx.fillStyle='#e8650a';rr(310,120,10,28,3);ctx.strokeStyle='#c85000';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#ff8c30';ctx.fillRect(312,122,6,8);
+  ctx.fillStyle='#1a1a1a';ctx.font='5px Comic Neue';ctx.textAlign='center';ctx.fillText('Aperol',315,155);ctx.textAlign='left';
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(332,125,8,4,0,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(348,125,8,4,0,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(340,125);ctx.lineTo(340,125);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(324,125);ctx.lineTo(322,122);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(356,125);ctx.lineTo(358,122);ctx.stroke();
+  // Sarap — balletsko
+  ctx.fillStyle='#f5e6e0';ctx.strokeStyle='#d4b0a0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.ellipse(548,158,16,7,-.2,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.ellipse(568,155,14,6,-.15,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#e8c8b8';ctx.lineWidth=.5;
+  ctx.beginPath();ctx.moveTo(537,154);ctx.lineTo(530,148);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(557,152);ctx.lineTo(550,146);ctx.stroke();
+  // Bennette — løbeseddel
+  ctx.fillStyle='#27ae60';rr(418,230,60,30,3);
+  ctx.fillStyle='#fff';ctx.font='bold 4px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('PIGEFODBOLD',448,240);ctx.fillText('I FDF 🏈',448,248);ctx.textAlign='left';
+  // Fodbold under bordet (lille)
+  ctx.fillStyle='#fff';ctx.strokeStyle='#333';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(450,278,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#222';ctx.lineWidth=.5;
+  ctx.beginPath();ctx.moveTo(442,278);ctx.lineTo(458,278);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(450,270);ctx.lineTo(450,286);ctx.stroke();
 
   // ── KAFFEMASKINE (Fællesrum, højre side) ─────────────────────────────────────
   {const kx=kbhKaffeX-65,ky=kbhKaffeY-5;
@@ -5638,6 +5759,15 @@ function drawKbhRoom(){
     ctx.strokeStyle=`rgba(180,150,255,${p})`;ctx.lineWidth=2;ctx.setLineDash([5,4]);
     ctx.beginPath();ctx.rect(340,510,220,50);ctx.stroke();ctx.setLineDash([]);
   }
+
+  // Sumsar — sutteflaske + mystiske tal
+  ctx.fillStyle='#b0c8e0';rr(430,415,14,22,4);ctx.strokeStyle='#88a8c0';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#d0e8f0';ctx.fillRect(432,412,10,6);
+  ctx.fillStyle='rgba(0,180,80,.2)';ctx.fillRect(432,418,10,10);
+  ctx.fillStyle='#1a2030';rr(462,405,50,35,3);
+  ctx.fillStyle='rgba(0,200,100,.4)';ctx.font='4px monospace';ctx.textAlign='left';
+  ['3.14','∞','0','847','???'].forEach((s,i)=>ctx.fillText(s,464,412+i*6));
+  ctx.textAlign='left';
 
   // ── VISIBLE NPCS ─────────────────────────────────────────────────────────────
   visibleKbhNpcs().forEach(n=>drawKbhNPC(n));
