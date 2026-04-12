@@ -5963,12 +5963,45 @@ const kbhTrees={
   },
   Tonatan:{
     start:[
-      {label:'💰 FDFs økonomi?',next:'ton_job'},
-      {label:'🇸🇪 Sverige og fjeldet?',next:'ton_sverige'},
+      {label:'💰 FDFs økonomi?',                        next:'ton_job'},
+      {label:'🎲 Star Wars brætspil?',                  next:'ton_sw'},
+      {label:'⚡ Hvad drikker du?',                     next:'ton_monster'},
+      {label:'📺 Kult-tv?',                             next:'ton_tv'},
+      {label:'📋 Din opgaveliste?',                     next:'ton_liste'},
+      {label:'👻 Økonomifolkene?',                      next:'ton_oekon'},
     ],
-    ton_job:{text:'Yo! Tonatan. Jeg holder styr på FDFs økonomi. Budgetter, regnskaber. Mastermind.',choices:[{label:'Hvad er sværest?',next:'ton_svaer'},{label:'Sverige?',next:'ton_sverige'}]},
-    ton_svaer:{text:'At forklare folk at penge ikke er ubegrænsede. Men vi klarer os godt.',choices:[{label:'Betryggende.',next:'__close'}]},
-    ton_sverige:{text:'Sverige er mit andet hjem. Fjeldene, stilheden. Helt anderledes end Køpmannæhafn.',choices:[{label:'Lyder vidunderligt.',next:'__close'}]},
+    ton_job:{text:'Yo. Tonatan. Økonomi. Budgetter, regnskaber, prognoser. Jeg har et system — farvekodet, kvartalsopdelt, med backup-backup. Ingen detalje er for lille.',choices:[{label:'Hvad er sværest?',next:'ton_svaer'},{label:'Din opgaveliste?',next:'ton_liste'}]},
+    ton_svaer:{text:'At forklare folk at "vi kan bare tage fra en anden post" ikke er en strategi. Det er en katastrofe i slow motion.',choices:[{label:'📋 Hvad står der på din liste?',next:'ton_liste'},{label:'Økonomifolkene?',next:'ton_oekon'}]},
+
+    ton_sw:{text:'Star Wars: Rebellion. Fire timers spiltid minimum. Jeg spiller altid Imperiet. Det er den eneste rationelle beslutning — bedre ressourcer, bedre struktur.',choices:[{label:'Har du vundet?',next:'ton_sw2'},{label:'Spiller du alene?',next:'ton_sw3'}]},
+    ton_sw2:{text:'Altid. Okay, næsten altid. Ét spil tabte jeg fordi min modstander gemte Luke Skywalker på en planet ingen ville lede på. Det var statistisk urimeligt.',choices:[{label:'😄 Fair point.',next:'ton_sw4'},{label:'Andre spil?',next:'ton_sw5'}]},
+    ton_sw3:{text:'Sarap spiller med en gang imellem. Hun er Rebellerne. Hun vinder ved at gøre ting der ikke giver mening taktisk. Det fungerer på en måde der generer mig dybt.',choices:[{label:'Andre spil?',next:'ton_sw5'}]},
+    ton_sw4:{text:'Jeg har lavet en sandsynlighedsanalyse over alle mine tab. 73% skyldes terningkast under det statistiske gennemsnit. Terningerne er suspekte.',choices:[{label:'Andre spil?',next:'ton_sw5'},{label:'Kult-tv?',next:'ton_tv'}]},
+    ton_sw5:{text:'Arkham Horror, Gloomhaven, og Twilight Imperium — men den kræver otte timer og nogen der har taget fri. Sidst vi spillede bestilte jeg pizzaen 3 timer i forvejen baseret på spillets forventede progression.',choices:[{label:'Økonomifolkene?',next:'ton_oekon'},{label:'Hvad drikker du?',next:'ton_monster'}]},
+
+    ton_monster:{text:'*løfter en Monster Ultra White* Nul kalorier. Det er vigtigt for mig at pointere det. Jeg drikker NØJAGTIGT to om dagen — én kl. 9 og én kl. 14. Det er et system.',choices:[{label:'Et system for Monster-drikke?',next:'ton_monster2'},{label:'Hvad med vand?',next:'ton_monster3'}]},
+    ton_monster2:{text:'Selvfølgelig. Jeg har et regneark. Dag, tidspunkt, smag, produktivitetsscore efterfølgende. Monster Ultra Fiesta er statistisk min bedste dag. Det er videnskab.',choices:[{label:'😂 Det er imponerende.',next:'ton_monster4'},{label:'📋 Opgavelisten?',next:'ton_liste'}]},
+    ton_monster3:{text:'Vand drikker jeg også. Præcis 1.8 liter om dagen. Det er i en anden kolonne i regnearket.',choices:[{label:'Selvfølgelig er det det.',next:'ton_monster4'}]},
+    ton_monster4:{text:'Folk griner. Men min gennemsnitlige svartid på emails er 4.2 minutter. Det er ikke tilfældigt.',choices:[{label:'📋 Opgavelisten?',next:'ton_liste'},{label:'Kult-tv?',next:'ton_tv'}]},
+
+    ton_tv:{text:'The Wire, Breaking Bad, The Leftovers, Dark, Succession, Severance. I nøje udvalgt rækkefølge. Jeg ser ikke trash-tv. Jeg ser fortællinger der siger noget om menneskelig natur.',choices:[{label:'Hvad er bedst?',next:'ton_tv2'},{label:'Ser du det alene?',next:'ton_tv3'}]},
+    ton_tv2:{text:'The Wire. Uden diskussion. Sæson 4. Omar og Bunk i en scene tilsammen er mere karakterudvikling end de fleste serier har i seks sæsoner. Det er fakta.',choices:[{label:'Severance?',next:'ton_tv_sev'},{label:'📋 Opgavelisten?',next:'ton_liste'}]},
+    ton_tv_sev:{text:'Severance... *lang pause* ...Severance rammer for tæt på. Folk der ikke kan huske hvad de laver på arbejde. Det er enten en dystopi eller en drøm. Jeg er ikke sikker på hvilken.',choices:[{label:'*ubehageligt tavshed*',next:'ton_oekon'},{label:'📋 Opgavelisten?',next:'ton_liste'}]},
+    ton_tv3:{text:'Ja. Jeg tager noter. Ikke om handlingen — om beslutningsstrukturerne. Walter White er primært interessant som case study i eskalerende risikoaccept.',choices:[{label:'Det lyder som arbejde.',next:'ton_tv4'}]},
+    ton_tv4:{text:'*pause* ...Måske. Men jeg nyder det. Det er nuanceret.',choices:[{label:'Hvad er næste på listen?',next:'ton_tv5'}]},
+    ton_tv5:{text:'Jeg er ved at se Deadwood igen. Tredje gang. Første gang for fornøjelsens skyld, anden gang for dialogen, tredje gang for den politiske økonomi i en frontier-by. Det er metodisk.',choices:[{label:'Selvfølgelig er det det.',next:'__close'}]},
+
+    ton_liste:{text:'*trækker en A3-side frem* Aktuelle opgaver: 1) Q3-regnskab (47% færdig), 2) Budgetprognose 2026, 3) Ny kontoaftale (afventer underskrift), 4) Møde med revisor (UDSAT x3), 5) Tasmus\' manglende udgiftsbilag—',choices:[{label:'Vent — Tasmus?',next:'ton_liste_tasmus'},{label:'Hvor lang er listen?',next:'ton_liste2'}]},
+    ton_liste2:{text:'*blar ned* ...Side 1 af 3. Punkt 23 er "Opfølge på punkt 14". Punkt 14 er "Opfølge på punkt 8". Det er et selvstændigt system.',choices:[{label:'Hvem ser du ellers på listen?',next:'ton_liste3'},{label:'Vent — Tasmus?',next:'ton_liste_tasmus'}]},
+    ton_liste3:{text:'Her: punkt 31: "Afklare økonomifolkene om Q2-bilag". De har ikke svaret i 18 dage. Jeg sender reminder hver tirsdag kl. 10:00. Ingen svar. Det er uacceptabelt.',choices:[{label:'Økonomifolkene?',next:'ton_oekon'},{label:'Tasmus?',next:'ton_liste_tasmus'}]},
+    ton_liste_tasmus:{text:'Tasmus havde 6 uindleverede bilag da han forsvandt. Det er stadig åbent i mit system. Jeg kan ikke lukke posten. Det... generer mig.',choices:[{label:'Han er bortført.',next:'ton_liste_tasmus2'},{label:'Økonomifolkene?',next:'ton_oekon'}]},
+    ton_liste_tasmus2:{text:'*lang pause* ...Jeg ved det. Simona har fortalt mig. Men bilagene eksisterer stadig som åbne poster. Jeg kan ikke slette dem. Det ville være at acceptere at han ikke kommer tilbage.',choices:[{label:'*stille* Det forstår jeg.',next:'__close'}]},
+
+    ton_oekon:{text:'*sænker stemmen* Økonomiafdelingen. Sidst jeg så dem — alle tre — var en tirsdag. De nikkede til mig i gangen. Præcist synkront. Som en metronom. Det var mærkeligt.',choices:[{label:'Hvornår var det?',next:'ton_oekon2'},{label:'Hvad lavede de?',next:'ton_oekon3'}]},
+    ton_oekon2:{text:'To uger og tre dage siden. Jeg har datoen i mit system. 14:32. Jeg husker det fordi jeg havde sendt min tredje reminder om Q2-bilag kl. 14:30. De nikkede OG ignorerede min mail to minutter før.',choices:[{label:'Hvad lavede de?',next:'ton_oekon3'}]},
+    ton_oekon3:{text:'De bar papirer. Meget papirer. Alle tre. I samme retning. Mod... kopirummet. Ingen af dem er kommet tilbage. Jeg sender stadig mails. Ingen svar. Men de bliver læst. Det viser systemet.',choices:[{label:'Læst — men ikke svaret?',next:'ton_oekon4'},{label:'Kopirummet?',next:'ton_oekon5'}]},
+    ton_oekon4:{text:'Læst kl. 03:47 hver gang. Præcist. Den samme tid. Hver tirsdag. Det er ikke et menneske der læser dem. Eller det er et meget disciplineret menneske i en meget underlig tidzone.',choices:[{label:'Kopirummet...',next:'ton_oekon5'}]},
+    ton_oekon5:{text:'*kigger mod kopirummet* Der er noget herinde der ikke stemmer. Tasmus vidste det. Nu er han væk. Jeg er organiseret, ikke modig. Men jeg skriver det ned. Punkt 47: "Find ud af hvad der sker i kopirummet."',choices:[{label:'Vær forsigtig, Tonatan.',next:'__close'}]},
   },
   Amers:{
     start:[
