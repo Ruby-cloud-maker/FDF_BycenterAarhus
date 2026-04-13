@@ -3004,13 +3004,12 @@ function drawTarkob(){
 // TMON POWERSJOV
 // ═══════════════════════════════════════════
 let guitarTrioKnown=false, jasTrioKnown=false;
-let tmon={active:false,visible:false,x:-200,y:310,tx:350,ty:310,walking:false,phase:0,buzzX:-300,buzzArriving:false,buzzDone:false};
+let tmon={active:false,visible:false,x:-200,y:310,tx:350,ty:310,walking:false,phase:0,buzzX:-400,buzzArriving:false,buzzDone:false,buzzY:280,buzzLeaving:false,leavingRight:false};
 
 function summonTmon(){
   if(tmon.active)return;
   tmon.active=true;tmon.visible=true;
   tmon.buzzX=-280;tmon.buzzArriving=true;tmon.buzzDone=false;
-  tmon.leavingRight=false;
   // Zone-aware spawn row
   tmon.y = currentZone==='kbh' ? 220 : 310;
   tmon.buzzY = tmon.y - 30;
@@ -3022,7 +3021,6 @@ function summonTmon(){
 
 function dismissTmon(){
   if(!tmon.active||!tmon.buzzDone)return;
-  tmon.leavingRight=false;
   tmon.buzzArriving=false;
   tmon.buzzDone=false;
   tmon.buzzLeaving=true;
@@ -3066,7 +3064,7 @@ function updateTmon(){
     if(tmon.buzzX>=80){
       tmon.buzzArriving=false;tmon.buzzDone=true;
       tmon.x=140;tmon.y=tmon.buzzY+30;
-      tmon.tx=currentZone==='kbh'?350:350;
+      tmon.tx=currentZone==='kbh'?500:350;
       tmon.ty=tmon.buzzY+30;
       tmon.walking=true;
     }
@@ -3083,7 +3081,7 @@ function drawTmon(){
   if(!tmon.visible)return;
   const t=Date.now()/600;
   // Draw WB-Buzz arriving
-  if(tmon.buzzArriving||tmon.buzzLeaving||tmon.buzzX>-280){
+  if(tmon.buzzArriving||tmon.buzzLeaving||tmon.buzzX>-400){
     const bx=tmon.buzzX,by=tmon.buzzY||280;
     // Bus body
     ctx.fillStyle='#ffcc02';ctx.strokeStyle='#222';ctx.lineWidth=2.5;
@@ -3283,11 +3281,6 @@ function nearbyNPC(){
   if(tmon.visible&&tmon.buzzDone){
     const d=Math.hypot(player.x-tmon.x,player.y-tmon.y);
     if(d<70&&d<min){min=d;best={id:'Tmon',name:'Tmon POWERSJOV',x:tmon.x,y:tmon.y,isTmon:true};}
-  }
-  // Check Tarkob
-  if(tarkob.visible){
-    const d=Math.hypot(player.x-tarkob.x,player.y-tarkob.y);
-    if(d<70&&d<min){min=d;best={id:'Tarkob',name:'Tarkob',x:tarkob.x,y:tarkob.y,isTarkob:true};}
   }
   return best;
 }
@@ -5221,6 +5214,11 @@ function drawFridayBar(){
 // ── UNIFIED ACTIVATION ──────────────────────────────────────────────────────
 function activateNearest(){
   if(currentZone==='kbh'){
+    // Check Tmon first — global NPC works in both zones
+    if(tmon.visible&&tmon.buzzDone){
+      const d=Math.hypot(player.x-tmon.x,player.y-tmon.y);
+      if(d<70){openTmonDialog();return;}
+    }
     const kn=nearbyKbhNPC();
     if(kn){openKbhDialog(kn);return;}
     const obj=nearbyWorldObject();
@@ -5282,7 +5280,7 @@ function changeDay(){
   coffeeT=currentDay===DAY.THU?400:9999;
   sudokuState='home';sudokuT=300+Math.random()*400;
   Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
-  document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
+  document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false; tarkobBarVisited=false;
   if(currentDay===DAY.FRI){flash('🍹 FREDAG! Noget ser anderledes ud i dag...');setTimeout(triggerFriday,2000);}
   else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
   else if(currentDay===DAY.WED){flash('📅 ONSDAG — Mødedag! 💻');setTimeout(startTarkobWedVisit,8000);}
@@ -5363,6 +5361,8 @@ function enterZone(zone, px, py){
     player.y = py || 280;
     tapTarget = null;
     closeDialog(); closeBar();
+    // Reset Tmon position if active mid-transit
+    if(tmon.buzzArriving){ tmon.buzzX=-400; tmon.buzzArriving=false; tmon.active=false; tmon.visible=false; }
     // Opdater HUD-titel
     const titles={aros:'FDF BYCENTER AROS', kbh:'FDF BYCENTER KØPMANNÆHAFN'};
     const hudTitle=document.getElementById('hud-title');
@@ -6255,6 +6255,19 @@ function drawSecretRoom(){
 function updateKbhHint(){
   const el=document.getElementById('hint');
   const mobileE=document.getElementById('mobile-e');
+  // Check Tmon first
+  if(tmon.visible&&tmon.buzzDone){
+    const d=Math.hypot(player.x-tmon.x,player.y-tmon.y);
+    if(d<70){
+      mobileE.classList.add('visible');
+      el.style.display='block';
+      el.textContent='[E] Tal med Tmon POWERSJOV';
+      el.style.left=(tmon.x+5)+'px';
+      el.style.top=(tmon.y-50)+'px';
+      el.style.transform='';
+      return;
+    }
+  }
   const n=nearbyKbhNPC();
   const obj=nearbyWorldObject();
   if(n){
@@ -6776,7 +6789,7 @@ document.querySelectorAll('.cal-day-btn').forEach(btn=>{
     coffeeState='idle'; coffeeDone=false; coffeeT=currentDay===DAY.THU?400:9999;
     sudokuState='home'; sudokuT=300+Math.random()*400;
     Object.values(wander).forEach(w=>{w.tx=w.hx;w.ty=w.hy;});
-    document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false;
+    document.getElementById('friday').style.display='none'; fridayBarActive=false; tarkobBarVisited=false; tarkobBarVisited=false;
     toastThursdayActive=false;
     if(currentDay===DAY.FRI){flash('🍹 FREDAG! Fredagsbar starter snart...');setTimeout(triggerFriday,1500);}
     else if(currentDay===DAY.MON)flash('📅 MANDAG — Alle er på kontoret!');
