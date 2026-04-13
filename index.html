@@ -239,7 +239,7 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
     </div>
   </div>
 
-  <div id="mobile-e">TAL<br>E</div>
+  <div id="mobile-e">✋<br>E</div>
 
   <!-- minimap -->
   <canvas id="minimap" width="90" height="56"></canvas>
@@ -1562,6 +1562,7 @@ function openKbhOpslagstavle(){
 // ── KOPIMASKINE ───────────────────────────────────────────────────────────────
 const KOPI_CODE = '09-4471';
 let kelderUnlocked = false;
+let kbhKaffeActive = false;  // NT kaffe-møde er i gang
 
 function openKopiMenu(){
   document.getElementById('kopi-overlay').style.display='flex';
@@ -2086,11 +2087,13 @@ const kalderObstacles = [
 
 // Regnskabsheksen state
 let heks = {
-  active: false, defeated: false,
+  active: false, defeated: false, dying: false,
+  dyingT: 0, dyingParticles: [],
+  bottleGlow: 0,
   x: 450, y: 200,
   phase: 0,
-  duelRound: 0,    // which question
-  duelScore: 0,    // correct answers
+  duelRound: 0,
+  duelScore: 0,
   duelActive: false,
   visits: 0,
 };
@@ -2178,6 +2181,176 @@ function shuffleOpts(q){
   return {...q,opts};
 }
 
+// ── HEKS LYDE ─────────────────────────────────────────────────────────────────
+function playHeksDeath(){
+  try {
+    const a=ac();
+    // Faldende dissonant tone (440→80 over 2s)
+    const o=a.createOscillator(),g=a.createGain();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(440,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80,a.currentTime+2);
+    g.gain.setValueAtTime(0.15,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+2.2);
+    o.connect(g);g.connect(a.destination);
+    o.start();o.stop(a.currentTime+2.3);
+    // Tre klik (regnskabsbøger falder)
+    [0.3,0.55,0.8].forEach(t=>{
+      const o2=a.createOscillator(),g2=a.createGain();
+      o2.type='square';o2.frequency.value=180;
+      g2.gain.setValueAtTime(0.12,a.currentTime+t);
+      g2.gain.exponentialRampToValueAtTime(0.001,a.currentTime+t+0.08);
+      o2.connect(g2);g2.connect(a.destination);
+      o2.start(a.currentTime+t);o2.stop(a.currentTime+t+0.1);
+    });
+    // Lavfrekvent puf ved slutningen
+    const o3=a.createOscillator(),g3=a.createGain();
+    o3.type='sine';o3.frequency.setValueAtTime(80,a.currentTime+1.8);
+    o3.frequency.exponentialRampToValueAtTime(30,a.currentTime+2.2);
+    g3.gain.setValueAtTime(0.2,a.currentTime+1.8);
+    g3.gain.exponentialRampToValueAtTime(0.001,a.currentTime+2.3);
+    o3.connect(g3);g3.connect(a.destination);
+    o3.start(a.currentTime+1.8);o3.stop(a.currentTime+2.4);
+  } catch(e){}
+}
+
+function playBottleMaterialize(){
+  try {
+    const a=ac();
+    // Stigende magisk tone (200→600 over 1s)
+    const o=a.createOscillator(),g=a.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(200,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(600,a.currentTime+1);
+    g.gain.setValueAtTime(0,a.currentTime);
+    g.gain.linearRampToValueAtTime(0.12,a.currentTime+0.3);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+1.2);
+    o.connect(g);g.connect(a.destination);
+    o.start();o.stop(a.currentTime+1.3);
+    // Kork-pling
+    setTimeout(()=>{
+      try{
+        const a2=ac(),o2=a2.createOscillator(),g2=a2.createGain();
+        o2.type='sine';o2.frequency.value=880;
+        g2.gain.setValueAtTime(0.1,a2.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.001,a2.currentTime+0.3);
+        o2.connect(g2);g2.connect(a2.destination);
+        o2.start();o2.stop(a2.currentTime+0.35);
+      }catch(e){}
+    },1000);
+  } catch(e){}
+}
+
+function playBottleWhisper(){
+  try {
+    const a=ac();
+    // Distorteret hvísken — høj frekvens, hurtigt aftagende
+    [1200,1400,1100,1600].forEach((f,i)=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='sawtooth';o.frequency.value=f;
+      g.gain.setValueAtTime(0,a.currentTime+i*0.08);
+      g.gain.linearRampToValueAtTime(0.04,a.currentTime+i*0.08+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+i*0.08+0.15);
+      o.connect(g);g.connect(a.destination);
+      o.start(a.currentTime+i*0.08);o.stop(a.currentTime+i*0.08+0.18);
+    });
+  } catch(e){}
+}
+
+// ── HEKS DEATH ANIMATION ──────────────────────────────────────────────────────
+function spawnHeksParticles(){
+  const REGNSKAB=['€','∑','¥','#','§','42','0','∞','%','!'];
+  for(let i=0;i<28;i++){
+    heks.dyingParticles.push({
+      x:heks.x+(Math.random()-.5)*30,
+      y:heks.y+(Math.random()-.5)*30,
+      vx:(Math.random()-.5)*3,
+      vy:-(1+Math.random()*3),
+      life:1,
+      decay:0.015+Math.random()*0.02,
+      sym:REGNSKAB[Math.floor(Math.random()*REGNSKAB.length)],
+      size:8+Math.random()*10,
+      col:`hsl(${270+Math.random()*40},80%,${50+Math.random()*30}%)`,
+    });
+  }
+}
+
+function updateHeksDying(){
+  if(!heks.dying) return;
+  heks.dyingT++;
+  // Update particles
+  for(let i=heks.dyingParticles.length-1;i>=0;i--){
+    const p=heks.dyingParticles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.08;
+    p.vx*=0.97;
+    p.life-=p.decay;
+    if(p.life<=0) heks.dyingParticles.splice(i,1);
+  }
+  // After 2.5s — fully defeated
+  if(heks.dyingT>150){
+    heks.dying=false;
+    heks.defeated=true;
+    heks.bottleGlow=0;
+    playBottleMaterialize();
+    // Don't close dialog — let player click "Befri Tasmus"
+  }
+}
+
+function drawHeksParticles(){
+  heks.dyingParticles.forEach(p=>{
+    ctx.globalAlpha=p.life*0.9;
+    ctx.fillStyle=p.col;
+    ctx.font=`bold ${p.size}px monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(p.sym,p.x,p.y);
+  });
+  ctx.globalAlpha=1;ctx.textAlign='left';
+}
+
+// Bottle whisper lines
+const BOTTLE_LINES=[
+  '*hvísker* ...Du vandt. Det indrømmer jeg. Én gang.',
+  '*hvísker* Portvin er faktisk udmærket herinde.',
+  '*hvísker* Pengeskabet er stadig ikke dit.',
+  '*hvísker* ...Gå nu.',
+  '*hvísker* Det er koldt herinde. Det er min skyld.',
+  '*hvísker* Jeg kan stadig se regnskaberne fra her.',
+  '*hvísker* ...Var det nødvendigt med partiklerne?',
+  '*hvísker* Glasset er tykkere end det ser ud.',
+  '*hvísker* Jeg overvejer at anke afgørelsen.',
+  '*hvísker* Du lugtede af kontor. Det gør du stadig.',
+  '*hvísker* Korken sidder fast. Det er et problem.',
+  '*hvísker* ...Jeg savner mit regneark.',
+  '*hvísker* Flasken er faktisk ret hyggelig. Det vil jeg ikke indrømme udenfor.',
+  '*hvísker* Giv mig et glas. Det er det mindste.',
+  '*hvísker* Pengeskabet er stadig mit. Symbolsk set.',
+  '*hvísker* ...Var Tasmus okay?',
+  '*hvísker* Jeg har 847 uafsluttede poster. Det generer mig.',
+  '*hvísker* Du kan ikke høre mig ordentligt. Det er bevidst.',
+  '*hvísker* Portvin fra 2019. Udmærket år.',
+  '*hvísker* ...Jeg tænker stadig i dobbelt bogføring.',
+  '*hvísker* Flasken er rund. Det er ineffektivt.',
+  '*hvísker* Kom ikke igen. Eller gør. Det er ligegyldigt.',
+  '*hvísker* Jeg har lavet en fejl. Ikke regnskabsmæssigt. Den anden slags.',
+  '*hvísker* ...Tasmus\' ID var 4471. Jeg ved det stadig.',
+  '*hvísker* Lyset herinde er lilla. Det er acceptabelt.',
+  '*hvísker* Kælderen er koldere uden mig. Du er velkommen.',
+  '*hvísker* Jeg kunne have vundet. Statistisk set.',
+  '*hvísker* ...Hav det godt. Det sagde jeg ikke.',
+  '*hvísker* Pengeskabet indeholder penge til Skovly. Det burde have været mit.',
+  '*hvísker* Jeg overvejer at skrive en bog. Fra flasken.',
+  '*hvísker* ...Tasmus printede 847 sider. Jeg vidste hvad det betød. Jeg ignorerede det.',
+  '*hvísker* Du er den første der har besøgt mig to gange. Det siger noget om dig.',
+];
+let bottleLineIdx=0;
+
+function openBottleDialog(){
+  playBottleWhisper();
+  const line=BOTTLE_LINES[bottleLineIdx%BOTTLE_LINES.length];
+  bottleLineIdx++;
+  openSimpleDialog('🍷','Ånden i Flasken','#9060cc',line,[{label:'*Sæt flasken ned igen*',next:'__close'}]);
+}
+
 function openHeksDialog(){
   if(heks.defeated){
     openSimpleDialog('❄️','Regnskabsheksen','#c8a8ff','*kun et iskoldt ekko tilbage*',[{label:'Gå.',next:'__close'}]);
@@ -2226,10 +2399,42 @@ function showHeksVerdict(){
   document.getElementById('dlg-text').textContent=`Resultat: ${s}/5\n\n${verdict}`;
   const dc=document.getElementById('dlg-choices');dc.innerHTML='';
   if(win){
-    heks.defeated=true;heks.duelActive=false;
-    const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='*Befri Tasmus*';
-    btn.addEventListener('click',()=>{closeDialog();tasmusKalder.freed=true;flash('🎉 TASMUS ER BEFRIET!');setTimeout(()=>flash('🍺 Tasmus finder en Wiibroe i lommen og rækker den til dig.'),2000);setTimeout(()=>openTasmusFreeDialog(),3500);});
-    dc.appendChild(btn);
+    heks.duelActive=false;
+    // Luk dialogen så animationen er synlig
+    closeDialog();
+    // Start death animation
+    setTimeout(()=>{
+      heks.dying=true;
+      spawnHeksParticles();
+      playHeksDeath();
+      flash('❄️ Regnskabsheksen smelter...');
+    }, 300);
+    setTimeout(()=>{
+      flash('🍷 En portvinsflaske materialiserer på pengeskabet...');
+    }, 2500);
+    // Åbn mini-dialog med knap når animation er færdig
+    setTimeout(()=>{
+      dlgOpen=true;
+      const port=document.getElementById('dlg-portrait');
+      port.style.background='#1a0a2a'; port.textContent='❄️';
+      document.getElementById('dlg-name').textContent='Regnskabsheksen';
+      document.getElementById('dlg-name').style.color='#c8a8ff';
+      document.getElementById('dlg-thinking').classList.remove('on');
+      document.getElementById('dlg-row').style.display='none';
+      document.getElementById('dlg').classList.add('on');
+      document.getElementById('dlg-text').textContent='*smeltet* ...tallene... de var mine...\n\n*koldt hvísken fra en portvinsflaske på pengeskabet*';
+      const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+      const btn=document.createElement('button');
+      btn.className='dlg-choice';btn.textContent='*Befri Tasmus*';
+      btn.addEventListener('click',()=>{
+        closeDialog();
+        tasmusKalder.freed=true;
+        flash('🎉 TASMUS ER BEFRIET!');
+        setTimeout(()=>flash('🍺 Tasmus finder en Wiibroe i lommen og rækker den til dig.'),2000);
+        setTimeout(()=>openTasmusFreeDialog(),3500);
+      });
+      dc.appendChild(btn);
+    }, 3400);
   } else {
     const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='*Gå tilbage og lær mere*';
     btn.addEventListener('click',()=>{closeDialog();setTimeout(()=>enterZone('kbh',400,400),400);});
@@ -2364,16 +2569,66 @@ function drawKalderRoom(){
 
   // ── GADELYGTE ──────────────────────────────────────────────────────────────
   {const lx=100,ly=80;
-    ctx.fillStyle='#3a3050';ctx.strokeStyle='#555070';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(lx,ly+300);ctx.lineTo(lx,ly);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(lx,ly);ctx.bezierCurveTo(lx,ly-20,lx+25,ly-20,lx+25,ly-28);ctx.stroke();
-    ctx.fillStyle='#2a2040';ctx.strokeStyle='#6060a0';ctx.lineWidth=1.5;
-    ctx.fillRect(lx+13,ly-48,24,18);ctx.strokeRect(lx+13,ly-48,24,18);
+    // Lyskegle på gulvet
     const lf=.7+.3*Math.sin(t*1.8);
-    ctx.fillStyle=`rgba(255,240,180,${lf*.9})`;ctx.beginPath();ctx.arc(lx+25,ly-39,6,0,Math.PI*2);ctx.fill();
-    const lg=ctx.createRadialGradient(lx+25,ly-39,2,lx+25,ly-39,100);
-    lg.addColorStop(0,`rgba(255,240,180,${lf*.15})`);lg.addColorStop(1,'transparent');
-    ctx.fillStyle=lg;ctx.fillRect(lx-75,ly-140,200,200);
+    const lg=ctx.createRadialGradient(lx+30,ly+280,5,lx+30,ly+280,200);
+    lg.addColorStop(0,`rgba(255,240,180,${lf*.3})`);lg.addColorStop(1,'transparent');
+    ctx.fillStyle=lg;ctx.beginPath();ctx.arc(lx+30,ly+280,200,0,Math.PI*2);ctx.fill();
+
+    // Stolpe — tykkere, mørk metal
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#4a4560';ctx.lineWidth=1;
+    ctx.fillRect(lx-4,ly,8,310);ctx.strokeRect(lx-4,ly,8,310);
+    // Stolpe-detaljer (ringe)
+    [ly+60,ly+140,ly+220].forEach(ry=>{
+      ctx.fillStyle='#3a3550';ctx.fillRect(lx-5,ry,10,6);ctx.strokeRect(lx-5,ry,10,6);
+    });
+
+    // Arm — lang elegant bue
+    ctx.strokeStyle='#3a3550';ctx.lineWidth=5;ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(lx,ly+10);
+    ctx.bezierCurveTo(lx,ly-15,lx+50,ly-15,lx+50,ly-45);
+    ctx.stroke();
+    // Arm outline
+    ctx.strokeStyle='#4a4560';ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(lx,ly+10);
+    ctx.bezierCurveTo(lx,ly-15,lx+50,ly-15,lx+50,ly-45);
+    ctx.stroke();
+    ctx.lineCap='butt';
+
+    // Krave hvor arm møder stolpe
+    ctx.fillStyle='#3a3550';ctx.strokeStyle='#5a5570';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(lx,ly+8,10,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+    // Lygte-hoved — klassisk hængende lygteform (trapez/sekskant)
+    const hx=lx+50,hy=ly-45;
+    // Top-kap
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#5a5570';ctx.lineWidth=1.5;
+    ctx.fillRect(hx-14,hy-8,28,6);ctx.strokeRect(hx-14,hy-8,28,6);
+    // Krop — trapez der smalner mod bunden
+    ctx.beginPath();
+    ctx.moveTo(hx-13,hy-2);
+    ctx.lineTo(hx-10,hy+22);
+    ctx.lineTo(hx+10,hy+22);
+    ctx.lineTo(hx+13,hy-2);
+    ctx.closePath();
+    ctx.fillStyle='#1a1528';ctx.fill();
+    ctx.strokeStyle='#5a5570';ctx.stroke();
+    // Glas-paneler (let gennemsigtige)
+    ctx.fillStyle=`rgba(255,240,180,${lf*.15})`;
+    ctx.beginPath();ctx.moveTo(hx-12,hy-1);ctx.lineTo(hx-9,hy+21);ctx.lineTo(hx,hy+21);ctx.lineTo(hx,hy-1);ctx.fill();
+    ctx.beginPath();ctx.moveTo(hx,hy-1);ctx.lineTo(hx,hy+21);ctx.lineTo(hx+9,hy+21);ctx.lineTo(hx+12,hy-1);ctx.fill();
+    // Indre pære — varm gul
+    ctx.fillStyle=`rgba(255,240,140,${lf})`;
+    ctx.beginPath();ctx.arc(hx,hy+10,5,0,Math.PI*2);ctx.fill();
+    // Glød rundt om lygten
+    const hg=ctx.createRadialGradient(hx,hy+10,2,hx,hy+10,100);
+    hg.addColorStop(0,`rgba(255,240,180,${lf*.4})`);hg.addColorStop(1,'transparent');
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(hx,hy+10,100,0,Math.PI*2);ctx.fill();
+    // Bund-detalje
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#5a5570';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(hx,hy+23,4,0,Math.PI*2);ctx.fill();ctx.stroke();
   }
 
   // ── SNE-PARTIKLER ──────────────────────────────────────────────────────────
@@ -2444,38 +2699,68 @@ function drawKalderRoom(){
   }
 
   // ── REGNSKABSHEKSEN ────────────────────────────────────────────────────────
-  if(!heks.defeated){
+  if(heks.dying){
+    // Dying — draw shrinking heks
+    const hx=heks.x,hy=heks.y;
+    const fade=Math.max(0,1-(heks.dyingT/150));
+    const shrink=1-((heks.dyingT/150)*0.8);
+    ctx.globalAlpha=fade;
+    ctx.save();ctx.translate(hx,hy);ctx.scale(shrink,shrink);ctx.translate(-hx,-hy);
+    ctx.fillStyle='#1a0a2a';ctx.strokeStyle='#9060cc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(hx-20,hy+10);ctx.lineTo(hx-30,hy+50);ctx.lineTo(hx+30,hy+50);ctx.lineTo(hx+20,hy+10);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#c8a8e0';ctx.beginPath();ctx.arc(hx,hy-2,13,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha=1;
+  } else if(!heks.defeated){
     const hx=heks.x,hy=heks.y;
     heks.phase+=.02;
     const bob=Math.sin(heks.phase*2)*4;
-    // Kappe — svævende
     ctx.fillStyle='#1a0a2a';ctx.strokeStyle='#9060cc';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(hx-20,hy+bob+10);ctx.lineTo(hx-30,hy+bob+50);ctx.lineTo(hx+30,hy+bob+50);ctx.lineTo(hx+20,hy+bob+10);ctx.fill();ctx.stroke();
-    // Hoved
     ctx.fillStyle='#c8a8e0';ctx.beginPath();ctx.arc(hx,hy+bob-2,13,0,Math.PI*2);ctx.fill();ctx.stroke();
-    // Hat
     ctx.fillStyle='#1a0a2a';ctx.strokeStyle='#9060cc';
     ctx.beginPath();ctx.moveTo(hx-18,hy+bob-10);ctx.lineTo(hx,hy+bob-38);ctx.lineTo(hx+18,hy+bob-10);ctx.fill();ctx.stroke();
     ctx.beginPath();ctx.ellipse(hx,hy+bob-10,20,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    // Øjne — isblå
     ctx.fillStyle='#a0d0ff';ctx.beginPath();ctx.arc(hx-4,hy+bob-3,2.5,0,Math.PI*2);ctx.fill();
     ctx.beginPath();ctx.arc(hx+4,hy+bob-3,2.5,0,Math.PI*2);ctx.fill();
-    // Regnskab i hånden
     ctx.font='13px serif';ctx.textAlign='center';ctx.fillText('📊',hx+18,hy+bob+15);ctx.textAlign='left';
-    // Is-aura
     const ia=ctx.createRadialGradient(hx,hy+bob,5,hx,hy+bob,60);
     ia.addColorStop(0,'rgba(160,208,255,.12)');ia.addColorStop(1,'transparent');
     ctx.fillStyle=ia;ctx.beginPath();ctx.arc(hx,hy+bob,60,0,Math.PI*2);ctx.fill();
-    // Badge
     ctx.fillStyle='rgba(26,10,42,.9)';ctx.strokeStyle='#9060cc';ctx.lineWidth=1;rr(hx-36,hy+bob+54,72,14,3);ctx.stroke();
     ctx.fillStyle='#c8a8ff';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
     ctx.fillText('REGNSKABSHEKSEN',hx,hy+bob+64);ctx.textAlign='left';
   }
+
+  // ── PORTVINSFLASKE MED ÅND (efter sejr) ──────────────────────────────────
+  if(heks.defeated){
+    const bx=430,by=248;
+    const pulse=.5+.5*Math.sin(t*1.5);
+    const bg=ctx.createRadialGradient(bx,by,2,bx,by,35);
+    bg.addColorStop(0,`rgba(150,80,255,${.2+pulse*.15})`);bg.addColorStop(1,'transparent');
+    ctx.fillStyle=bg;ctx.beginPath();ctx.arc(bx,by,35,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#4a2060';ctx.strokeStyle='#9060cc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(bx-7,by+20);ctx.lineTo(bx-9,by-5);
+    ctx.bezierCurveTo(bx-9,by-18,bx+9,by-18,bx+9,by-5);
+    ctx.lineTo(bx+7,by+20);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#3a1a50';ctx.fillRect(bx-4,by-28,8,12);ctx.strokeRect(bx-4,by-28,8,12);
+    ctx.fillStyle='#c8a060';ctx.fillRect(bx-3,by-32,6,6);ctx.strokeRect(bx-3,by-32,6,6);
+    ctx.fillStyle=`rgba(200,150,255,${.3+pulse*.25})`;
+    ctx.beginPath();ctx.ellipse(bx,by+5,5,9,0,0,Math.PI*2);ctx.fill();
+    if(pulse>.7){
+      ctx.fillStyle=`rgba(180,120,255,${(pulse-.7)*0.4})`;
+      ctx.beginPath();ctx.arc(bx+Math.sin(t*2)*3,by-35,3,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='rgba(200,150,255,.6)';ctx.font='bold 6px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('ÅNDEN',bx,by+32);ctx.textAlign='left';
+  }
 }
 
 function nearbyKalderNPC(){
+  // Ånde-flaske
+  if(heks.defeated && Math.hypot(player.x-430,player.y-248)<55) return 'bottle';
   // Heksen
-  if(!heks.defeated){
+  if(!heks.defeated && !heks.dying){
     const d=Math.hypot(player.x-heks.x,player.y-heks.y);
     if(d<70) return 'heks';
   }
@@ -2489,7 +2774,8 @@ function activateKalderNearest(){
   // Check exit first
   if(Math.hypot(player.x-450,player.y-30)<60){enterZone('kbh',400,400);return;}
   const who=nearbyKalderNPC();
-  if(who==='heks') openHeksDialog();
+  if(who==='bottle') openBottleDialog();
+  else if(who==='heks') openHeksDialog();
   else if(who==='tasmus' && tasmusKalder.freed) openTasmusFreeDialog();
   else if(who==='tasmus') openSimpleDialog('🔧','Tasmus Trydensdahl','#7dce13','*hvisker desperat* Du skal besejre heksen! Hun har koden til pengeskabet! HJÆLP MIG!',[{label:'Jeg klarer det!',next:'__close'}]);
 }
@@ -5790,7 +6076,7 @@ function updateHint(){
 
   if(npc){
     el.style.display='block';
-    el.textContent='[E] Tal med '+npc.name;
+    el.textContent='[E] Interagér med '+npc.name;
     el.style.left=(npc.x+5)+'px';
     el.style.top=(npc.y-50)+'px';
   } else if(obj){
@@ -6187,35 +6473,85 @@ const kbhMeetings = [
     timer:900,
     active:false,
   },
+  // NT kaffe-møde ved kaffemaskinen — Rime, Emse, Tonatan
+  {
+    id:'nt_kaffe',
+    room:'nt',
+    npcs:['Rime','Emse','Tonatan'],
+    days:DAY.ALL,
+    target:{x:kbhKaffeX-30, y:kbhKaffeY+60},
+    waypoint:{x:220, y:260}, // åbning i skillevæg NT→fællesrum
+    spreadR:28,
+    duration:800,
+    gap:6000,
+    timer:2400,
+    active:false,
+    atWaypoint:false,
+  },
 ];
 
 function updateKbhMeetings(){
   kbhMeetings.forEach(m=>{
-    // Kun på relevante dage
     if(m.days!==DAY.ALL && !m.days.includes(currentDay)) return;
     m.timer--;
+
     if(!m.active && m.timer<=0){
-      // Start møde — send NPCs til møderummet
       m.active=true;
-      m.timer=m.duration;
+      m.timer=9999; // stor nok til at dække rejsetid — nulstilles ved waypoint
+      m.atWaypoint=false;
       m.npcs.forEach((id,i)=>{
         const w=kbhWander[id]; if(!w) return;
-        const angle=(i/m.npcs.length)*Math.PI*2;
-        w.tx=m.target.x+Math.cos(angle)*m.spreadR;
-        w.ty=m.target.y+Math.sin(angle)*m.spreadR;
+        w._savedSpd=w.spd; w.spd=1.8; // hurtigere under møde
+        if(m.waypoint && !m.atWaypoint){
+          w.tx=m.waypoint.x+(i-1)*20;
+          w.ty=m.waypoint.y;
+        } else {
+          const angle=(i/m.npcs.length)*Math.PI*2;
+          w.tx=m.target.x+Math.cos(angle)*m.spreadR;
+          w.ty=m.target.y+Math.sin(angle)*m.spreadR;
+        }
         w.locked=true;
       });
-    } else if(m.active && m.timer<=0){
-      // Afslut møde — send NPCs hjem
-      m.active=false;
-      m.timer=m.gap+Math.random()*400;
-      m.npcs.forEach(id=>{
-        const w=kbhWander[id]; if(!w) return;
-        w.tx=w.hx+(Math.random()-.5)*20;
-        w.ty=w.hy+(Math.random()-.5)*20;
-        w.locked=false;
-        w.t=60+Math.random()*120;
-      });
+
+    } else if(m.active){
+      // Check if all NPCs have reached waypoint — then send to target
+      if(m.waypoint && !m.atWaypoint){
+        const allAtWP=m.npcs.every(id=>{
+          const npc=kbhNpcs.find(n=>n.id===id);
+          if(!npc) return true;
+          return Math.hypot(npc.x-m.waypoint.x, npc.y-m.waypoint.y)<45;
+        });
+        if(allAtWP){
+          m.atWaypoint=true;
+          m.timer=m.duration; // start timer NOW — ikke ved rejsens start
+          m.npcs.forEach((id,i)=>{
+            const w=kbhWander[id]; if(!w) return;
+            const angle=(i/m.npcs.length)*Math.PI*2;
+            w.tx=m.target.x+Math.cos(angle)*m.spreadR;
+            w.ty=m.target.y+Math.sin(angle)*m.spreadR;
+          });
+          if(m.id==='nt_kaffe'){
+            kbhKaffeActive=true;
+            coffeeSnd();
+            flash('☕ Rime, Emse og Tonatan holder kaffemøde ved maskinen!');
+          }
+        }
+      }
+
+      if(m.timer<=0){
+        m.active=false;
+        m.atWaypoint=false;
+        m.timer=m.gap+Math.random()*400;
+        if(m.id==='nt_kaffe') kbhKaffeActive=false;
+        m.npcs.forEach(id=>{
+          const w=kbhWander[id]; if(!w) return;
+          if(w._savedSpd) w.spd=w._savedSpd; // restore speed
+          w.tx=w.hx+(Math.random()-.5)*20;
+          w.ty=w.hy+(Math.random()-.5)*20;
+          w.locked=false;
+          w.t=60+Math.random()*120;
+        });
+      }
     }
   });
 }
@@ -6658,24 +6994,56 @@ function drawKbhRoom(){
 
   // ── NARNIA REFERENCER ────────────────────────────────────────────────────────
   // Gadelygte (hjørne, ingen kollision)
-  {const lx=332,ly=310;
-    // Stolpe
-    ctx.fillStyle='#3a3050';ctx.strokeStyle='#555070';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(lx,ly+180);ctx.lineTo(lx,ly);ctx.stroke();
-    // Arm
-    ctx.beginPath();ctx.moveTo(lx,ly);ctx.bezierCurveTo(lx,ly-20,lx+22,ly-20,lx+22,ly-30);ctx.stroke();
-    // Lygte-kasse
-    ctx.fillStyle='#2a2040';ctx.strokeStyle='#6060a0';ctx.lineWidth=1.5;
-    ctx.fillRect(lx+10,ly-50,24,20);ctx.strokeRect(lx+10,ly-50,24,20);
-    // Lys — flimrende
-    const lf=.7+.3*Math.sin(t*2.3+Math.random()*.1);
-    ctx.fillStyle=`rgba(255,240,180,${lf*.9})`;
-    ctx.beginPath();ctx.arc(lx+22,ly-40,6,0,Math.PI*2);ctx.fill();
-    // Glød på gulvet
-    const lg=ctx.createRadialGradient(lx+22,ly-40,2,lx+22,ly-40,50);
-    lg.addColorStop(0,`rgba(255,240,180,${lf*.18})`);lg.addColorStop(1,'transparent');
-    ctx.fillStyle=lg;ctx.fillRect(lx-28,ly-90,100,100);
-    // Sne-antydning (hvide prikker under lygten)
+  {const lx=332,ly=335;
+    const lf=.7+.3*Math.sin(t*2.3+0.1);
+    // Lyskegle på gulvet
+    const lg=ctx.createRadialGradient(lx+32,ly+160,3,lx+32,ly+160,160);
+    lg.addColorStop(0,`rgba(255,240,180,${lf*.35})`);lg.addColorStop(1,'transparent');
+    ctx.fillStyle=lg;ctx.beginPath();ctx.arc(lx+32,ly+160,160,0,Math.PI*2);ctx.fill();
+    // Stolpe — tykkere, mørk metal
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#4a4560';ctx.lineWidth=1;
+    ctx.fillRect(lx-3,ly,6,210);ctx.strokeRect(lx-3,ly,6,210);
+    // Stolpe-detaljer (ringe)
+    [ly+50,ly+105].forEach(ry=>{
+      ctx.fillStyle='#3a3550';ctx.fillRect(lx-4,ry,8,5);ctx.strokeRect(lx-4,ry,8,5);
+    });
+    // Arm — lang elegant bue
+    ctx.strokeStyle='#3a3550';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(lx,ly+8);
+    ctx.bezierCurveTo(lx,ly-12,lx+38,ly-12,lx+38,ly-36);
+    ctx.stroke();
+    ctx.strokeStyle='#4a4560';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(lx,ly+8);
+    ctx.bezierCurveTo(lx,ly-12,lx+38,ly-12,lx+38,ly-36);
+    ctx.stroke();
+    ctx.lineCap='butt';
+    // Krave
+    ctx.fillStyle='#3a3550';ctx.strokeStyle='#5a5570';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(lx,ly+7,8,4,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Lygte-hoved — hængende trapez
+    const hx=lx+38,hy=ly-36;
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#5a5570';ctx.lineWidth=1.5;
+    ctx.fillRect(hx-11,hy-6,22,5);ctx.strokeRect(hx-11,hy-6,22,5);
+    ctx.beginPath();
+    ctx.moveTo(hx-10,hy-1);ctx.lineTo(hx-8,hy+18);
+    ctx.lineTo(hx+8,hy+18);ctx.lineTo(hx+10,hy-1);
+    ctx.closePath();
+    ctx.fillStyle='#1a1528';ctx.fill();ctx.strokeStyle='#5a5570';ctx.stroke();
+    // Glaspaneler
+    ctx.fillStyle=`rgba(255,240,180,${lf*.35})`;
+    ctx.beginPath();ctx.moveTo(hx-9,hy);ctx.lineTo(hx-7,hy+17);ctx.lineTo(hx,hy+17);ctx.lineTo(hx,hy);ctx.fill();
+    ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(hx,hy+17);ctx.lineTo(hx+7,hy+17);ctx.lineTo(hx+9,hy);ctx.fill();
+    // Pære
+    ctx.fillStyle=`rgba(255,240,140,${lf})`;
+    ctx.beginPath();ctx.arc(hx,hy+8,4,0,Math.PI*2);ctx.fill();
+    // Glød
+    const hg=ctx.createRadialGradient(hx,hy+8,2,hx,hy+8,80);
+    hg.addColorStop(0,`rgba(255,240,180,${lf*.4})`);hg.addColorStop(1,'transparent');
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(hx,hy+8,80,0,Math.PI*2);ctx.fill();
+    // Bund
+    ctx.fillStyle='#2a2535';ctx.strokeStyle='#5a5570';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(hx,hy+19,3,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Sne-antydning
     ctx.fillStyle='rgba(255,255,255,.5)';
     [[lx+8,ly+20],[lx+18,ly+35],[lx+30,ly+15],[lx+5,ly+48],[lx+25,ly+55]].forEach(([sx,sy])=>{
       ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fill();
@@ -6843,7 +7211,7 @@ function updateKbhHint(){
     if(d<70){
       mobileE.classList.add('visible');
       el.style.display='block';
-      el.textContent='[E] Tal med Tmon POWERSJOV';
+      el.textContent='[E] Interagér med Tmon POWERSJOV';
       el.style.left=(tmon.x+5)+'px';
       el.style.top=(tmon.y-50)+'px';
       el.style.transform='';
@@ -6855,7 +7223,7 @@ function updateKbhHint(){
   if(n){
     mobileE.classList.add('visible');
     el.style.display='block';
-    el.textContent='[E] Tal med '+n.name;
+    el.textContent='[E] Interagér med '+n.name;
     el.style.left=(n.x+5)+'px';
     el.style.top=(n.y-50)+'px';
   } else if(obj){
@@ -7162,6 +7530,17 @@ function render(){
   } else if(currentZone==='kbh'){
     drawKbhRoom();
     drawTmon();
+    // Kaffe-bobler over NT-møde
+    if(kbhKaffeActive){
+      const kt=Date.now()/1000;
+      ['Rime','Emse','Tonatan'].forEach((id,i)=>{
+        const n=kbhNpcs.find(npc=>npc.id===id);if(!n)return;
+        const bob=Math.sin(kt*1.5+i)*3;
+        ctx.font='14px serif';ctx.textAlign='center';ctx.globalAlpha=.85;
+        ctx.fillText('☕',n.x,n.y-22+bob);
+        ctx.globalAlpha=1;ctx.textAlign='left';
+      });
+    }
     drawPlayer();
     drawNotes();
     // Sparkles over KBH interactable objects
@@ -7178,6 +7557,7 @@ function render(){
     if(kn){ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(kn.x,kn.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   } else if(currentZone==='kalder'){
     drawKalderRoom();
+    drawHeksParticles();
     drawTmon();
     drawPlayer();
   }
@@ -7190,6 +7570,7 @@ function loop(){
   update();
   updateTmon();  // global — both zones
   if(currentZone==='kalder') updateKalder();
+  if(currentZone==='kalder'||heks.dying) updateHeksDying();
   if(currentZone==='aros'){
     updateTarkob();
     updateWander();
