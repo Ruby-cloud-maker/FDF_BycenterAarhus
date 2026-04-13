@@ -1563,6 +1563,8 @@ function openKbhOpslagstavle(){
 const KOPI_CODE = '09-4471';
 let kelderUnlocked = false;
 let kbhKaffeActive = false;  // NT kaffe-møde er i gang
+let bottleDefeated = false;  // Flaske eksisterer permanent efter sejr
+let tasmusCalled = false;     // Spilleren har ringet til Tasmus
 
 function openKopiMenu(){
   document.getElementById('kopi-overlay').style.display='flex';
@@ -2290,6 +2292,7 @@ function updateHeksDying(){
   if(heks.dyingT>150){
     heks.dying=false;
     heks.defeated=true;
+    bottleDefeated=true;
     heks.bottleGlow=0;
     playBottleMaterialize();
     // Don't close dialog — let player click "Befri Tasmus"
@@ -2681,7 +2684,7 @@ function drawKalderRoom(){
   } else {
     // Freed — running or standing
     const tx=tasmusKalder.x,ty=tasmusKalder.y;
-    if(tx < -50) return; // offscreen
+    if(tx >= -50){  // kun tegn Tasmus hvis han er på skærmen
     const bob=tasmusKalder.running ? Math.sin(tasmusKalder.runPhase)*5 : 0;
     ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(tx,ty+18+bob,12,4,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#5a7a3a';rr(tx-10,ty+2+bob,20,20,4);
@@ -2696,8 +2699,8 @@ function drawKalderRoom(){
       ctx.fillStyle='#3a5a2a';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
       ctx.fillText('TASMUS T. ✓',tx,ty+34);ctx.textAlign='left';
     }
+    } // end if(tx >= -50)
   }
-
   // ── REGNSKABSHEKSEN ────────────────────────────────────────────────────────
   if(heks.dying){
     // Dying — draw shrinking heks
@@ -2733,7 +2736,7 @@ function drawKalderRoom(){
   }
 
   // ── PORTVINSFLASKE MED ÅND (efter sejr) ──────────────────────────────────
-  if(heks.defeated){
+  if(bottleDefeated){
     const bx=430,by=248;
     const pulse=.5+.5*Math.sin(t*1.5);
     const bg=ctx.createRadialGradient(bx,by,2,bx,by,35);
@@ -2758,7 +2761,7 @@ function drawKalderRoom(){
 
 function nearbyKalderNPC(){
   // Ånde-flaske
-  if(heks.defeated && Math.hypot(player.x-430,player.y-248)<55) return 'bottle';
+  if(bottleDefeated && Math.hypot(player.x-430,player.y-248)<55) return 'bottle';
   // Heksen
   if(!heks.defeated && !heks.dying){
     const d=Math.hypot(player.x-heks.x,player.y-heks.y);
@@ -5821,6 +5824,7 @@ function showPhoneMenu(){
       setTimeout(()=>{ screen.textContent='☎ *Klik*\n\n🚐 EN WB-BUZZ ER PÅ VEJ!!'; }, 2500);
       setTimeout(summonTmon, 3500);
     } else if(v==='41731170'){
+      tasmusCalled=true;
       dialPhoneTree('tasmus');
     } else if(v==='86845759'){
       dialPhoneTree('don');
@@ -6369,9 +6373,9 @@ const kbhObstacles = [
 
 // ── KBH NPCs ──────────────────────────────────────────────────────────────────
 const kbhNpcs=[
-  {id:'Tia',      name:'Tia Sydhavn',       title:'Kommunikation & Brand',       x:360,y:160, emoji:'🍺'},
-  {id:'Sarap',    name:'Sarap',             title:'Studentermedhjælper',          x:560,y:160, emoji:'🩰'},
-  {id:'Bennette', name:'Bennette',          title:'Kredsstart Co-Manager',        x:450,y:240, emoji:'⚽'},
+  {id:'Tia',      name:'Tia Sydhavn',       title:'Kommunikation & Brand',       x:280,y:230, emoji:'🍺'},
+  {id:'Sarap',    name:'Sarap',             title:'Studentermedhjælper',          x:580,y:240, emoji:'🩰'},
+  {id:'Bennette', name:'Bennette',          title:'Kredsstart Co-Manager',        x:450,y:260, emoji:'⚽'},
   {id:'Rime',     name:'Rime Bindberg',     title:'Kursus & Medlemsekspert',      x:80, y:380, emoji:'📋'},
   {id:'Emse',     name:'Emse Thoftmår',    title:'Kursus & Strik Queen',         x:180,y:380, emoji:'🧶'},
   {id:'Tonatan',  name:'Tonatan',           title:'Økonomi',                      x:260,y:470, emoji:'💰'},
@@ -6400,9 +6404,9 @@ const KBH_COLORS={
 };
 const kbhWander={
   Tasmus: {hx:450,hy:130,tx:450,ty:130,t:0,r:60,spd:.5},
-  Tia:        {hx:360,hy:160,tx:360,ty:160,t:0,r:70,spd:.55},
-  Sarap:      {hx:560,hy:160,tx:560,ty:160,t:0,r:50,spd:.55},
-  Bennette:   {hx:450,hy:240,tx:450,ty:240,t:0,r:70,spd:.55},
+  Tia:        {hx:280,hy:230,tx:280,ty:230,t:0,r:80,spd:.55},
+  Sarap:      {hx:580,hy:240,tx:580,ty:240,t:0,r:60,spd:.55},
+  Bennette:   {hx:450,hy:260,tx:450,ty:260,t:0,r:100,spd:.65},
   Rime:       {hx:80, hy:380,tx:80, ty:380,t:0,r:30,spd:.55},
   Emse:       {hx:180,hy:380,tx:180,ty:380,t:0,r:30,spd:.55},
   Tonatan:    {hx:260,hy:470,tx:260,ty:460,t:0,r:30,spd:.55},
@@ -6466,8 +6470,8 @@ const kbhMeetings = [
     room:'faelles',
     npcs:['Tia','Sarap','Bennette'],
     days:DAY.ALL,
-    target:{x:450,y:220},
-    spreadR:40,
+    target:{x:400,y:200},
+    spreadR:80,
     duration:400,
     gap:1400,
     timer:900,
@@ -6477,10 +6481,10 @@ const kbhMeetings = [
   {
     id:'nt_kaffe',
     room:'nt',
-    npcs:['Rime','Emse','Tonatan'],
+    npcs:['Rime','Emse','Tonatan','Tia'],
     days:DAY.ALL,
     target:{x:kbhKaffeX-30, y:kbhKaffeY+60},
-    waypoint:{x:220, y:260}, // åbning i skillevæg NT→fællesrum
+    waypoint:{x:220, y:260}, // åbning i skillevæg NT→fællesrum (Rime, Emse, Tonatan bruger den — Tia går direkte)
     spreadR:28,
     duration:800,
     gap:6000,
@@ -6533,7 +6537,7 @@ function updateKbhMeetings(){
           if(m.id==='nt_kaffe'){
             kbhKaffeActive=true;
             coffeeSnd();
-            flash('☕ Rime, Emse og Tonatan holder kaffemøde ved maskinen!');
+            flash('☕ Rime, Emse, Tonatan og Tia holder kaffemøde ved maskinen!');
           }
         }
       }
@@ -7242,16 +7246,37 @@ function updateKbhHint(){
 const kbhTrees={
   Tia:{
     start:[
-      {label:'🍺 Hvad laver du her?',next:'tia_job'},
-      {label:'🎉 Fest næste fredag?',next:'tia_fest'},
-      {label:'🏙️ Nyder du Sydhavn?',next:'tia_sydhavn'},
+      {label:'📣 Hvad laver du egentlig?',next:'tia_job'},
+      {label:'🎭 Du er temaguru?',next:'tia_tema'},
+      {label:'🎉 Festudvalg?',next:'tia_fest'},
+      {label:'📢 National kampagne?',next:'tia_kampagne'},
+      {label:'🏙️ Sydhavn?',next:'tia_sydhavn'},
     ],
-    tia_job:{text:'Hej! Jeg er Tia — al kommunikation. Budskabet ud til kredse, fedt og engagerende. Det er mig.',choices:[{label:'Hvad er det sværeste?',next:'tia_svaer'},{label:'Fest næste fredag?',next:'tia_fest'}]},
-    tia_svaer:{text:'At ramme alle 340 kredse på én gang. De er alle forskellige. Men det er også det sjove.',choices:[{label:'Hvad med sociale medier?',next:'tia_social'},{label:'Tilbage',next:'__start'}]},
-    tia_social:{text:'Instagram, Facebook, nyhedsbrev. Og ja, shots i Sydhavn bagefter. Du er inviteret.',choices:[{label:'Ja tak!',next:'__close'}]},
-    tia_fest:{text:'SELVFØLGELIG! Næste fredag — kontoret, musik, bajere. Jeg ordner det.',choices:[{label:'Jeg er der! 🎉',next:'tia_tmon'},{label:'Inviterer du Tmon?',next:'tia_tmon'}]},
-    tia_tmon:{text:'TMON! Selvfølgelig! Han er på listen. Du kender ham? Ring 312-Gæst på en vilkårlig telefon — han ankommer i sin WB-Buzz inden du kan sige "podcast". Han er kontorets bedste overraskelse.',choices:[{label:'312-Gæst — noteret!',next:'__close'}]},
-    tia_sydhavn:{text:'Det er bare det fedeste sted i Køpmannæhafn. Havnebad, streetfood, mine venner. Alt er der.',choices:[{label:'Lyder godt.',next:'__close'}]},
+    tia_job:{text:'Hej! Tia. Jeg arbejder med national kommunikation — kampagner, budskaber, det store billede. Vi skal ramme alle 340 kredse og stadig lyde menneskelige. Det er faktisk svært.',choices:[{label:'Hvad er det sværeste?',next:'tia_svaer'},{label:'National kampagne?',next:'tia_kampagne'},{label:'10 år i FDF?',next:'tia_10aar'}]},
+    tia_svaer:{text:'At alle kredse er forskellige. En kreds i Esbjerg og en kreds i Hellerup har ikke meget til fælles udover FDF. Kommunikationen skal virke begge steder. Og den skal føles lokal.',choices:[{label:'Hvordan løser du det?',next:'tia_svaer2'},{label:'10 år i FDF?',next:'tia_10aar'}]},
+    tia_svaer2:{text:'Du finder det universelle. Det som alle kredse har til fælles — fællesskabet, eventyret, det der sker når børn tager ansvar. Det er det vi kommunikerer. Resten er lokalt.',choices:[{label:'Det er faktisk smukt.',next:'__close'},{label:'National kampagne?',next:'tia_kampagne'}]},
+    tia_10aar:{text:'*tæller på fingrene* Ja. Ti år ansat. Jeg startede som kommunikationskoordinator. Så seniorkonsulent. Så det her. *pause* Jeg har aldrig overvejet at stoppe. Det er et godt tegn.',choices:[{label:'Hvad har ændret sig?',next:'tia_10aar2'},{label:'Festudvalg?',next:'tia_fest'}]},
+    tia_10aar2:{text:'Antallet af kredse er vokset. Frivilligkulturen er blevet stærkere. Og vi er blevet bedre til at fortælle hvad vi laver. Det tog lang tid. Det var det værd.',choices:[{label:'Og temafesterne?',next:'tia_tema'},{label:'Imponerende, Tia.',next:'__close'}]},
+    tia_kampagne:{text:'*lyser op men dæmper det hurtigt* Ja. Nationale kampagner er mit kernefelt. Rekrutteringskampagne, synlighedskampagne, frivilligkampagne. Hvert år en ny vinkel. Hvert år noget der virker.',choices:[{label:'Din bedste kampagne?',next:'tia_kampagne2'},{label:'Og temafesterne?',next:'tia_tema'}]},
+    tia_kampagne2:{text:'"FDF er ikke for alle — det er for dig." 2022. Det var modigt. Intern modstand. Men det virkede. Rekrutteringstal steg 18% det år. *pause* Jeg fortæller ikke det til alle.',choices:[{label:'18%? Det er imponerende.',next:'tia_kampagne3'},{label:'Intern modstand?',next:'tia_kampagne4'}]},
+    tia_kampagne3:{text:'Tal er tal. Det vigtigste var at kredse ringede og sagde at børn kom ind og sagde "det er mig". Det er det der tæller.',choices:[{label:'Det er det der tæller.',next:'__close'},{label:'Festudvalg?',next:'tia_fest'}]},
+    tia_kampagne4:{text:'Nogen syntes det lød ekskluderende. Men det modsatte af eksklusivt er ikke inkluderende — det er utydeligt. Utydelig kommunikation rammer ingen. *pause* Det sagde jeg i mødet. Det var stille bagefter.',choices:[{label:'Det var nok stille.',next:'tia_kampagne3'}]},
+    tia_tema:{text:'*kigger sig lidt om* ...Jeg er kontorets festudvalgsformand. Det er ikke officielt. Det er bare det der sker.',choices:[{label:'Hvad er dit bedste tema?',next:'tia_tema2'},{label:'Hvor lang er din temahistorie?',next:'tia_tema3'},{label:'Hvem ved det?',next:'tia_tema4'}]},
+    tia_tema2:{text:'Rumfart 2021. Alle mødte op i sølvfolie og vi serverede "måneboller" — det var bare rundstykker med sølvpapir på. Det var det bedste. Ingen klagede. *smiler*',choices:[{label:'Måneboller er genialitet.',next:'tia_tema5'},{label:'Hvad ellers?',next:'tia_tema3'}]},
+    tia_tema3:{text:'Hvert år siden 2015. Det første var vikinger. Det var nemt. Siden er det eskaleret. I 2023 var temaet "Kontoret som dystopisk arkipelag". *pause* Ikke alle forstod det. Men dekoren var fremragende.',choices:[{label:'Dystopisk arkipelag?!',next:'tia_tema6'},{label:'Dit bedste tema?',next:'tia_tema2'}]},
+    tia_tema4:{text:'Alle ved det. Ingen siger det højt. Det er et stiltiende arrangement. Simona hjælper med dekoren. Sarap syr kostumer. Rime laver et regneark over forplejning. Det kører.',choices:[{label:'Rime laver et regneark.',next:'tia_tema7'},{label:'Hvad er dit bedste tema?',next:'tia_tema2'}]},
+    tia_tema5:{text:'*nikker stille* Det er kernen i godt tema. Alle kan deltage. Ingen behøver at have forberedt sig. Men de der HAR forberedt sig — de skinede virkelig. Det er god design.',choices:[{label:'Du tænker som en kampagnestrateg.',next:'tia_tema8'},{label:'Næste tema?',next:'tia_tema9'}]},
+    tia_tema6:{text:'En samling af øer der ikke kan kommunikere med hinanden. Hvert bord var en ø. Man måtte kun tale med sit eget bord. Kommunikationen foregik via flaskepost — dvs. sedler i plastikkrus. *stille* Det var faktisk en meget effektiv øvelse i kommunikationsbarrierer.',choices:[{label:'Det er både fest og faglighed.',next:'tia_tema5'}]},
+    tia_tema7:{text:'*griner stille* Ja. Rime laver et regneark med forplejningskolonner. Det er 12 sider. Vi bruger måske tre rækker. Men det er vigtigt for hende. Og maden er altid perfekt. Så systemet virker.',choices:[{label:'Næste tema?',next:'tia_tema9'}]},
+    tia_tema8:{text:'*tænker* ...Ja. Det er faktisk det samme. Hvad er budskabet? Hvem er publikum? Hvad skal de gå hjem med? Tema og kampagne er det samme håndværk. Det var jeg ikke klar over i starten.',choices:[{label:'Det er en god observation.',next:'__close'}]},
+    tia_tema9:{text:'*sænker stemmen* Det er hemmelig information. Men... Guldalder. 1890erne. Malerkultur, smørrebrød, store hatte og Skagen. Simona ved det. Sarap er allerede i gang med hat-research.',choices:[{label:'Jeg glæder mig.',next:'__close'},{label:'Sydhavn?',next:'tia_sydhavn'}]},
+    tia_fest:{text:'Jeg melder mig altid til festudvalg. Altid. Det er ikke pligt. Det er det rigtige at gøre. *pause* Og ingen andre melder sig hvis jeg ikke gør det. Så.',choices:[{label:'Du er kontorets festanker.',next:'tia_fest2'},{label:'Hvad er dit bedste tema?',next:'tia_tema2'}]},
+    tia_fest2:{text:'Det er et stort ord. Men... *pause* ...ja. Måske. Jeg tænker bare at hvis ikke man skaber de gode øjeblikke, sker de ikke. Det gælder kampagner. Det gælder fester. Det gælder FDF.',choices:[{label:'Det er dit liv-syn.',next:'tia_fest3'}]},
+    tia_fest3:{text:'*ler stille* Ja. Det er nok det. *ser tilbage på skærmen* Vi har en kampagne der skal godkendes inden fredag. Men spørg igen om temaet. Det er ikke officielt bekræftet endnu.',choices:[{label:'Tak, Tia.',next:'__close'}]},
+    tia_sydhavn:{text:'Det er bare det fedeste sted. Havnebad om morgenen. Streetfood om aftenen. Og mine venner bor alle der inden for ti minutters cykling. Det er bevidst.',choices:[{label:'Bevidst?',next:'tia_sydhavn2'},{label:'Shots i Sydhavn?',next:'tia_sydhavn3'}]},
+    tia_sydhavn2:{text:'Jeg valgte lejlighed efter venner, ikke pris. Det var et bevidst valg. Det er dyrere. Det er det værd. Fællesskab er ikke tilfældigt — det kræver geografi.',choices:[{label:'Det er et kommunikationsargument.',next:'tia_sydhavn4'},{label:'Shots?',next:'tia_sydhavn3'}]},
+    tia_sydhavn3:{text:'*griner* Der er en bar der hedder Havnebaren. Fredag aften. Det er alt jeg siger. *pause* Kom til temafesten og du finder ud af resten.',choices:[{label:'Noteret.',next:'__close'}]},
+    tia_sydhavn4:{text:'*stopper op* ...Det er det faktisk. Fællesskab kræver nærhed. Det er derfor FDF virker — kredsen er lokal. Tæt. Det er ikke en app. Det er et sted man mødes. *skriver noget ned* Det er måske min næste kampagne.',choices:[{label:'Du finder inspiration overalt.',next:'__close'}]},
   },
   Sarap:{
     start:[
@@ -7277,20 +7302,36 @@ const kbhTrees={
     benn_tarkob:{text:'Ha! Tarkob sender folk herned. Det er hans måde at hjælpe på.',choices:[{label:'😄 Klassisk Tarkob.',next:'__close'}]},
   },
   Rime:{
-    start:[
-      {label:'📋 Hvad ved du om kurser?',        next:'rime_kurser'},
-      {label:'🖥️ Hvad er Medlemsorganisatoren?', next:'rime_mo'},
-      {label:'🎉 Du har booket gæster til en fest?', next:'rime_fest'},
-    ],
+    get start(){
+      return [
+        {label:'📋 Hvad ved du om kurser?',        next:'rime_kurser'},
+        {label:'🖥️ Hvad er Medlemsorganisatoren?', next:'rime_mo'},
+        {label:'🎉 Du har booket gæster til en fest?', next:'rime_fest'},
+        {label:'🏡 Hvad er det med et gods i Gilleleje?', next:'rime_gods'},
+        {label:'📊 Hvordan holder du styr på det hele?', next:'rime_styr'},
+        ...(tasmusCalled?[{label:'🔍 Kan du slå Tasmus Trydensdahl op?', next:'rime_tasmus'}]:[]),
+      ];
+    },
     rime_kurser:{text:'Hej! Rime her. Jeg ved BOGSTAVELIGT TALT alt om FDFs kurser. Alt.',choices:[{label:'Hvad er det bedste?',next:'rime_bedst'},{label:'Hvad er MO?',next:'rime_mo'}]},
     rime_bedst:{text:'Afhænger af hvad du søger. Hvad drømmer din kreds om?',choices:[{label:'Det ved jeg ikke endnu.',next:'rime_ved_ikke'}]},
     rime_ved_ikke:{text:'Start med en weekendlejr. Det afklarer altid hvad folk vil have mere af.',choices:[{label:'Godt råd. Tak!',next:'__close'}]},
-    rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',choices:[{label:'Tak, Rime!',next:'__close'},{label:'Kan du slå Tasmus Trydensdahl op?',next:'rime_tasmus'}]},
+    rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',get choices(){ return [{label:'Tak, Rime!',next:'__close'},{label:'Hvordan holder du styr på det hele?',next:'rime_styr'}].concat(tasmusCalled?[{label:'Kan du slå Tasmus Trydensdahl op?',next:'rime_tasmus'}]:[]);}},
     rime_tasmus:{text:'*klikker* Tasmus Trydensdahl. Opsynsmand og Bygmester. Medarbejder-ID: 4471. Ansat 2019. Status: ... *pause* ...der står ingenting under status. Det felt er tomt.',choices:[{label:'Hvad betyder det?',next:'rime_tasmus2'}]},
     rime_tasmus2:{text:'Det betyder at systemet ikke ved hvad han er. Hverken aktiv, inaktiv eller fratrådt. Han er bare... ikke der. Rent systemteknisk. Det er meget usædvanligt.',choices:[{label:'Tak, Rime.',next:'__close'}]},
     rime_fest:{text:'*lyser op* Ja! Vi skulle have gæster til vores sommerfest. Jeg boede dem gennem et selskab — 312-Gæst hedder det. Super professionelt. De sendte en hel bus.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'},{label:'En hel bus?!',next:'rime_fest3'}]},
     rime_fest2:{text:'Du ringer bare "312-Gæst" på telefonen — bogstaveligt talt, det er hvad du taster. Manden der ankommer hedder Tmon. Han er... meget. Men på den gode måde.',choices:[{label:'Tak, Rime!',next:'__close'}]},
     rime_fest3:{text:'En gul WB-Buzz. Fuld af mennesker. De spillede guitar i fællesrummet i to timer. Den røde Post-it på min mappe sagde "NEJ" i tre dage bagefter. Af ren overvældelse.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'}]},
+    rime_gods:{text:'*ser op fra skærmen* Godsøer? Ja. Jeg er ved at købe et lille gods i Gilleleje. 14 hektarer. Skov, eng og en gammel staldbygning der kan omdannes.',choices:[{label:'Et gods? Som privatperson?',next:'rime_gods2'},{label:'Hvad vil du bruge det til?',next:'rime_gods3'}]},
+    rime_gods2:{text:'Ja. Jeg har holdt styr på mine økonomi siden jeg var 19. Og jeg har et system. Det er altid et system. *vender skærmen* Se — det er kolonneregneark 47b. Godsoversigt.',choices:[{label:'47b? Hvad er de andre 46?',next:'rime_gods4'},{label:'Hvad vil du bruge det til?',next:'rime_gods3'}]},
+    rime_gods3:{text:'Sommerlejre for FDF-kredse primært. Og måske lidt glamping. Og en hestefold. Og et grøntsagshus. *pause* Jeg har en liste. Listen er detaljeret.',choices:[{label:'Vis mig listen.',next:'rime_gods5'},{label:'47 regneark?',next:'rime_gods4'}]},
+    rime_gods4:{text:'De første 12 handler om kurser. 13-28 er MO-relaterede. 29-39 er private projekter. 40-46 er hvad jeg kalder "fremtidssikring". 47 er Gilleleje. Det giver mening.',choices:[{label:'Det giver faktisk mening.',next:'rime_gods6'},{label:'Hvad er fremtidssikring?',next:'rime_gods7'}]},
+    rime_gods5:{text:'*trækker en lamineret A4 frem* Her. Punkt 1-47 er selve godset. 48-89 er renoveringen. 90-112 er FDF-aktiviteter. 113 er hesteholdet. *pause* Jeg mangler stadig at udfylde 114.',choices:[{label:'Hvad er punkt 114?',next:'rime_gods8'},{label:'Du er imponerende, Rime.',next:'rime_gods6'}]},
+    rime_gods6:{text:'Tak. Det kræver bare et system. Og vilje. Og 47 regneark. *vender tilbage til skærmen* Jeg har et møde med godsmægleren på fredag.',choices:[{label:'Held og lykke, Rime!',next:'__close'}]},
+    rime_gods7:{text:'"Fremtidssikring" er projekter der måske sker. Eller måske ikke. Men hvis de sker er jeg klar. *nikker bestemt* Gilleleje var i kolonne 47b i 18 måneder inden jeg ringede mægleren.',choices:[{label:'18 måneder med plan inden opkald.',next:'rime_gods6'}]},
+    rime_gods8:{text:'*lang pause* ...Det er det der handler om hvad man gør med et gods når man ikke er der. Jeg har ikke besluttet mig endnu. Det er den eneste åbne post.',choices:[{label:'Den åbner du nok.',next:'rime_gods6'}]},
+    rime_styr:{text:'MO er min platform, men systemet er mit. Hvert kursus, hvert arrangement, hvert modul — det hele er planlagt i MO og dobbelttjekket i et regneark. Altid.',choices:[{label:'Dobbelttjekket?',next:'rime_styr2'},{label:'Hvor mange regneark?',next:'rime_styr3'}]},
+    rime_styr2:{text:'MO kan fejle. Systemer kan fejle. Det er menneskeskabte ting. Så ja — alt MO-indhold eksisterer også i min egen version. Lokal backup. Printet backup. Og én i en mappe i Gilleleje.',choices:[{label:'En mappe i Gilleleje?',next:'rime_gods'},{label:'Hvor mange regneark?',next:'rime_styr3'}]},
+    rime_styr3:{text:'*kigger på mig* ...47. Lige nu. Men det 47. er nyt. Og det er faktisk ikke et arbejdsregneark. *vender tilbage til skærmen* Det er privat.',choices:[{label:'Hvad handler det om?',next:'rime_gods'},{label:'Okay, Rime. Tak.',next:'__close'}]},
   },
   Emse:{
     start:[
@@ -7354,20 +7395,60 @@ const kbhTrees={
     start:[
       {label:'🖥️ Hvad er Medlemsorganisatoren?',next:'amers_mo'},
       {label:'⚖️ Overretsdommer i fritiden?',next:'amers_dom'},
+      {label:'⛺ FDF-lejre?',next:'amers_lejr'},
+      {label:'📐 Struktur?',next:'amers_struktur'},
+      {label:'🦇 Er du... Batman?',next:'amers_batman'},
     ],
-    amers_mo:{text:'Amers Klosterkant. ULTRA-bruger på Medlemsorganisatoren. Alle snarvejetaster. Alle tricks.',choices:[{label:'Bedste trick?',next:'amers_trick'},{label:'Overretsdommer?',next:'amers_dom'}]},
+    amers_mo:{text:'Amers Klosterkant. ULTRA-bruger på Medlemsorganisatoren. Alle snarvejetaster. Alle tricks.',choices:[{label:'Bedste trick?',next:'amers_trick'},{label:'Overretsdommer?',next:'amers_dom'},{label:'Struktur?',next:'amers_struktur'}]},
     amers_trick:{text:'Ctrl+Shift+Alt+E. Masseeksport. Ingen kender den. Du er velkommen.',choices:[{label:'Tak!',next:'__close'}]},
-    amers_dom:{text:'Til rettersfester. Det giver perspektiv på hverdagen. Orden er vigtigt.',choices:[{label:'Unik kombination.',next:'__close'}]},
+    amers_dom:{text:'Til rettersfester. Det giver perspektiv på hverdagen. Orden er vigtigt.',choices:[{label:'Unik kombination.',next:'__close'},{label:'Er du Batman?',next:'amers_batman'}]},
+    amers_lejr:{text:'FDF-lejr er det bedste der findes. Ikke fordi det er nemt — det er kaos. Men det er GODT kaos. Struktureret kaos.',choices:[{label:'Struktureret kaos?',next:'amers_lejr2'},{label:'Din bedste lejr?',next:'amers_lejr3'},{label:'Eventyrklubben?',next:'amers_eventyrklubb'}]},
+    amers_lejr2:{text:'Du planlægger. Du forbereder. Og så sker der noget andet. Og du improviserer — men inden for systemet. Det er FDF. Det er faktisk også Batman.',choices:[{label:'...Batman?',next:'amers_batman'},{label:'Din bedste lejr?',next:'amers_lejr3'}]},
+    amers_lejr3:{text:'Langelandslejren 2021. 140 børn. Det regnede alle fem dage. Intet virkede som planlagt. Alt virkede. *stille* Det var perfekt.',choices:[{label:'Perfekt i regn?',next:'amers_lejr4'},{label:'Eventyrklubben?',next:'amers_eventyrklubb'}]},
+    amers_lejr4:{text:'Regnen fjerner det overflødige. Alle er i samme situation. Ingen skærme. Ingen undskyldninger. Bare FDF og et telt der halvt er faldet ned. Det er ægte.',choices:[{label:'Det er faktisk smukt.',next:'__close'},{label:'Er du Batman?',next:'amers_batman'}]},
+    amers_struktur:{text:'*nikker langsomt* Struktur er fundamentet. Uden struktur er alt tilfældigt. Med struktur er alt muligt.',choices:[{label:'Hvad er dit system?',next:'amers_struktur2'},{label:'Eventyrklubben?',next:'amers_eventyrklubb'}]},
+    amers_struktur2:{text:'Dagens opgaver er planlagt aftenen før. Indbakke ryddes kl. 09:00, 12:00 og 16:00. Ingen åbne loops efter kl. 17:00. *pause* Det er ikke perfektionisme. Det er respekt for fremtiden.',choices:[{label:'Åbne loops?',next:'amers_struktur3'},{label:'Er du Batman?',next:'amers_batman'}]},
+    amers_struktur3:{text:'En opgave man ikke har lukket. Det sidder i baghovedet og tager energi. Luk den eller planlæg hvornår du lukker den. Ellers er den en parasit.',choices:[{label:'En parasit. Stærkt billede.',next:'amers_struktur4'}]},
+    amers_struktur4:{text:'Jeg er ikke poetisk. Jeg er præcis. *vender tilbage til skærmen* Der er forskel.',choices:[{label:'Beklager. Respekt.',next:'__close'},{label:'Eventyrklubben?',next:'amers_eventyrklubb'}]},
+    amers_eventyrklubb:{text:'*holder op med at skrive* ...Hvor hørte du om det?',choices:[{label:'Jeg gættede.',next:'amers_eventyrklubb2'},{label:'Det sagde nogen.',next:'amers_eventyrklubb2'}]},
+    amers_eventyrklubb2:{text:'*lang pause* ...Det er en privat klub. Vi mødes en gang om måneden. Vi spiller rollespil. Avanceret. Detaljeret. Struktureret.',choices:[{label:'Hvem er med?',next:'amers_eventyrklubb3'},{label:'Struktureret rollespil?',next:'amers_eventyrklubb4'}]},
+    amers_eventyrklubb3:{text:'Det fortæller jeg ikke. *bestemt* Men der er seks medlemmer. Alle har faste roller. Alle møder forberedt. Det er ikke til forhandling.',choices:[{label:'Er en af dem Batman?',next:'amers_batman2'},{label:'Din rolle?',next:'amers_eventyrklubb5'}]},
+    amers_eventyrklubb4:{text:'Vi bruger tre timer på forberedelse per session. Der er et kanon-dokument på 47 sider. Det opdateres løbende. *pause* Rime har et lignende dokument. Vi taler aldrig om det.',choices:[{label:'Rime?!',next:'amers_eventyrklubb6'},{label:'Din rolle?',next:'amers_eventyrklubb5'}]},
+    amers_eventyrklubb5:{text:'*kigger sig om* ...Jeg spiller en karakter der er meget struktureret. Meget forberedt. Meget... nat-orienteret. *vender tilbage til skærmen* Det er alt jeg siger.',choices:[{label:'Nat-orienteret...',next:'amers_batman'},{label:'Er du Batman?',next:'amers_batman'}]},
+    amers_eventyrklubb6:{text:'Rime ved mere end hun siger. Det er alt jeg siger om det emne. *klikker intenst på tastaturet*',choices:[{label:'Er du Batman?',next:'amers_batman'}]},
+    amers_batman:{text:'*holder helt op med at skrive* *lang pause* *kigger direkte på dig* ...Hvad fik dig til at spørge om det?',choices:[{label:'Din adfærd.',next:'amers_batman2'},{label:'Bare en fornemmelse.',next:'amers_batman2'}]},
+    amers_batman2:{text:'*meget lang pause* ...Jeg er Amers Klosterkant. IT-systemkoordinator. Jeg er på kontoret mandag til fredag kl. 08:30 til 16:45. *pause* Det er hvad jeg er.',choices:[{label:'Og om natten?',next:'amers_batman3'},{label:'Selvfølgelig. Beklager.',next:'amers_batman4'}]},
+    amers_batman3:{text:'*rejser sig og henter kaffe* Om natten sover jeg. Som alle andre. *går tilbage* Vi skifter emne nu.',choices:[{label:'Den overretsdommer-kostume...',next:'amers_batman4'}]},
+    amers_batman4:{text:'*sætter sig* Overretsdommerkostumen er til rettersfester. Det har jeg sagt. Det er alt. *åbner et nyt vindue i MO* God dag.',choices:[{label:'...God dag, Amers.',next:'__close'}]},
   },
   Simona:{
     start:[
       {label:'📱 Content?',next:'simo_content'},
       {label:'📰 FDFMedlederen?',next:'simo_magasin'},
+      {label:'🎸 Festival og fritid?',next:'simo_festival'},
+      {label:'🌆 Åbybro-pigen i København?',next:'simo_aabybro'},
       {label:'🫥 Hvad skete der med Tasmus?',next:'simo_tasmus'},
     ],
-    simo_content:{text:'Hej! Simona. Kommunikation og content. Jeg skaber ting der rammer målgruppen. Content er kongen.',choices:[{label:'Din strategi?',next:'simo_strategi'},{label:'FDFMedlederen?',next:'simo_magasin'}]},
+    simo_content:{text:'Hej! Simona. Kommunikation og content. Jeg skaber ting der rammer målgruppen. Content er kongen.',choices:[{label:'Din strategi?',next:'simo_strategi'},{label:'FDFMedlederen?',next:'simo_magasin'},{label:'Er du fra Nordjylland?',next:'simo_aabybro'}]},
     simo_strategi:{text:'Autenticitet. FDF har en god historie — vi skal bare fortælle den rigtigt.',choices:[{label:'Det er sandt.',next:'__close'}]},
     simo_magasin:{text:'FDFMedlederen er vores magasin. Hvert nummer er en kærlighed til kredse i hele landet.',choices:[{label:'Imponerende!',next:'__close'}]},
+    simo_festival:{text:'*lyser helt op* Festival er mit andet hjem. Smukfest, Roskilde, NorthSide — jeg har været på alle tre. Smukfest er mit favorit. Der er noget ved skoven og musikken der bare... passer.',choices:[{label:'Smukfest i skoven?',next:'simo_smukfest'},{label:'Hvem tager du derned?',next:'simo_festival2'},{label:'Hvad med Roskilde?',next:'simo_roskilde'}]},
+    simo_smukfest:{text:'*nikker intenst* Skanderborg-skoven om natten. Musikken der siver mellem træerne. Det er content i sig selv — men jeg lægger telefonen fra mig der. Det er helligt.',choices:[{label:'Du lægger telefonen fra dig?!',next:'simo_festival3'},{label:'Hvem tager du derned?',next:'simo_festival2'}]},
+    simo_festival2:{text:'En fast flok. Vi er seks der har været på Smukfest sammen siden 2018. Én af dem er min fætter fra Åbybro. Han tager altid for mange snacks og for lidt tøj. Hvert år.',choices:[{label:'😄 Klassiker.',next:'simo_festival4'},{label:'Hvad med Roskilde?',next:'simo_roskilde'}]},
+    simo_festival3:{text:'*griner* JA. Der er steder der er vigtigere end content. Det ved jeg godt. Det siger jeg bare ikke til chefen. *hvisker* Tfan tror jeg arbejder på en "festival-content-strategi". Det gør jeg ikke.',choices:[{label:'😄 Din hemmelighed er tryg.',next:'__close'}]},
+    simo_festival4:{text:'Han mødte op i 2022 med Crocs og en fleecetrøje. Det regnede alle fire dage. Han var lykkelig. Det er Åbybro-mentalitet. Praktisk over alt.',choices:[{label:'Er du selv praktisk?',next:'simo_aabybro'},{label:'Hvad med Roskilde?',next:'simo_roskilde'}]},
+    simo_roskilde:{text:'Roskilde er stort og fedt men... det er ikke Smukfest. Der er for meget asfalt. Jeg savner skoven. *pause* Det siger jeg aldrig højt til folk fra Roskilde. Der er mange.',choices:[{label:'Klogt.',next:'__close'},{label:'NorthSide?',next:'simo_northside'}]},
+    simo_northside:{text:'NorthSide er perfekt til en fredag eftermiddag. Ikke en hel weekend. Det er Aarhus-festivalen — lidt for poleret. Men lineup er altid stærkt.',choices:[{label:'Og Åbybro?',next:'simo_aabybro'}]},
+    simo_aabybro:{text:'*smiler* Åbybro. Ja. Vesthjørnet af Jammerbugt. Jeg er opvokset der. Alle kender alle. Ingen låser døren. Og fredag aften kørte man ind til Aalborg.',choices:[{label:'Tur i Aalborg?',next:'simo_aalborg'},{label:'Savner du det?',next:'simo_savner'}]},
+    simo_savner:{text:'Sommetider. KBH er hurtig og fed og der sker noget. Men Åbybro er rolig. Min mor bor der stadig. Hun sender rugbrød med posten to gange om måneden. Det er kærlighed.',choices:[{label:'Det er kærlighed.',next:'simo_mor'},{label:'Tur i Aalborg?',next:'simo_aalborg'}]},
+    simo_mor:{text:'*griner* Hun bekymrer sig for at jeg ikke spiser nok. Jeg er kommunikationsmedarbejder i FDF. Jeg spiser Toast Torsdag hver uge. Jeg har det fint.',choices:[{label:'Toast Torsdag er mad.',next:'__close'}]},
+    simo_aalborg:{text:'*griner* JAAAAH. Fredagsbar på Jomfru Ane Gade. Det er... det er en oplevelse. Første gang man er ude der som 18-årig tror man man er i en film.',choices:[{label:'En film om hvad?',next:'simo_aalborg2'},{label:'Shots?',next:'simo_shots'}]},
+    simo_aalborg2:{text:'En film om at alt er muligt og ingen sover og alle er bedste venner. *pause* Virkeligheden er at det er koldt, der er kø ved toiletterne og man har for lidt jakke på. Men man glemmer det.',choices:[{label:'Shots?',next:'simo_shots'},{label:'Er du stadig der af og til?',next:'simo_aalborg3'}]},
+    simo_aalborg3:{text:'Når jeg er hjemme til jul. Min fætter fra Åbybro insisterer. Og man siger jo ikke nej. *pause* Selv om man er 26 og har møde mandag morgen.',choices:[{label:'Shots?',next:'simo_shots'}]},
+    simo_shots:{text:'*lang pause* ...Vi behøver ikke tale om shots.',choices:[{label:'Vi gør.',next:'simo_shots2'},{label:'Okay, vi gør ikke.',next:'__close'}]},
+    simo_shots2:{text:'...Der fandtes en periode. Sidst i gymnasiet og lidt ind i KBH-livet. En shot der hedder Bøf-Bearnaise. Den smager af ingenting godt. Men man tager den alligevel. Det er Aalborg.',choices:[{label:'Bøf-Bearnaise??',next:'simo_shots3'},{label:'Og nu?',next:'simo_shots4'}]},
+    simo_shots3:{text:'Ja. Den er ægte. Den serveres stadig. Det er et kulturarvsprodukt. Det burde stå i FDFMedlederen. *pause* Det gør det ikke.',choices:[{label:'Det burde det.',next:'simo_shots4'}]},
+    simo_shots4:{text:'Nu? Ét glas vin fredag og en god søvn. Jeg er kommunikationsmedarbejder. Jeg skal have øjnene åbne mandag. *ser direkte på dig* Men Bøf-Bearnaise eksisterer stadig. Det er vigtig viden.',choices:[{label:'Tak for den viden, Simona.',next:'__close'}]},
     simo_tasmus:{text:'*ser sig om* ...Tasmus Trydensdahl. Han sad ved det bord dér. En tirsdag var stolen bare... tom. Kaffen stadig varm.',choices:[{label:'Ingen så noget?',next:'simo_tasmus2'},{label:'Hvornår var det?',next:'simo_tasmus_hvornaar'}]},
     simo_tasmus2:{text:'Amers siger hun hørte en printer køre hele natten. Men det gør den altid. Ingen ringede hjem til ham. Det er det mærkeligste.',choices:[{label:'Hans nummer er 41 73 11 70.',next:'simo_tasmus3'},{label:'Er han meldt savnet?',next:'simo_tasmus_savnet'}]},
     simo_tasmus3:{text:'*bliver bleg* Du har... ringet til ham? Hvad sagde han??',choices:[{label:'Han råber om hjælp.',next:'simo_tasmus4'},{label:'Det var svært at høre.',next:'simo_tasmus4'}]},
@@ -7533,7 +7614,7 @@ function render(){
     // Kaffe-bobler over NT-møde
     if(kbhKaffeActive){
       const kt=Date.now()/1000;
-      ['Rime','Emse','Tonatan'].forEach((id,i)=>{
+      ['Rime','Emse','Tonatan','Tia'].forEach((id,i)=>{
         const n=kbhNpcs.find(npc=>npc.id===id);if(!n)return;
         const bob=Math.sin(kt*1.5+i)*3;
         ctx.font='14px serif';ctx.textAlign='center';ctx.globalAlpha=.85;
@@ -7558,6 +7639,13 @@ function render(){
   } else if(currentZone==='kalder'){
     drawKalderRoom();
     drawHeksParticles();
+    // Sparkle over bottle when defeated
+    if(bottleDefeated){
+      const bt=Date.now()/600;
+      const bp=.5+.5*Math.sin(bt*2);
+      ctx.globalAlpha=.5+.4*bp;ctx.font='14px serif';ctx.textAlign='center';
+      ctx.fillText('✨',430,225-4*bp);ctx.globalAlpha=1;ctx.textAlign='left';
+    }
     drawTmon();
     drawPlayer();
   }
@@ -7773,7 +7861,7 @@ document.getElementById('dlg-input').addEventListener('keydown',e=>{
 // mobile E button
 document.getElementById('mobile-e').addEventListener('touchstart',e=>{
   e.preventDefault();
-  activateNearest();
+  if(!dlgOpen&&!phoneOpen) activateNearest();
 },{passive:false});
 
 // bar events
