@@ -145,6 +145,10 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
 #mobile-e.visible{display:block}
 @media(hover:none)and(pointer:coarse){#mobile-e{display:none}#mobile-e.visible{display:block}}
 
+/* ── KOPIMASKINE ───────────────────────────── */
+.kopi-btn{padding:7px 12px;background:#0a0a1a;border:1.5px solid #3a2060;color:#9060cc;font-family:'Work Sans',sans-serif;font-size:.82rem;border-radius:8px;cursor:pointer;transition:all .12s;text-align:left}
+.kopi-btn:hover{border-color:#9060cc;color:#c8a8ff;background:#1a0a2a}
+
 /* friday overlay */
 #friday{display:none;position:absolute;inset:30px 0 0 0;pointer-events:none;border-radius:0 0 12px 12px;background:radial-gradient(ellipse at 20% 80%,rgba(255,100,150,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(120,80,255,.12) 0%,transparent 60%);animation:fpulse 3s ease-in-out infinite;z-index:2}
 @keyframes fpulse{0%,100%{opacity:.7}50%{opacity:1}}
@@ -281,6 +285,28 @@ canvas{display:block;border:3px solid #ffcc02;border-top:none;border-radius:0 0 
   </div>
 
   <!-- calendar -->
+  <!-- kopimaskine -->
+  <div id="kopi-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px);z-index:15;align-items:center;justify-content:center">
+    <div style="background:linear-gradient(160deg,#0a0a14,#1a1a2e);border:2px solid #3a3060;border-radius:16px;padding:20px 24px;width:420px;box-shadow:0 0 0 1px rgba(100,60,200,.2),0 20px 60px rgba(0,0,0,.8)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(100,60,200,.3);padding-bottom:10px">
+        <span style="font-family:Bangers,cursive;color:#9060cc;font-size:1.4rem;letter-spacing:2px">📠 KOPIMASKINE v2.3</span>
+        <button id="kopi-close" style="background:none;border:1.5px solid #554;color:#776;border-radius:6px;padding:2px 9px;cursor:pointer;font-size:.9rem">✕</button>
+      </div>
+      <div id="kopi-screen" style="background:#07120d;border:1.5px solid #00ff88;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:.8rem;color:#00ff88;min-height:80px;margin-bottom:12px;white-space:pre-line">Vælg en funktion eller indtast kode.</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        <button class="kopi-btn" data-fn="sille">📄 Print 100 × Sille og Sigurd</button>
+        <button class="kopi-btn" data-fn="kreds">📄 Print 40 × Kredsstartshæfte</button>
+        <button class="kopi-btn" data-fn="plan">📄 Print Aktivitetsplan Q4</button>
+        <button class="kopi-btn" data-fn="maaned">📄 Print månedsseddel</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="kopi-code" type="text" placeholder="Indtast kode..." maxlength="10"
+          style="flex:1;padding:7px 10px;border:1.5px solid #9060cc;border-radius:8px;background:#0a0a1a;color:#c8a8ff;font-family:monospace;font-size:.9rem"/>
+        <button id="kopi-submit" style="padding:7px 14px;background:linear-gradient(135deg,#6030a0,#9060cc);color:#fff;border:none;border-radius:8px;font-family:Bangers,cursive;font-size:1rem;letter-spacing:1px;cursor:pointer">▶ OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-overlay">
     <div id="toast-box">
       <div id="toast-header">
@@ -1533,6 +1559,44 @@ function openKbhOpslagstavle(){
   dc.appendChild(btn);
 }
 
+// ── KOPIMASKINE ───────────────────────────────────────────────────────────────
+const KOPI_CODE = '09-4471';
+let kelderUnlocked = false;
+
+function openKopiMenu(){
+  document.getElementById('kopi-overlay').style.display='flex';
+  document.getElementById('kopi-screen').textContent='Vælg en funktion eller indtast kode.';
+  document.getElementById('kopi-code').value='';
+}
+function closeKopiMenu(){
+  document.getElementById('kopi-overlay').style.display='none';
+}
+
+const KOPI_RESPONSES = {
+  sille:  '📄 Printer 100 × Sille og Sigurd...\n\n*brr brr brr*\n\nPapirbakken er fuld.\nSille og Sigurd kigger op ad dig.',
+  kreds:  '📄 Printer 40 × Kredsstartshæfte...\n\n*brr brr*\n\n"Godt at nogen er seriøse\nom kredsudvikling."\n— maskinen, sandsynligvis.',
+  plan:   '📄 Printer Aktivitetsplan Q4...\n\n*brr*\n\nPlanen er 47 sider lang.\nSide 12 er blank.\nDet er sandsynligvis meningen.',
+  maaned: '📄 Printer månedsseddel...\n\n*klik klik brr*\n\nMånedssedlen indeholder\n3 møder, 2 deadlines\nog én mystisk post\nmærket "847 — se bilag".',
+};
+
+function handleKopiSubmit(){
+  const v = document.getElementById('kopi-code').value.trim();
+  const screen = document.getElementById('kopi-screen');
+  const vClean = v.replace(/\s/g,'');
+  if(vClean === KOPI_CODE.replace('-','') || v === KOPI_CODE){
+    screen.textContent='✅ KODE ACCEPTERET\n\n*dybe mekaniske lyde*\n\nAdgang til underjordisk anlæg 09...\n\nKælderlem åbner sig...';
+    kelderUnlocked = true;
+    setTimeout(()=>{
+      closeKopiMenu();
+      flash('🌲 En luge i gulvet åbner sig. Koldt træk. Sne?');
+      setTimeout(()=>flash('⬇️ Gå mod kælderlugen for at stige ned.'), 2500);
+    }, 2800);
+  } else if(v){
+    screen.textContent='❌ FORKERT KODE\n\n*bip bip*\n\nAdgang nægtet.\nPrøv igen.';
+  }
+  document.getElementById('kopi-code').value='';
+}
+
 function openToast(){
   if(currentZone!=='kbh'||currentDay!==DAY.THU||!toastThursdayActive){
     flash('🍞 Toast Torsdag er kun torsdag i Køpmannæhafn!'); return;
@@ -1954,11 +2018,11 @@ function drawSecretDoor(){
 
 // ── KBH DESK ITEMS ───────────────────────────────────────────────────────────
 const kbhDeskItems = [
-  {id:'ki_tia',    x:325, y:130, r:40, zone:'kbh',
+  {id:'ki_tia',    x:265, y:175, r:40, zone:'kbh',
    msg:'En halvtom flaske Aperol og et par solbriller — ingen vet hvem de tilhører. Tia siger de er hendes. Sarap siger de ligner dem hun mistede i juni. Det er uafklaret.'},
-  {id:'ki_sarap',  x:555, y:158, r:40, zone:'kbh',
+  {id:'ki_sarap',  x:555, y:200, r:40, zone:'kbh',
    msg:'To hvide satinballetsko stikker ud under bordet. Spidserne er slidte og let beskidte. En lyserød sløjfe er ved at løsne sig. De er indeni mærket "SARAP — IKKE RØRE".'},
-  {id:'ki_benn',   x:440, y:240, r:45, zone:'kbh',
+  {id:'ki_benn',   x:440, y:260, r:45, zone:'kbh',
    msg:'En grøn løbeseddel: "PIGEFODBOLD I FDF — BLIV EN DEL AF NOGET STØRRE". Under bordet ligger en fodbold. Den er blevet sparket et par gange for hårdt — der er et lille mærke på væggen.'},
   {id:'ki_rime',   x:112, y:333, r:40, zone:'kbh',
    msg:'En tyk mappe mærket "FORTROLIGT — Q4 KURSER". Tre Post-its falder ud: en gul siger "RING TIL DEM INDEN FREDAG", en orange siger "HUSK KAFFEMASKINEN", en rød siger bare "NEJ".'},
@@ -2000,6 +2064,475 @@ kbhDeskItems.forEach(item=>{
   });
 });
 
+// ═══════════════════════════════════════════
+// KÆLDER — NARNIA ZONEN
+// ═══════════════════════════════════════════
+
+const kalderWalls = [
+  {x:0,  y:0,  w:900,h:20 }, // top — luge åbning x:360-540
+  {x:0,  y:0,  w:360,h:20 },
+  {x:540,y:0,  w:360,h:20 },
+  {x:0,  y:540,w:900,h:20 }, // bund
+  {x:0,  y:0,  w:20, h:560}, // venstre
+  {x:880,y:0,  w:20, h:560}, // højre
+];
+
+const kalderObstacles = [
+  {x:140,y:180,w:80, h:80 }, // træ 1
+  {x:650,y:200,w:80, h:80 }, // træ 2
+  {x:380,y:350,w:80, h:80 }, // træ 3 (bag pengeskabet)
+  {x:350,y:260,w:120,h:80 }, // pengeskab
+];
+
+// Regnskabsheksen state
+let heks = {
+  active: false, defeated: false,
+  x: 450, y: 200,
+  phase: 0,
+  duelRound: 0,    // which question
+  duelScore: 0,    // correct answers
+  duelActive: false,
+  visits: 0,
+};
+
+// Tasmus in kalder
+let tasmusKalder = {x: 680, y: 310, freed: false, running: false, runPhase: 0};
+
+// ── KÆLDER DRONE ─────────────────────────────
+let kalderDroneNodes = [];
+let kalderDroneActive = false;
+
+function startKalderDrone(){
+  if(kalderDroneActive) return;
+  // Sluk radio
+  if(radioChannel>0){ radioChannel=0; if(radioGain) radioGain.gain.setTargetAtTime(0,ac().currentTime,.3); }
+  kalderDroneActive = true;
+  const a = ac();
+  // Dyb drone — tre oscillatorer lidt forskudt i pitch for uhyggeligt beat
+  const freqs = [36.7, 37.0, 55.0, 73.4];
+  const types = ['sine','sine','triangle','sine'];
+  const vols  = [0.12, 0.10, 0.06, 0.04];
+  freqs.forEach((f,i)=>{
+    const o=a.createOscillator(), g=a.createGain();
+    o.type=types[i]; o.frequency.value=f;
+    g.gain.setValueAtTime(0,a.currentTime);
+    g.gain.linearRampToValueAtTime(vols[i],a.currentTime+3);
+    o.connect(g); g.connect(a.destination);
+    o.start();
+    kalderDroneNodes.push({o,g});
+  });
+  // Lejlighedsvis høj dissonant tone
+  function scheduleWhisper(){
+    if(!kalderDroneActive) return;
+    const delay = 4 + Math.random()*8;
+    setTimeout(()=>{
+      if(!kalderDroneActive) return;
+      const a2=ac(), o=a2.createOscillator(), g=a2.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(440+Math.random()*200, a2.currentTime);
+      o.frequency.linearRampToValueAtTime(200+Math.random()*100, a2.currentTime+2);
+      g.gain.setValueAtTime(0,a2.currentTime);
+      g.gain.linearRampToValueAtTime(0.04,a2.currentTime+.5);
+      g.gain.linearRampToValueAtTime(0,a2.currentTime+2.5);
+      o.connect(g); g.connect(a2.destination);
+      o.start(); o.stop(a2.currentTime+3);
+      scheduleWhisper();
+    }, delay*1000);
+  }
+  scheduleWhisper();
+}
+
+function stopKalderDrone(){
+  if(!kalderDroneActive) return;
+  kalderDroneActive = false;
+  const a = ac();
+  kalderDroneNodes.forEach(({o,g})=>{
+    g.gain.setTargetAtTime(0, a.currentTime, 1.5);
+    o.stop(a.currentTime+5);
+  });
+  kalderDroneNodes = [];
+}
+
+function enterKalder(){
+  enterZone('kalder', 450, 80);
+  heks.active = true;
+  setTimeout(startKalderDrone, 800);
+  setTimeout(()=>flash('🌲 Kold luft. Sne på gulvet. En skov... under KBH?'), 700);
+  setTimeout(()=>flash('👁️ Der er nogen herinde.'), 3000);
+}
+
+// ── REGNSKABSHEKSEN DIALOG-DUEL ───────────────────────────────────────────────
+const HEKS_GREETINGS = ["*vender sig langsomt* ...Et menneske. Fra kontoret ovenfor. *fryser luften* Du vil have Trydensdahl. Bevis at du kender dette sted. Fem spørgsmål. Svar. Derpå dømmer jeg.", "*suk* Igen. Du lærer langsomt.", "Din lille DFDS-Pejder. Tilbage igen. Stadig ikke klar.", "Tre gange nu. Er det vedholdenhed eller forvirring?", "Du lugter af kontor og nederlag.", "Fjerde besøg. Pengeskabet er stadig mit.", "...Igen. *lang pause* Du er enten modig eller dum. Måske begge.", "Sjette gang. Jeg begynder at finde dig underholdende. Det er ikke et kompliment.", "Du er som en dårlig fondsansøgning. Returnerer konstant.", "Niende besøg. Ved du hvad det koster i overarbejde at fryse dig ud?", "Tiende gang. *suk* Spørg nu.", "Elleve gange. Jeg har begyndt at sætte din stol frem.", "...Du er den eneste der besøger mig herinde. Det siger noget om os begge.", "Tolvte besøg. Regnskaberne er stadig ikke i din favør.", "Jeg har opdateret din fil. Den er meget tyk nu.", "Femtende gang. *iskoldt suk* Du er blevet en vane.", "...Igen. Jeg har lært dit navn udenad. Det er uhyggeligt.", "Syttende besøg. Pengeskabet støver stadig ikke.", "Du begynder at ligne en der hører til herinde. Det er ikke et kompliment.", "Nittende gang. Jeg overvejer at sætte dit navn på regnearket.", "Tyvende besøg. *lang pause* ...Er du okay?"];
+
+const HEKS_QUESTIONS = [
+  {q:'Hvad siger Tia om rugbrød til toast?',opts:[{t:'"Det er modigt"',ok:true},{t:'"Det er forfærdeligt"',ok:false},{t:'"Det giver mening"',ok:false}]},
+  {q:'Hvem er ALTID i saunaen på Sletten?',opts:[{t:'Don Tilstrup',ok:true},{t:'Crisdan Callas',ok:false},{t:'Tarkob',ok:false}]},
+  {q:'Hvad hedder Tmons, Jas\' og Delisateths musiktrio?',opts:[{t:'Den Stille Treenighed',ok:true},{t:'Det Gyldne Trio',ok:false},{t:'FDF Sound System',ok:false}]},
+  {q:'Hvad gemmer Tonatan i sin skuffe?',opts:[{t:'Nutella',ok:true},{t:'Digestive',ok:false},{t:'Lakrids',ok:false}]},
+  {q:'Hvad bruger Ásfríðr en karabinhage til på sit bord?',opts:[{t:'Papirclips',ok:true},{t:'Nøglering',ok:false},{t:'Hænger den på væggen',ok:false}]},
+];
+
+function shuffleOpts(q){
+  const opts=[...q.opts];
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return {...q,opts};
+}
+
+function openHeksDialog(){
+  if(heks.defeated){
+    openSimpleDialog('❄️','Regnskabsheksen','#c8a8ff','*kun et iskoldt ekko tilbage*',[{label:'Gå.',next:'__close'}]);
+    return;
+  }
+  heks.duelActive=true; heks.duelRound=0; heks.duelScore=0;
+  heks.shuffled=HEKS_QUESTIONS.map(shuffleOpts);
+  const greeting=HEKS_GREETINGS[Math.min(heks.visits,HEKS_GREETINGS.length-1)];
+  heks.visits++;
+  dlgOpen=true;
+  const port=document.getElementById('dlg-portrait');
+  port.style.background='#1a0a2a'; port.textContent='❄️';
+  document.getElementById('dlg-name').textContent='Regnskabsheksen';
+  document.getElementById('dlg-name').style.color='#c8a8ff';
+  document.getElementById('dlg-thinking').classList.remove('on');
+  document.getElementById('dlg-row').style.display='none';
+  document.getElementById('dlg').classList.add('on');
+  document.getElementById('dlg-text').textContent=greeting;
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='Jeg er klar.';
+  btn.addEventListener('click',()=>showHeksDuelRound(0));dc.appendChild(btn);
+}
+
+function showHeksDuelRound(round){
+  if(round>=heks.shuffled.length){showHeksVerdict();return;}
+  const q=heks.shuffled[round];
+  document.getElementById('dlg-text').textContent=`❄️ Spørgsmål ${round+1} af 5:\n\n"${q.q}"`;
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  q.opts.forEach(opt=>{
+    const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent=opt.t;
+    btn.addEventListener('click',()=>{
+      if(opt.ok) heks.duelScore++;
+      showHeksDuelRound(round+1);
+    });
+    dc.appendChild(btn);
+  });
+}
+
+function showHeksVerdict(){
+  const s=heks.duelScore;
+  let verdict,win;
+  if(s===5){verdict='*lang pause* ...Umuligt. Du ved ALT. Du er farligere end Trydensdahl selv. *stemmen revner* ...Tag ham.';win=true;}
+  else if(s===4){verdict='...Fire af fem. *iskoldt* Tæt. Men ikke tæt nok. Du mangler én brik. Gå tilbage — og find den.';win=false;}
+  else if(s===3){verdict='...Tre af fem. *fniser* Du er ikke klar. Kom tilbage når du ved mere.';win=false;}
+  else{verdict='*ler koldt* '+(s===2?'To':s===1?'Ét':'Nul')+' af fem. Du kender ikke dette sted. Gå.';win=false;}
+  document.getElementById('dlg-text').textContent=`Resultat: ${s}/5\n\n${verdict}`;
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  if(win){
+    heks.defeated=true;heks.duelActive=false;
+    const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='*Befri Tasmus*';
+    btn.addEventListener('click',()=>{closeDialog();tasmusKalder.freed=true;flash('🎉 TASMUS ER BEFRIET!');setTimeout(()=>flash('🍺 Tasmus finder en Wiibroe i lommen og rækker den til dig.'),2000);setTimeout(()=>openTasmusFreeDialog(),3500);});
+    dc.appendChild(btn);
+  } else {
+    const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='*Gå tilbage og lær mere*';
+    btn.addEventListener('click',()=>{closeDialog();setTimeout(()=>enterZone('kbh',400,400),400);});
+    dc.appendChild(btn);
+  }
+}
+
+function openTasmusFreeDialog(){
+  dlgOpen=true;
+  const port=document.getElementById('dlg-portrait');
+  port.style.background='#2d5016'; port.textContent='🔧';
+  document.getElementById('dlg-name').textContent='Tasmus Trydensdahl — Opsynsmand & Bygmester';
+  document.getElementById('dlg-name').style.color='#7dce13';
+  document.getElementById('dlg-thinking').classList.remove('on');
+  document.getElementById('dlg-row').style.display='none';
+  document.getElementById('dlg').classList.add('on');
+  document.getElementById('dlg-text').textContent='*strækker arme og ben* ...Frihed. *rækker en Wiibroe frem* Jeg vidste nogen ville finde mig. Jeg indgraverede mit ID i kopimaskinen. 4471. Bag papirbakken. Ingen kigger bag papirbakken.';
+  const dc=document.getElementById('dlg-choices');
+  dc.innerHTML='';
+  [{t:'Hvad er pengeskabet?',fn:()=>tasmusSkab()},{t:'Du kan takke Tonatan og Simona.',fn:()=>tasmusTak()},{t:'*Tag Wiebroen* Tak, Tasmus.',fn:()=>{closeDialog();triggerTasmusKBH();}}].forEach(({t,fn})=>{
+    const btn=document.createElement('button');
+    btn.className='dlg-choice'; btn.textContent=t;
+    btn.addEventListener('click',fn);
+    dc.appendChild(btn);
+  });
+}
+
+function tasmusSkab(){
+  document.getElementById('dlg-text').textContent='Pengeskabet? Det er FDFs reservefond. Ikke guld — men penge nok til at bygge Skovly ved Viborg UDEN banklån. Det er derfor de ville have koden. Jeg gav dem den aldrig.';
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='Du er en helt, Tasmus.';
+  btn.addEventListener('click',()=>{document.getElementById('dlg-text').textContent='*drikker Wiebroen* Jeg er bygmester. Jeg holder hus. Det er det samme.';
+    const dc2=document.getElementById('dlg-choices');dc2.innerHTML='';
+    const b2=document.createElement('button');b2.className='dlg-choice';b2.textContent='*Tag Wiebroen* Tak.';
+    b2.addEventListener('click',()=>{closeDialog();triggerTasmusKBH();});dc2.appendChild(b2);
+  });
+  dc.appendChild(btn);
+}
+
+function tasmusTak(){
+  document.getElementById('dlg-text').textContent='*nikker langsomt* Tonatan havde mine bilag åbne. Det vidste jeg. Og Simona... hun er skarp. De vidste det. Giv dem en Wiibroe fra mig. Jeg har kun én.';
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent='*Tag Wiebroen* Det gør jeg.';
+  btn.addEventListener('click',()=>{closeDialog();triggerTasmusKBH();});dc.appendChild(btn);
+}
+
+function triggerTasmusKBH(){
+  // Tasmus runs toward the exit luge (x:450, y:30)
+  tasmusKalder.running = true;
+  flash('🔧 Tasmus løber mod udgangen!');
+  // After 2.5s he's gone, then appears in KBH
+  setTimeout(()=>{
+    tasmusKalder.running = false;
+    tasmusKalder.x = -200; // offscreen
+    const t=kbhNpcs.find(n=>n.id==='Tasmus');
+    if(t){t.x=450;t.y=130;}
+    const w=kbhWander['Tasmus'];
+    if(w){w.hx=450;w.hy=130;w.tx=450;w.ty=130;}
+    flash('🔧 Tasmus er steget op i fællesrummet og finder sig et hjørne med øl og portvin.');
+  }, 2500);
+}
+
+function openSimpleDialog(emoji, name, nameColor, text, choices){
+  dlgOpen=true;
+  document.getElementById('dlg-portrait').textContent=emoji;
+  document.getElementById('dlg-portrait').style.background='#1a0a2a';
+  document.getElementById('dlg-name').textContent=name;
+  document.getElementById('dlg-name').style.color=nameColor||'#fff';
+  document.getElementById('dlg-text').textContent=text;
+  document.getElementById('dlg-thinking').classList.remove('on');
+  document.getElementById('dlg-row').style.display='none';
+  document.getElementById('dlg').classList.add('on');
+  const dc=document.getElementById('dlg-choices');dc.innerHTML='';
+  (choices||[]).forEach(ch=>{
+    const btn=document.createElement('button');btn.className='dlg-choice';btn.textContent=ch.label;
+    btn.addEventListener('click',ch.next==='__close'?closeDialog:()=>{});
+    dc.appendChild(btn);
+  });
+}
+
+// ── KALDER DRAW ───────────────────────────────────────────────────────────────
+function updateKalder(){
+  if(tasmusKalder.running){
+    // Run toward exit luge (x:450, y:30)
+    const dx=450-tasmusKalder.x, dy=30-tasmusKalder.y;
+    const d=Math.hypot(dx,dy);
+    if(d>5){
+      tasmusKalder.x+=dx/d*4;
+      tasmusKalder.y+=dy/d*4;
+      tasmusKalder.runPhase+=.4;
+    }
+  }
+}
+function drawKalderRoom(){
+  const t=Date.now()/1000;
+
+  // ── GULV — snedækket skov ───────────────────────────────────────────────────
+  ctx.fillStyle='#0a1a0f';ctx.fillRect(20,20,860,520); // mørk skov-gulv
+  // Sne-lag
+  ctx.fillStyle='rgba(220,235,255,.15)';ctx.fillRect(20,20,860,520);
+  // Skovbund-tekstur
+  ctx.strokeStyle='rgba(40,80,40,.3)';ctx.lineWidth=1;
+  for(let x=20;x<880;x+=40){ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,540);ctx.stroke();}
+  for(let y=20;y<540;y+=40){ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(880,y);ctx.stroke();}
+
+  // ── VÆGGE ──────────────────────────────────────────────────────────────────
+  ctx.fillStyle='#1a2a1a';
+  kalderWalls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+
+  // ── LUGE OP (åbning i topvæg) ──────────────────────────────────────────────
+  ctx.fillStyle='rgba(150,100,50,.8)';ctx.fillRect(380,0,140,22);
+  ctx.strokeStyle='#8B5E3C';ctx.lineWidth=2;ctx.setLineDash([4,3]);
+  ctx.strokeRect(382,2,136,18);ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,180,100,.6)';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+  ctx.fillText('↑ KBH KOPIRUM',450,14);ctx.textAlign='left';
+
+  // ── TRÆER ──────────────────────────────────────────────────────────────────
+  [
+    {x:180,y:220,h:200,r:45},{x:690,y:240,h:180,r:40},
+    {x:420,y:390,h:150,r:35},{x:80, y:350,h:160,r:38},
+    {x:780,y:380,h:170,r:42},{x:300,y:150,h:190,r:35},
+    {x:600,y:150,h:185,r:38},
+  ].forEach(({x,y,h,r})=>{
+    // Stamme
+    ctx.fillStyle='#3a2010';ctx.fillRect(x-8,y,16,h);
+    // Krone — snedækkede grene
+    ctx.fillStyle='#1a3a1a';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(220,235,255,.4)';ctx.beginPath();ctx.arc(x,y-5,r-5,0,Math.PI*2);ctx.fill();
+    // Sne på toppen
+    ctx.fillStyle='rgba(240,248,255,.7)';ctx.beginPath();ctx.ellipse(x,y-r+8,r*0.6,12,0,0,Math.PI*2);ctx.fill();
+  });
+
+  // ── GADELYGTE ──────────────────────────────────────────────────────────────
+  {const lx=100,ly=80;
+    ctx.fillStyle='#3a3050';ctx.strokeStyle='#555070';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(lx,ly+300);ctx.lineTo(lx,ly);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lx,ly);ctx.bezierCurveTo(lx,ly-20,lx+25,ly-20,lx+25,ly-28);ctx.stroke();
+    ctx.fillStyle='#2a2040';ctx.strokeStyle='#6060a0';ctx.lineWidth=1.5;
+    ctx.fillRect(lx+13,ly-48,24,18);ctx.strokeRect(lx+13,ly-48,24,18);
+    const lf=.7+.3*Math.sin(t*1.8);
+    ctx.fillStyle=`rgba(255,240,180,${lf*.9})`;ctx.beginPath();ctx.arc(lx+25,ly-39,6,0,Math.PI*2);ctx.fill();
+    const lg=ctx.createRadialGradient(lx+25,ly-39,2,lx+25,ly-39,100);
+    lg.addColorStop(0,`rgba(255,240,180,${lf*.15})`);lg.addColorStop(1,'transparent');
+    ctx.fillStyle=lg;ctx.fillRect(lx-75,ly-140,200,200);
+  }
+
+  // ── SNE-PARTIKLER ──────────────────────────────────────────────────────────
+  ctx.fillStyle='rgba(220,235,255,.6)';
+  for(let i=0;i<30;i++){
+    const sx=(i*137+Math.sin(t*.3+i)*60)%880+20;
+    const sy=(i*73+t*20*(i%3+0.5))%500+20;
+    ctx.beginPath();ctx.arc(sx,sy,1.2,0,Math.PI*2);ctx.fill();
+  }
+
+  // ── PENGESKAB ──────────────────────────────────────────────────────────────
+  {const sx=350,sy=260;
+    ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(sx+4,sy+4,120,80);
+    ctx.fillStyle='#2a3a2a';ctx.strokeStyle='#3a5a3a';ctx.lineWidth=2.5;
+    ctx.fillRect(sx,sy,120,80);ctx.strokeRect(sx,sy,120,80);
+    ctx.fillStyle='#1a2a1a';ctx.fillRect(sx+8,sy+8,104,64);
+    // Håndhul
+    ctx.fillStyle='#888';ctx.beginPath();ctx.arc(sx+90,sy+40,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#555';ctx.beginPath();ctx.arc(sx+90,sy+40,5,0,Math.PI*2);ctx.fill();
+    // Label
+    ctx.fillStyle='#4a7a4a';ctx.font='bold 8px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('FDF RESERVEFOND',sx+60,sy+52);ctx.textAlign='left';
+    // Penge-emoji hint
+    ctx.font='16px serif';ctx.textAlign='center';ctx.fillText('💰',sx+60,sy+74);ctx.textAlign='left';
+  }
+
+  // ── TASMUS FANGET ──────────────────────────────────────────────────────────
+  if(!tasmusKalder.freed){
+    const tx=tasmusKalder.x,ty=tasmusKalder.y;
+    // Reb om træ
+    ctx.strokeStyle='#8B5E3C';ctx.lineWidth=3;ctx.setLineDash([4,2]);
+    ctx.beginPath();ctx.ellipse(tx,ty+5,22,12,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    // Tasmus-figur (lille, bundet)
+    ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(tx,ty+18,12,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5a7a3a';rr(tx-10,ty+2,20,20,4);
+    ctx.fillStyle='#d4956a';ctx.beginPath();ctx.arc(tx,ty-4,11,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#111';ctx.lineWidth=1.5;ctx.stroke();
+    // Hjelm/kasket
+    ctx.fillStyle='#3a5a2a';ctx.beginPath();ctx.arc(tx,ty-11,10,Math.PI,0);ctx.fill();
+    // Hjælp-boble
+    const bub=.5+.5*Math.sin(t*2);
+    ctx.fillStyle=`rgba(255,220,50,${.8+bub*.2})`;ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+    rr(tx-28,ty-45,56,20,6);ctx.stroke();
+    ctx.fillStyle='#222';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('HJÆLP MIG!! 🔧',tx,ty-32);ctx.textAlign='left';
+    // Badge
+    ctx.fillStyle='rgba(255,255,255,.9)';rr(tx-24,ty+25,48,13,3);
+    ctx.fillStyle='#3a5a2a';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('TASMUS T.',tx,ty+34);ctx.textAlign='left';
+  } else {
+    // Freed — running or standing
+    const tx=tasmusKalder.x,ty=tasmusKalder.y;
+    if(tx < -50) return; // offscreen
+    const bob=tasmusKalder.running ? Math.sin(tasmusKalder.runPhase)*5 : 0;
+    ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(tx,ty+18+bob,12,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5a7a3a';rr(tx-10,ty+2+bob,20,20,4);
+    ctx.fillStyle='#d4956a';ctx.beginPath();ctx.arc(tx,ty-4+bob,11,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#111';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#3a5a2a';ctx.beginPath();ctx.arc(tx,ty-11+bob,10,Math.PI,0);ctx.fill();
+    ctx.font='13px serif';ctx.textAlign='center';
+    ctx.fillText(tasmusKalder.running?'💨':'🍺',tx+14,ty+8+bob);
+    ctx.textAlign='left';
+    if(!tasmusKalder.running){
+      ctx.fillStyle='rgba(255,255,255,.9)';rr(tx-24,ty+25,48,13,3);
+      ctx.fillStyle='#3a5a2a';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+      ctx.fillText('TASMUS T. ✓',tx,ty+34);ctx.textAlign='left';
+    }
+  }
+
+  // ── REGNSKABSHEKSEN ────────────────────────────────────────────────────────
+  if(!heks.defeated){
+    const hx=heks.x,hy=heks.y;
+    heks.phase+=.02;
+    const bob=Math.sin(heks.phase*2)*4;
+    // Kappe — svævende
+    ctx.fillStyle='#1a0a2a';ctx.strokeStyle='#9060cc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(hx-20,hy+bob+10);ctx.lineTo(hx-30,hy+bob+50);ctx.lineTo(hx+30,hy+bob+50);ctx.lineTo(hx+20,hy+bob+10);ctx.fill();ctx.stroke();
+    // Hoved
+    ctx.fillStyle='#c8a8e0';ctx.beginPath();ctx.arc(hx,hy+bob-2,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Hat
+    ctx.fillStyle='#1a0a2a';ctx.strokeStyle='#9060cc';
+    ctx.beginPath();ctx.moveTo(hx-18,hy+bob-10);ctx.lineTo(hx,hy+bob-38);ctx.lineTo(hx+18,hy+bob-10);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.ellipse(hx,hy+bob-10,20,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Øjne — isblå
+    ctx.fillStyle='#a0d0ff';ctx.beginPath();ctx.arc(hx-4,hy+bob-3,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(hx+4,hy+bob-3,2.5,0,Math.PI*2);ctx.fill();
+    // Regnskab i hånden
+    ctx.font='13px serif';ctx.textAlign='center';ctx.fillText('📊',hx+18,hy+bob+15);ctx.textAlign='left';
+    // Is-aura
+    const ia=ctx.createRadialGradient(hx,hy+bob,5,hx,hy+bob,60);
+    ia.addColorStop(0,'rgba(160,208,255,.12)');ia.addColorStop(1,'transparent');
+    ctx.fillStyle=ia;ctx.beginPath();ctx.arc(hx,hy+bob,60,0,Math.PI*2);ctx.fill();
+    // Badge
+    ctx.fillStyle='rgba(26,10,42,.9)';ctx.strokeStyle='#9060cc';ctx.lineWidth=1;rr(hx-36,hy+bob+54,72,14,3);ctx.stroke();
+    ctx.fillStyle='#c8a8ff';ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('REGNSKABSHEKSEN',hx,hy+bob+64);ctx.textAlign='left';
+  }
+}
+
+function nearbyKalderNPC(){
+  // Heksen
+  if(!heks.defeated){
+    const d=Math.hypot(player.x-heks.x,player.y-heks.y);
+    if(d<70) return 'heks';
+  }
+  // Tasmus
+  const d=Math.hypot(player.x-tasmusKalder.x,player.y-tasmusKalder.y);
+  if(d<70) return 'tasmus';
+  return null;
+}
+
+function activateKalderNearest(){
+  // Check exit first
+  if(Math.hypot(player.x-450,player.y-30)<60){enterZone('kbh',400,400);return;}
+  const who=nearbyKalderNPC();
+  if(who==='heks') openHeksDialog();
+  else if(who==='tasmus' && tasmusKalder.freed) openTasmusFreeDialog();
+  else if(who==='tasmus') openSimpleDialog('🔧','Tasmus Trydensdahl','#7dce13','*hvisker desperat* Du skal besejre heksen! Hun har koden til pengeskabet! HJÆLP MIG!',[{label:'Jeg klarer det!',next:'__close'}]);
+}
+
+function updateKalderHint(){
+  const el=document.getElementById('hint');
+  const mobileE=document.getElementById('mobile-e');
+  // Check exit luge
+  if(Math.hypot(player.x-450,player.y-30)<60){
+    mobileE.classList.add('visible');
+    el.style.display='block';
+    el.textContent='[E] ⬆ Klatrer op til kopirummet';
+    el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    return;
+  }
+  const who=nearbyKalderNPC();
+  if(who==='heks'){
+    mobileE.classList.add('visible');
+    el.style.display='block';
+    el.textContent='[E] Konfronter Regnskabsheksen ❄️';
+    el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+  } else if(who==='tasmus'){
+    mobileE.classList.add('visible');
+    el.style.display='block';
+    el.textContent=tasmusKalder.freed?'[E] Tal med Tasmus 🍺':'[E] Tal med Tasmus 🔧';
+    el.style.left=(tasmusKalder.x+5)+'px';el.style.top=(tasmusKalder.y-50)+'px';
+    el.style.transform='';
+  } else {
+    mobileE.classList.remove('visible');
+    el.style.display='none';
+    el.style.transform='translateX(-50%)';
+  }
+}
+
+// ── END KALDER ────────────────────────────────────────────────────────────────
+
+
+// Kalder exit WORLD_OBJECT
+WORLD_OBJECTS.push({
+  id:'kalder_exit', x:450, y:30, r:60, zone:'kalder',
+  label:'⬆ Klatrer op til kopirummet',
+  onActivate:()=>enterZone('kbh',400,400),
+});
 function initWorldObjects(){
   phoneObj   = {id:'phone',   x:50,  y:163, r:40, label:'Ring til FDF 📞',       hintPos:{left:'60px',top:'120px'},   onActivate:openPhone};
   calObj     = {id:'calendar',x:580, y:50,  r:55, label:'Åbn kalender 📅',        hintPos:{left:'535px',top:'85px'},   onActivate:openCalendar};
@@ -2014,7 +2547,9 @@ function initWorldObjects(){
     {id:'kbh_radio', x:kbhRadioX, y:kbhRadioY, r:50, label:'Slå radio til 📻', zone:'kbh', onActivate:openRadio},
     {id:'kbh_cal',   x:kbhCalX,   y:kbhCalY,   r:55, label:'Åbn kalender 📅',  zone:'kbh', onActivate:openCalendar},
     {id:'kbh_phone', x:kbhPhoneX, y:kbhPhoneY, r:55, label:'Ring til FDF 📞',  zone:'kbh', onActivate:openPhone},
-    {id:'kbh_toast', x:415,       y:185,        r:70, label:'🍞 Toast Torsdag!', zone:'kbh', onActivate:openToast},
+    {id:'kbh_toast',  x:415,       y:185,        r:70, label:'🍞 Toast Torsdag!',    zone:'kbh', onActivate:openToast},
+    {id:'kbh_kopi',   x:400,       y:450,        r:60, label:'Brug kopimaskinen 📠', zone:'kbh', onActivate:openKopiMenu},
+    {id:'kbh_luge',   x:450,       y:490,        r:50, label:'⬇ Åbn luge til kælderen', zone:'kbh', onActivate:()=>{if(kelderUnlocked)enterKalder();else flash('Lugen er låst.');}},
     {id:'kbh_ops',   x:100,       y:42,         r:45, label:'Kig på opslagstavlen 📌', zone:'kbh', onActivate:()=>openKbhOpslagstavle()},
   );
 }
@@ -2050,6 +2585,7 @@ function collides(nx,ny){
     return hits(activeWalls)||hits(obstacles);
   }
   if(currentZone==='kbh')  return hits(kbhOuterWalls)||hits(kbhObstacles);
+  if(currentZone==='kalder') return hits(kalderWalls)||hits(kalderObstacles);
   return false;
 }
 
@@ -4779,7 +5315,8 @@ const phoneTrees={
     tasmus_hvad:{text:'*hviskende* De er her... de er her hele tiden. Jeg kan ikke sige mere. Send hjælp. Og kaffe. Der er INGEN KAFFE her—',choices:[{label:'Hvem er "de"?',next:'tasmus_hvem'},{label:'Hvor er du?',next:'tasmus_hvor'}]},
     tasmus_hvor:{text:'Jeg ved det ikke! Der er ingen vinduer. Der er en printer der kører hele natten. Den printer bare... blanke sider. BLANKE SIDER, SIGER JEG—',choices:[{label:'En printer...?',next:'tasmus_printer'},{label:'Vi finder dig, Tasmus!',next:'tasmus_farvel'}]},
     tasmus_hvem:{text:'*lang pause* ...Jeg tror... det er nogen fra regnskabsafdelingen. Men det giver ingen mening. INTET GIVER MENING—',choices:[{label:'Regnskab?',next:'tasmus_regnskab'},{label:'Hold ud, Tasmus!',next:'tasmus_farvel'}]},
-    tasmus_printer:{text:'Den printer en side hvert 7. minut. Jeg har talt dem. 847 blanke sider. Det er et BUDSKAB—',choices:[{label:'Hvad slags budskab?',next:'tasmus_budskab'},{label:'Vi finder dig!',next:'tasmus_farvel'}]},
+    tasmus_printer:{text:'Den printer en side hvert 7. minut. Jeg har talt dem. 847 blanke sider. Og koden— *støj* —09 og mit— *kraftig støj* —ID— HUSK DET—',choices:[{label:'Hvad siger du?! Hvad er koden?',next:'tasmus_kode'},{label:'Vi finder dig!',next:'tasmus_farvel'}]},
+    tasmus_kode:{text:'*hvisker* ...09... mit ID... kopimaskinen... *forbindelsen brydes med et klik*',choices:[{label:'...Tasmus?',next:'__close'}]},
     tasmus_budskab:{text:'Det ved jeg IKKE! Det er derfor det er et budskab! *lyd af trin* De kommer— HUSK MIG—',choices:[{label:'*Forbindelsen brydes*',next:'__close'}]},
     tasmus_regnskab:{text:'De nikkede altid så... præcist. For præcist. Som en metronom. Det burde have advaret mig— *støj* —DE KAN HØRE MIG—',choices:[{label:'Vi ringer til politiet!',next:'tasmus_politi'},{label:'*Forbindelsen brydes*',next:'__close'}]},
     tasmus_politi:{text:'POLITIET KAN IKKE HJÆLPE MOD REGNSKABSFOLK— *klik*',choices:[{label:'...Tasmus?',next:'__close'}]},
@@ -4865,7 +5402,10 @@ const phoneTrees={
     don_bike2:{text:'Start med en hardtail, god hjelm og en rute du ikke kender. Resten kommer af sig selv. Og ring til mig hvis du vil have en guide i Sletten-skoven.',choices:[{label:'Det kunne jeg godt!',next:'__close'},{label:'Hvad ved du om banklån?',next:'don_laan'}]},
     don_laan:{text:'Banklån? Ja. Når man bygger og renoverer centre i FDF-regi, er det ikke gratis. Jeg har forhandlet med fem forskellige banker de seneste tre år. Det er en kunstart.',choices:[{label:'Hvad er tricket?',next:'don_laan2'},{label:'Det lyder hårdt.',next:'don_laan3'}]},
     don_laan2:{text:'Vis dem din passion. Banker kan godt lide tal — men de kan *mærke* om du tror på projektet. Kombiner de to og du klarer dig.',choices:[{label:'Er det virkeligt?',next:'don_laan3'},{label:'Tak, Don.',next:'__close'}]},
-    don_laan3:{text:'Det er det. Og hvis det ikke virker — så tag en tur på mountainbike og prøv igen. Det hjælper altid.',choices:[{label:'😄 Tak, Don.',next:'__close'}]},
+    don_laan3:{text:'Det er det. Og hvis det ikke virker — så tag en tur på mountainbike og prøv igen. Det hjælper altid.',choices:[{label:'😄 Tak, Don.',next:'__close'},{label:'Kender du Tasmus Trydensdahl?',next:'don_tasmus'}]},
+    don_tasmus:{text:'Tasmus! Ja. Han renoverede taget herude på Sletten for to år siden. Grundig mand. Meget grundig. Han fortalte mig at alle kældre i FDF-systemet har kode 09 som præfiks — det er standard bygmesterkode.',choices:[{label:'Kode 09?',next:'don_tasmus2'},{label:'Ved du hvor han er?',next:'don_tasmus3'}]},
+    don_tasmus2:{text:'Ja — det er den interne kode for underjordiske anlæg. 09 efterfulgt af bygmesterens ID. Tasmus forklarede det mens vi stod på taget. Jeg ved ikke hvorfor jeg husker det. Men jeg gør.',choices:[{label:'Tak, Don. Det er vigtigt.',next:'__close'}]},
+    don_tasmus3:{text:'Nej. Han ringede ikke afbud til vores aftale om klatrevæggen. Det er ikke Tasmus. Noget er galt.',choices:[{label:'Kode 09?',next:'don_tasmus2'}]},
   },
 
   crisdan:{
@@ -5213,6 +5753,7 @@ function drawFridayBar(){
 }
 // ── UNIFIED ACTIVATION ──────────────────────────────────────────────────────
 function activateNearest(){
+  if(currentZone==='kalder'){activateKalderNearest();return;}
   if(currentZone==='kbh'){
     // Check Tmon first — global NPC works in both zones
     if(tmon.visible&&tmon.buzzDone){
@@ -5237,6 +5778,7 @@ function activateNearest(){
 
 function updateHint(){
   if(currentZone==='kbh'){updateKbhHint();return;}
+  if(currentZone==='kalder'){updateKalderHint();return;}
   const el=document.getElementById('hint');
   const mobileE=document.getElementById('mobile-e');
   const npc=nearbyNPC();
@@ -5334,6 +5876,7 @@ function update(){
     // Zone boundary triggers
     if(currentZone==='aros'&&secretDoorUnlocked&&player.y<30&&player.x>330&&player.x<530) enterKopi('aros');
     if(currentZone==='kbh'&&player.y>530)  enterArosFromKopi();
+    if(currentZone==='kalder'&&player.y<35&&player.x>360&&player.x<540) enterZone('kbh',400,400);
   }
   if(discOpen&&(Math.abs(player.x-discPlayerPos.x)>8||Math.abs(player.y-discPlayerPos.y)>8))closeDisc();
   updateHint();
@@ -5357,6 +5900,7 @@ function enterZone(zone, px, py){
   requestAnimationFrame(()=>{ overlay.style.opacity='1'; });
   setTimeout(()=>{
     currentZone = zone;
+    if(zone!=='kalder') stopKalderDrone();
     player.x = px || 450;
     player.y = py || 280;
     tapTarget = null;
@@ -5364,7 +5908,7 @@ function enterZone(zone, px, py){
     // Reset Tmon position if active mid-transit
     if(tmon.buzzArriving){ tmon.buzzX=-400; tmon.buzzArriving=false; tmon.active=false; tmon.visible=false; }
     // Opdater HUD-titel
-    const titles={aros:'FDF BYCENTER AROS', kbh:'FDF BYCENTER KØPMANNÆHAFN'};
+    const titles={aros:'FDF BYCENTER AROS', kbh:'FDF BYCENTER KØPMANNÆHAFN', kalder:'❄️ KÆLDEREN — Regnskabsafdelingen: Marnia'};
     const hudTitle=document.getElementById('hud-title');
     if(hudTitle) hudTitle.textContent=titles[zone]||'FDF';
     requestAnimationFrame(()=>{
@@ -5549,11 +6093,13 @@ const kbhNpcs=[
   {id:'Simona',   name:'Simona',            title:'Content & Kommunikation',      x:780,y:460, emoji:'📱'},
   {id:'Asfriodr', name:'Ásfríðr',           title:'Landsdele & Krise',            x:745,y:360, emoji:'🌐'},
   {id:'Sumsar',   name:'Sumsar Dnil',       title:'På barsel (tilsyneladende)',   x:450,y:430, emoji:'👶'},
+  {id:'Tasmus',  name:'Tasmus Trydensdahl', title:'Opsynsmand & Bygmester', x:450, y:130, emoji:'🔧'},
   {id:'Tfan',       name:'Tfan',       title:'Chef NT',         x:340,y:180, emoji:'🚗', days:[DAY.TUE,DAY.WED,DAY.THU,DAY.FRI], useArosDialog:true},
   {id:'Tentriette', name:'Tentriette', title:'Chef LT',         x:560,y:210, emoji:'✨', days:[DAY.TUE,DAY.WED],                  useArosDialog:true},
   {id:'Tarkob',     name:'Tarkob',     title:'Generalsekretær', x:450,y:120, emoji:'🎖️', days:[DAY.MON,DAY.TUE,DAY.THU,DAY.FRI], useArosDialog:true},
 ];
 const KBH_COLORS={
+  Tasmus:{skin:'#d4956a',hair:'#3a2a10',shirt:'#5a7a3a',emoji:'🔧',male:true},
   Tia:{skin:'#f5cba7',hair:'#8e44ad',shirt:'#e74c3c',emoji:'🍺',male:false},
   Sarap:{skin:'#fdebd0',hair:'#2c3e50',shirt:'#3498db',emoji:'🩰',male:false},
   Bennette:{skin:'#f9e4b7',hair:'#c0392b',shirt:'#27ae60',emoji:'⚽',male:false},
@@ -5567,6 +6113,7 @@ const KBH_COLORS={
   Tfan:COLORS.Tfan, Tentriette:COLORS.Tentriette, Tarkob:COLORS.Tarkob,
 };
 const kbhWander={
+  Tasmus: {hx:450,hy:130,tx:450,ty:130,t:0,r:60,spd:.5},
   Tia:        {hx:360,hy:160,tx:360,ty:160,t:0,r:70,spd:.55},
   Sarap:      {hx:560,hy:160,tx:560,ty:160,t:0,r:50,spd:.55},
   Bennette:   {hx:450,hy:240,tx:450,ty:240,t:0,r:70,spd:.55},
@@ -5582,7 +6129,12 @@ const kbhWander={
   Tarkob:     {hx:450,hy:120,tx:450,ty:120,t:0,r:100,spd:.7},
 };
 function visibleKbhNpcs(){
-  return kbhNpcs.filter(n=>!n.days||n.days.includes(currentDay)||n.id==='Sumsar');
+  // Tasmus only appears when freed
+  return kbhNpcs.filter(n=>{
+    if(n.id==='Tasmus') return tasmusKalder.freed;
+    if(n.id==='Sumsar') return true;
+    return !n.days||n.days.includes(currentDay);
+  });
 }
 
 function nearbyKbhNPC(){
@@ -6074,6 +6626,36 @@ function drawKbhRoom(){
   eg.addColorStop(0,`rgba(100,60,200,${sc*.12})`); eg.addColorStop(1,'transparent');
   ctx.fillStyle=eg; ctx.fillRect(324,294,252,246);
 
+  // ── KÆLDER-LUGE ──────────────────────────────────────────────────────────────
+  if(kelderUnlocked){
+    const lx=450,ly=490,lw=80,lh=50;
+    // Gulvplanker rundt om lugen
+    ctx.fillStyle='#1a1020';ctx.fillRect(lx-lw/2-4,ly-lh/2-4,lw+8,lh+8);
+    // Lugeramme
+    ctx.fillStyle='#3a2a10';ctx.strokeStyle='#6a4a20';ctx.lineWidth=2.5;
+    ctx.fillRect(lx-lw/2,ly-lh/2,lw,lh);ctx.strokeRect(lx-lw/2,ly-lh/2,lw,lh);
+    // Planker på lugen
+    ctx.strokeStyle='#2a1a08';ctx.lineWidth=1;
+    [ly-lh/2+14,ly-lh/2+28].forEach(py=>{
+      ctx.beginPath();ctx.moveTo(lx-lw/2+2,py);ctx.lineTo(lx+lw/2-2,py);ctx.stroke();
+    });
+    // Hængsler
+    [[lx-lw/2+6,ly-lh/2+6],[lx-lw/2+6,ly+lh/2-10]].forEach(([hx,hy])=>{
+      ctx.fillStyle='#888';ctx.fillRect(hx,hy,10,6);
+      ctx.fillStyle='#666';ctx.fillRect(hx+2,hy+1,6,4);
+    });
+    // Håndtag
+    ctx.fillStyle='#aaa';ctx.strokeStyle='#888';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(lx+12,ly,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Kold luft-effekt (pulserende blå glød)
+    const cf=.3+.3*Math.sin(t*2);
+    ctx.strokeStyle=`rgba(100,160,255,${cf})`;ctx.lineWidth=2;ctx.setLineDash([3,3]);
+    ctx.strokeRect(lx-lw/2-2,ly-lh/2-2,lw+4,lh+4);ctx.setLineDash([]);
+    // Label
+    ctx.fillStyle=`rgba(100,160,255,${.6+cf*.3})`;ctx.font='bold 7px Comic Neue';ctx.textAlign='center';
+    ctx.fillText('⬇ KÆLDER',lx,ly+lh/2+12);ctx.textAlign='left';
+  }
+
   // ── NARNIA REFERENCER ────────────────────────────────────────────────────────
   // Gadelygte (hjørne, ingen kollision)
   {const lx=332,ly=310;
@@ -6335,7 +6917,9 @@ const kbhTrees={
     rime_kurser:{text:'Hej! Rime her. Jeg ved BOGSTAVELIGT TALT alt om FDFs kurser. Alt.',choices:[{label:'Hvad er det bedste?',next:'rime_bedst'},{label:'Hvad er MO?',next:'rime_mo'}]},
     rime_bedst:{text:'Afhænger af hvad du søger. Hvad drømmer din kreds om?',choices:[{label:'Det ved jeg ikke endnu.',next:'rime_ved_ikke'}]},
     rime_ved_ikke:{text:'Start med en weekendlejr. Det afklarer altid hvad folk vil have mere af.',choices:[{label:'Godt råd. Tak!',next:'__close'}]},
-    rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',choices:[{label:'Tak, Rime!',next:'__close'}]},
+    rime_mo:{text:'Medlemsorganisatoren er vores store platform. Jeg kan guide dig gennem hele systemet.',choices:[{label:'Tak, Rime!',next:'__close'},{label:'Kan du slå Tasmus Trydensdahl op?',next:'rime_tasmus'}]},
+    rime_tasmus:{text:'*klikker* Tasmus Trydensdahl. Opsynsmand og Bygmester. Medarbejder-ID: 4471. Ansat 2019. Status: ... *pause* ...der står ingenting under status. Det felt er tomt.',choices:[{label:'Hvad betyder det?',next:'rime_tasmus2'}]},
+    rime_tasmus2:{text:'Det betyder at systemet ikke ved hvad han er. Hverken aktiv, inaktiv eller fratrådt. Han er bare... ikke der. Rent systemteknisk. Det er meget usædvanligt.',choices:[{label:'Tak, Rime.',next:'__close'}]},
     rime_fest:{text:'*lyser op* Ja! Vi skulle have gæster til vores sommerfest. Jeg boede dem gennem et selskab — 312-Gæst hedder det. Super professionelt. De sendte en hel bus.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'},{label:'En hel bus?!',next:'rime_fest3'}]},
     rime_fest2:{text:'Du ringer bare "312-Gæst" på telefonen — bogstaveligt talt, det er hvad du taster. Manden der ankommer hedder Tmon. Han er... meget. Men på den gode måde.',choices:[{label:'Tak, Rime!',next:'__close'}]},
     rime_fest3:{text:'En gul WB-Buzz. Fuld af mennesker. De spillede guitar i fællesrummet i to timer. Den røde Post-it på min mappe sagde "NEJ" i tre dage bagefter. Af ren overvældelse.',choices:[{label:'Hvad er nummeret?',next:'rime_fest2'}]},
@@ -6387,7 +6971,8 @@ const kbhTrees={
 
     ton_liste:{text:'*trækker en A3-side frem* Aktuelle opgaver: 1) Q3-regnskab (47% færdig), 2) Budgetprognose 2026, 3) Ny kontoaftale (afventer underskrift), 4) Møde med revisor (UDSAT x3), 5) Tasmus\' manglende udgiftsbilag—',choices:[{label:'Vent — Tasmus?',next:'ton_liste_tasmus'},{label:'Hvor lang er listen?',next:'ton_liste2'}]},
     ton_liste2:{text:'*blar ned* ...Side 1 af 3. Punkt 23 er "Opfølge på punkt 14". Punkt 14 er "Opfølge på punkt 8". Det er et selvstændigt system.',choices:[{label:'Hvem ser du ellers på listen?',next:'ton_liste3'},{label:'Vent — Tasmus?',next:'ton_liste_tasmus'}]},
-    ton_liste3:{text:'Her: punkt 31: "Afklare økonomifolkene om Q2-bilag". De har ikke svaret i 18 dage. Jeg sender reminder hver tirsdag kl. 10:00. Ingen svar. Det er uacceptabelt.',choices:[{label:'Økonomifolkene?',next:'ton_oekon'},{label:'Tasmus?',next:'ton_liste_tasmus'}]},
+    ton_liste3:{text:'Her: punkt 31: "Afklare økonomifolkene om Q2-bilag". De har ikke svaret i 18 dage. Sender reminder hver tirsdag kl. 10:00. Ingen svar. *blar videre* ...og punkt 34 er Tasmus\' bilag. Seks styk. Bilag 4 af 6 er det seneste — signeret med hans ID som altid.',choices:[{label:'Hans ID?',next:'ton_4471'},{label:'Økonomifolkene?',next:'ton_oekon'},{label:'Tasmus?',next:'ton_liste_tasmus'}]},
+    ton_4471:{text:'*nærmest for sig selv* T.T. — 4471. Han signerede ALT med det. Rapporter, bilag, byggetilladelser. Meget grundig mand. *pause* Jeg kan ikke lukke de poster. Det ville være forkert.',choices:[{label:'Interessant.',next:'__close'},{label:'Økonomifolkene?',next:'ton_oekon'}]},
     ton_liste_tasmus:{text:'Tasmus havde 6 uindleverede bilag da han forsvandt. Det er stadig åbent i mit system. Jeg kan ikke lukke posten. Det... generer mig.',choices:[{label:'Han er bortført.',next:'ton_liste_tasmus2'},{label:'Økonomifolkene?',next:'ton_oekon'}]},
     ton_liste_tasmus2:{text:'*lang pause* ...Jeg ved det. Simona har fortalt mig. Men bilagene eksisterer stadig som åbne poster. Jeg kan ikke slette dem. Det ville være at acceptere at han ikke kommer tilbage.',choices:[{label:'*stille* Det forstår jeg.',next:'__close'}]},
 
@@ -6420,7 +7005,8 @@ const kbhTrees={
     simo_tasmus3:{text:'*bliver bleg* Du har... ringet til ham? Hvad sagde han??',choices:[{label:'Han råber om hjælp.',next:'simo_tasmus4'},{label:'Det var svært at høre.',next:'simo_tasmus4'}]},
     simo_tasmus4:{text:'*stille* Jeg vidste det. Jeg vidste det fra den dag stolen var tom. *åbner sin notesbog* Jeg skriver en artikel om det. Content er kongen — men sandheden er vigtigere.',choices:[{label:'Vær forsigtig, Simona.',next:'__close'}]},
     simo_tasmus_hvornaar:{text:'Tre uger siden. En helt normal tirsdag. Han havde endda pakket frokost med. Den stod stadig i køleskabet i en uge.',choices:[{label:'Ingen så noget?',next:'simo_tasmus2'}]},
-    simo_tasmus_savnet:{text:'IT sagde hans computer var låst udefra kl. 03:47 om natten. Politiet sagde "intet mistænkeligt". Politiet har aldrig mødt Tasmus.',choices:[{label:'Hans nummer er 41 73 11 70.',next:'simo_tasmus3'}]},
+    simo_tasmus_savnet:{text:'IT sagde hans computer var låst udefra kl. 03:47 om natten. Og det sidste han selv gjorde — kl. 03:46 — var at logge ind på kopimaskinen. Politiet sagde "intet mistænkeligt". Politiet har aldrig mødt Tasmus.',choices:[{label:'Hans nummer er 41 73 11 70.',next:'simo_tasmus3'},{label:'Kopimaskinen?',next:'simo_kopi'}]},
+    simo_kopi:{text:'*hvisker* Ja. Kopimaskinen. Som om han ville efterlade et spor. Eller åbne noget. Det er det eneste det giver mening at fortolke det som.',choices:[{label:'Vær forsigtig, Simona.',next:'__close'}]},
   },
   Asfriodr:{
     start:[
@@ -6430,7 +7016,11 @@ const kbhTrees={
       {label:'🧗 Hvad laver du i fritiden?',next:'asf_fritid'},
       {label:'🎈 Ballondyr?',next:'asf_ballon'},
     ],
-    asf_fritid:{text:'Klatring. Altid klatring. Det eneste der minder om krisehåndtering — du kan ikke slippe taket, du kan kun gå op eller ned. Og så slaglinjen på weekender. Det ligner fred.',choices:[{label:'Hvad er slagline?',next:'asf_slagline'},{label:'Ballondyr?',next:'asf_ballon'}]},
+    asf_fritid:{text:'Klatring. Altid klatring. Det eneste der minder om krisehåndtering — du kan ikke slippe taket, du kan kun gå op eller ned. Og så slaglinjen på weekender. Det ligner fred.',choices:[{label:'Hvad er slagline?',next:'asf_slagline'},{label:'Ballondyr?',next:'asf_ballon'},{label:'🧗 Hvad bruger du af udstyr?',next: kelderUnlocked?'asf_udstyr':'asf_udstyr_luk'}]},
+    asf_udstyr_luk:{text:'*kigger op* ...Standardudstyr. Hjelm, sele, karabinhager. Hvorfor spørger du?',choices:[{label:'Bare nysgerrig.',next:'__close'}]},
+    asf_udstyr:{text:'Hjelm, sele, reb — og karabinhager. Mange karabinhager. Jeg har en på skrivebordet lige nu. *pause* Bruger den som papirclips. Ingen af mine kolleger har kommenteret det. Det siger noget om vores arbejdsplads.',choices:[{label:'Hvad siger det?',next:'asf_udstyr2'},{label:'Det er faktisk smart.',next:'asf_udstyr3'}]},
+    asf_udstyr2:{text:'At vi er vant til det uventede. En karabinhage som papirclips er bare... praktisk. I klatring holder den dit liv. På kontoret holder den tre dokumenter om krisekommunikation og en opskrift på birkekvistsuppe.',choices:[{label:'Birkekvistsuppe?',next:'asf_udstyr3'}]},
+    asf_udstyr3:{text:'En gammel norsk opskrift. God efter en kold dag på væggen. Eller i en kælder. *kigger direkte på dig* Du har været der nede, ikke?',choices:[{label:'...',next:'__close'}]},
     asf_slagline:{text:'Du spænder en line mellem to træer og går hen ad den. Langsomt. Det kræver total fokus. Ingen krisemails. Ingen landsdele. Bare linen.',choices:[{label:'Det lyder meditativt.',next:'asf_slagline2'},{label:'Ballondyr?',next:'asf_ballon'}]},
     asf_slagline2:{text:'Det er det. Og hvis man falder — og det gør man — så starter man forfra. Det er en god livsfilosofi.',choices:[{label:'Ballondyr?',next:'asf_ballon'},{label:'Tak, Ásfríðr.',next:'__close'}]},
     asf_ballon:{text:'*kort pause* ...Ja. Jeg laver ballondyr. Hunde, giraffer, sværd. Det startede på en teamdag. Ingen kan tage mig seriøst under krisehåndtering bagefter. Det er problemet.',choices:[{label:'😄 Det er faktisk charmerende.',next:'asf_ballon2'},{label:'Hvem lærte dig det?',next:'asf_ballon_tmon'}]},
@@ -6458,6 +7048,26 @@ const kbhTrees={
     sums_delight2:{text:'*nikker meget langsomt* God. *pause* Du vil have mere. Det gør de alle sammen.',choices:[{label:'Hvad mener du med det?',next:'sums_delight4'},{label:'...Farvel, Sumsar.',next:'__close'}]},
     sums_delight3:{text:'Klogt. *lægger æsken væk* Meget klogt.',choices:[{label:'...Tak, Sumsar.',next:'__close'}]},
     sums_delight4:{text:'*ser endelig op* Ingenting. *æsken forsvinder* Det var dejligt at du besøgte kopirummet.',choices:[{label:'...',next:'__close'}]},
+  },
+  Tasmus:{
+    start:[
+      {label:'🍺 Hvordan har du det?',         next:'tas_how'},
+      {label:'🔧 Hvad sker der nu?',            next:'tas_now'},
+      {label:'🍷 Hvad drikker du?',             next:'tas_drink'},
+      {label:'💰 Pengeskabet — hvad nu?',       next:'tas_skab'},
+    ],
+    tas_how:{text:'*løfter Wiebroe* Bedre. Meget bedre. Lyset herinde er anderledes end dernede. Varmere. *kigger på loftet* Jeg tænker på at installere et nyt ventilationsanlæg. Det er reflex.',choices:[{label:'Det lyder som Tasmus.',next:'tas_reflex'},{label:'Hvad drikker du?',next:'tas_drink'}]},
+    tas_reflex:{text:'Jeg er bygmester. Jeg ser et rum og tænker på rørene. Det er uundgåeligt. Denne bygning har i øvrigt utætte fuger mod nord. Det bør udbedres inden vinter.',choices:[{label:'Du har lige siddet i en kælder.',next:'tas_reflex2'}]},
+    tas_reflex2:{text:'Ja. Og kælderens ventilation er også mangelfuld. Det forklarer den vedvarende kulde. Det er ikke magi — det er dårlig isolering.',choices:[{label:'😄 Velkomment tilbage, Tasmus.',next:'__close'}]},
+    tas_now:{text:'Nu? Jeg afleverer de seks bilag til Tonatan. Det generer ham at de er åbne. Og så inspicerer jeg kopimaskinen. Den har kørt unormalt siden... begivenhederne.',choices:[{label:'Og heksen?',next:'tas_heks'},{label:'Hvad drikker du?',next:'tas_drink'}]},
+    tas_heks:{text:'*lang pause* Regnskabsafdelingen. De eksisterede. Det er... ubehageligt at vide. Men de er væk nu. Og pengeskabet er intakt. Det er det vigtigste.',choices:[{label:'Du er rolig for en der har siddet i kælder.',next:'tas_rolig'}]},
+    tas_rolig:{text:'Jeg har siddet på tage i storme. Jeg har stået i oversvømmede kældre med en lommelygte og en skruenøgle. En regnskabsheks er ubehagelig. Men den er ikke det værste jeg har set.',choices:[{label:'Hvad er det værste?',next:'tas_worst'}]},
+    tas_worst:{text:'En vandskade i fjerde etage der ingen har rapporteret i tre måneder. Det er det virkelige mareridt. *drikker Wiebroen*',choices:[{label:'😄 Skål, Tasmus.',next:'__close'}]},
+    tas_drink:{text:'Wiebroe. *løfter flasken* Og portvin bagefter. I den rækkefølge. Det er et princip jeg har haft siden 2019 efter en særlig lang dag med en utæt tagkonstruktion i Horsens.',choices:[{label:'Portvin efter øl?',next:'tas_drink2'},{label:'Hvad sker der nu?',next:'tas_now'}]},
+    tas_drink2:{text:'Øl renser. Portvin afslutter. Det er en metode. *hælder portvin op* Vil du have et glas?',choices:[{label:'Ja tak.',next:'tas_drink3'},{label:'Nej tak.',next:'tas_drink4'}]},
+    tas_drink3:{text:'*nikker anerkendende* Godt valg. Skål. For FDFs reservefond — og for folk der kigger bag papirbakker.',choices:[{label:'Skål, Tasmus.',next:'__close'}]},
+    tas_drink4:{text:'*trækker på skuldrene* Mere til mig.',choices:[{label:'Fair nok. Skål.',next:'__close'}]},
+    tas_skab:{text:'Pengeskabet er intakt. Koden er kun mig der kender. Den ændrer jeg i morgen — til noget ingen nogensinde finder. Måske skriver jeg det bag en anden papirbakke.',choices:[{label:'😄 Klogt.',next:'__close'}]},
   },
 };
 
@@ -6554,8 +7164,22 @@ function render(){
     drawTmon();
     drawPlayer();
     drawNotes();
+    // Sparkles over KBH interactable objects
+    {const t=Date.now()/600;
+    WORLD_OBJECTS.forEach(o=>{
+      if(o.zone!=='kbh') return;
+      if(o.id==='kbh_luge'&&!kelderUnlocked) return;
+      if(o.id==='kbh_toast'&&(currentDay!==DAY.THU||!toastThursdayActive)) return;
+      const p=.5+.5*Math.sin(t+o.x*.1);
+      ctx.globalAlpha=.45+.35*p;ctx.font='13px serif';ctx.textAlign='center';
+      ctx.fillText('✨',o.x,o.y-18-4*p);ctx.globalAlpha=1;ctx.textAlign='left';
+    });}
     const kn=nearbyKbhNPC();
     if(kn){ctx.strokeStyle='rgba(255,204,2,.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(kn.x,kn.y,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
+  } else if(currentZone==='kalder'){
+    drawKalderRoom();
+    drawTmon();
+    drawPlayer();
   }
 
   ctx.restore();
@@ -6565,6 +7189,7 @@ function render(){
 function loop(){
   update();
   updateTmon();  // global — both zones
+  if(currentZone==='kalder') updateKalder();
   if(currentZone==='aros'){
     updateTarkob();
     updateWander();
@@ -6773,6 +7398,19 @@ document.getElementById('mobile-e').addEventListener('touchstart',e=>{
 // bar events
 document.getElementById('bar-close').addEventListener('click',closeBar);
 document.getElementById('bar-serve-btn').addEventListener('click',serveAtBar);
+document.getElementById('kopi-close').addEventListener('click', closeKopiMenu);
+document.getElementById('kopi-submit').addEventListener('click', handleKopiSubmit);
+document.getElementById('kopi-code').addEventListener('keydown', e=>{
+  if(e.key==='Enter') handleKopiSubmit();
+  e.stopPropagation();
+});
+document.querySelectorAll('.kopi-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const fn = btn.dataset.fn;
+    const screen = document.getElementById('kopi-screen');
+    screen.textContent = KOPI_RESPONSES[fn] || '📄 Printer...';
+  });
+});
 document.getElementById('toast-close').addEventListener('click',closeToast);
 document.getElementById('toast-serve-btn').addEventListener('click',serveToast);
 
