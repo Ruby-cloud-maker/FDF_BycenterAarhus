@@ -1263,6 +1263,10 @@ const items=[
    foundMsg:'Plakaten er der stadig. 2026 nærmer sig.',
    item:'📋 Landslejrplakat 2026',emoji:'🛋️'},
 
+  {id:'emse_blomst',label:'Blomster fra Emses bord 🌸',x:180,y:380,r:45,found:false,
+   msgs:['En lille buket tørrede blomster fra haven. Emse har dem stående ved siden af strikketøjet.','Du tager en blomst med dig. Den dufter stadig.'],
+   foundMsg:'Du har allerede taget en blomst.',
+   item:'🌸 Blomst fra haven',emoji:'🌸',zone:'kbh'},
   {id:'num_sauna',label:'Kig bag energidrikken',x:645,y:217,r:55,found:false,
    msgs:['Du kigger nærmere på Gunes bord. Bag den halvtomme energidrik sidder et lille lamineret kort.',
          'Kortet: "FDF SAUNA — Sletten 🌿 | 86 84 60 28 | Ring kun hvis du mener det." Og nederst med anden håndskrift: "Don er der. Altid. — G"'],
@@ -4058,7 +4062,7 @@ const slettenObstacles = [
 const DYR = {
   krystalugle:   {x:450,y:120,hx:450,hy:120,wx:450,wy:120,wt:0,wr:120, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:180, method:'bagfra',   loot:'sten',      emoji:'🦉', folk:'Stjernepejlerne', color:'#b8b0c2'},
   stormodder:    {x:760,y:250, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:200, method:'vand',     loot:null,        emoji:'🦦', folk:'Bølgebærerne',   color:'#5c3d54'},
-  borgbæver:     {x:820,y:500, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:160, method:'træ',      loot:'kvist',     emoji:'🦫', folk:'Rodvæverne',     color:'#4c542b'},
+  borgbæver:     {x:820,y:500, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:160, method:'byg',      loot:'kvist',     emoji:'🦫', folk:'Rodvæverne',     color:'#4c542b'},
   ildegern:      {x:720,y:900, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:150, method:'stillestå', loot:null,       emoji:'🐿️', folk:'Flammepusterne', color:'#854232'},
   klippegrævling:{x:450,y:1000,caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:170, method:'runesten', loot:'runesten',  emoji:'🦡', folk:'Runemagerne',    color:'#b8b0c2'},
   sølvskade:     {x:180,y:900, caught:false, fleeing:false, fleeT:0, catchT:0, catchNeeded:140, method:'metal',    loot:'metal',     emoji:'🐀', folk:'Morgengriberne', color:'#f2d5a2'},
@@ -4068,6 +4072,12 @@ const DYR = {
 
 let caughtCount = 0;
 let slettenComplete = false;
+let bænkSidder = false;
+let bæverByg = false;
+let runebrikFundet = false;
+let ildebuskSlukt = false;
+let vindT = 0;  // frames man bevæger sig direkte mod lynsvale // spilleren har bygget konstruktion
+let bænkTimer = 0; // frames — 600 = 10 sek ved 60fps
 
 function enterSletten(){
   enterZone('sletten', 450, 580);
@@ -4102,10 +4112,11 @@ function tryDyrCatch(id){
   const d=DYR[id];
   if(!d||d.caught) return;
   const inv=[...items.filter(i=>i.found).map(i=>i.id)];
-  const hasRunesten = inv.includes('p4');     // runesten fra planten
+  const hasRunesten = inv.includes('p4') || inv.includes('runebrik');
   const hasMetallisk = inv.includes('p2')||inv.includes('desk_jas'); // øreringe/koala
-  const hasBlomsterne = baalLit===true; // blomster fra haven (tændt bål = har oplevet haven)
-  const hasBlomsterne2 = asfriodrGearKnown; // har set blomsterbedet
+  const hasBlomsterne = baalLit===true;
+  const hasBlomsterne2 = asfriodrGearKnown;
+  const hasBlomsterne3 = inv.includes('emse_blomst');
   
   let canCatch=false, failMsg='';
   
@@ -4114,25 +4125,23 @@ function tryDyrCatch(id){
     if(player.x < d.x-30){ canCatch=true; }
     else{ failMsg='🦉 Uglen vender sig. Du skal nærme dig bagfra.'; }
   } else if(d.method==='vand'){
-    // Stormodder — nær vand (bæk i sydøst area)
-    if(Math.abs(player.y - d.y) < 60 && player.x > 700){ canCatch=true; }
-    else{ failMsg='🦦 Odderen forsvinder i vandet. Sæt dig ned ved bredden.'; }
-  } else if(d.method==='træ'){
-    // Borgbæver — skal have kvist (p3 = armbånd har kvist-tema, eller brug desk_neter)
-    canCatch=true; // åben — bankning sker automatisk ved E
+    if(d.catchable){ canCatch=true; }
+    else{ failMsg='🦦 Odderen holder sig under vand. Find bænken ved bækken og sid stille i et stykke tid.'; }
+  } else if(d.method==='byg'){
+    if(bæverByg && Math.hypot(player.x-860,player.y-520)<80){ canCatch=true; }
+    else if(!bæverByg){ failMsg='🦫 Borgbæveren ignorerer dig. Måske vil den se dig bygge noget nær dens hule?'; }
+    else{ failMsg='🦫 Borgbæveren er ikke tæt nok endnu. Vent lidt.'; }
   } else if(d.method==='stillestå'){
     // Ildegern — spiller skal stå stille OG ildegern skal stå stille
-    const playerStill = (keys['w']||keys['W']||keys['ArrowUp']||
-                         keys['s']||keys['S']||keys['ArrowDown']||
-                         keys['a']||keys['A']||keys['ArrowLeft']||
-                         keys['d']||keys['D']||keys['ArrowRight']) ? false : true;
+    const playerStill = !(keys['w']||keys['W']||keys['ArrowUp']||keys['s']||keys['S']||keys['ArrowDown']||keys['a']||keys['A']||keys['ArrowLeft']||keys['d']||keys['D']||keys['ArrowRight']);
     const dyrStill = Math.hypot(d.wx-d.x, d.wy-d.y) < 6;
-    if(playerStill && dyrStill){ canCatch=true; }
+    if(!ildebuskSlukt){ failMsg='🐿️ Ilden skræmmer ildegernen væk. Sluk busken der brænder nær klipperne.'; }
+    else if(playerStill && dyrStill){ canCatch=true; }
     else if(!playerStill){ failMsg='🐿️ Ildegernen fryser. Du skal stå helt stille.'; }
     else{ failMsg='🐿️ Ildegernen er i bevægelse. Vent til den sætter sig.'; }
   } else if(d.method==='runesten'){
     if(hasRunesten){ canCatch=true; }
-    else{ failMsg='🦡 Grævlingen snuser. Den mangler noget. Måske en sten med tegn?'; }
+    else{ failMsg='🦡 Grævlingen snuser. Den mangler noget med runetegn. Der er et stenbrud et sted på Sletten...'; }
   } else if(d.method==='metal'){
     if(hasMetallisk){ canCatch=true; }
     else{ failMsg='🐦 Skaden flyver op. Den ville have set noget glimte.'; }
@@ -4140,8 +4149,8 @@ function tryDyrCatch(id){
     // Lynsvale — håndteres i update — man løber MOD den
     canCatch=true;
   } else if(d.method==='blomst'){
-    if(hasBlomsterne || hasBlomsterne2){ canCatch=true; }
-    else{ failMsg='🦌 Hjorten trækker sig. Den kan lugte at du ikke har blomster.'; }
+    if(hasBlomsterne || hasBlomsterne2 || hasBlomsterne3){ canCatch=true; }
+    else{ failMsg='🦌 Hjorten trækker sig. Den kan lugte at du ikke har blomster. Måske Emse på KBH-kontoret har en?'; }
   }
   
   if(!canCatch){
@@ -4173,6 +4182,17 @@ function catchDyr(id){
 
 function updateSletten(){
   const t2=Date.now()/1000;
+  // Bænk-timer
+  if(bænkSidder){
+    const moving=keys['w']||keys['W']||keys['ArrowUp']||keys['s']||keys['S']||keys['ArrowDown']||keys['a']||keys['A']||keys['ArrowLeft']||keys['d']||keys['D']||keys['ArrowRight'];
+    if(moving){ bænkSidder=false; bænkTimer=0; flash('Du rejser dig fra bænken.'); }
+    else{ bænkTimer++;
+      if(bænkTimer>=600){ bænkSidder=false; bænkTimer=0;
+        flash('🌊 Du har siddet stille ved bækken. Noget rører sig i vandet...');
+        DYR.stormodder.catchable=true;
+      }
+    }
+  }
   for(const [id,d] of Object.entries(DYR)){
     // Wander — simple random movement
     if(!d.caught && !d.fleeing){
@@ -4208,15 +4228,29 @@ function updateSletten(){
       const distToPlayer=Math.hypot(player.x-d.x,player.y-d.y);
       if(distToPlayer>100) d.catchT=Math.max(0,d.catchT-0.5);
     }
-    // Lynsvale — løb MOD den
+    // Lynsvale — løb direkte mod den uden at ændre retning i 2 sek
     if(id==='lynsvale'&&!d.fleeing){
       const dx=player.x-d.x, dy=player.y-d.y;
       const dist=Math.hypot(dx,dy);
-      if(dist<120&&dist>20){
-        // Spiller nærmer sig = god
-        d.catchT+=0.5;
-      } else if(dist>120){
-        d.catchT=Math.max(0,d.catchT-1);
+      // Check if player moving directly toward dyr
+      const movingRight=keys['d']||keys['D']||keys['ArrowRight'];
+      const movingLeft=keys['a']||keys['A']||keys['ArrowLeft'];
+      const movingUp=keys['w']||keys['W']||keys['ArrowUp'];
+      const movingDown=keys['s']||keys['S']||keys['ArrowDown'];
+      const moving=movingRight||movingLeft||movingUp||movingDown;
+      const playerVx=(movingRight?1:0)-(movingLeft?1:0);
+      const playerVy=(movingDown?1:0)-(movingUp?1:0);
+      // Dot product — are we moving toward dyr?
+      const dot=(-dx)*playerVx+(-dy)*playerVy;
+      const movLen=Math.hypot(playerVx,playerVy)||1;
+      const alignment=dot/(dist*movLen);
+      if(moving && dist<200 && alignment>0.5){
+        vindT++;
+        if(vindT>=120){ // 2 sek ved 60fps
+          d.catchT=d.catchNeeded; // fang den
+        }
+      } else {
+        vindT=Math.max(0,vindT-2);
       }
       if(d.catchT>=d.catchNeeded) catchDyr(id);
     }
@@ -4242,6 +4276,30 @@ function updateSlettenHint(){
     const _rsScreenY=rs.y-(player.y-280);el.style.left=(rs.x+5)+'px';el.style.top=(_rsScreenY-40)+'px';el.style.transform='';
     return;
   }
+  // Bænk ved bækken
+  if(Math.hypot(player.x-740,player.y-195)<45){
+    el.style.display='block';el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    el.textContent=bænkSidder?'Sid stille ved bækken... 🌊':'[E] Sæt dig på bænken ved bækken';
+    mobileE.classList.add('visible');return;
+  }
+  // Byggested
+  if(Math.hypot(player.x-860,player.y-520)<50){
+    el.style.display='block';el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    el.textContent=bæverByg?'🪵 Konstruktion bygget':'[E] Byg noget her nær hulen 🪵';
+    mobileE.classList.add('visible');return;
+  }
+  // Stenbrud
+  if(Math.hypot(player.x-560,player.y-960)<55){
+    el.style.display='block';el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    el.textContent=runebrikFundet?'🪨 Stenbrud undersøgt':'[E] Undersøg stenbruddet 🪨';
+    mobileE.classList.add('visible');return;
+  }
+  // Ildebusk
+  if(Math.hypot(player.x-680,player.y-870)<45){
+    el.style.display='block';el.style.left='50%';el.style.top='52px';el.style.transform='translateX(-50%)';
+    el.textContent=ildebuskSlukt?'💨 Busken er slukket':'[E] Sluk ilden 🔥';
+    mobileE.classList.add('visible');return;
+  }
   const d=nearestDyr();
   if(d){
     mobileE.classList.add('visible');
@@ -4258,6 +4316,49 @@ function updateSlettenHint(){
 }
 
 function activateSlettenNearest(){
+  // Ildebusk — sluk den
+  if(Math.hypot(player.x-680,player.y-870)<45){
+    if(!ildebuskSlukt){
+      ildebuskSlukt=true;
+      flash('💨 Du slukker ilden med sand og jord. Busken ryger stadig lidt. Stille nu.');
+      setTimeout(()=>flash('🐿️ Ildegernen kigger frem fra klipperne. Den er ikke bange mere.'), 2000);
+      DYR.ildegern.catchable=true;
+    } else {
+      flash('Busken er allerede slukket.');
+    }
+    return;
+  }
+  // Stenbrud — find Runebrik
+  if(Math.hypot(player.x-560,player.y-960)<55){
+    if(!runebrikFundet){
+      runebrikFundet=true;
+      inv.push('runebrik');
+      flash('🪨 Du undersøger stenene. Mellem klippeblokkene finder du en lille sten med et runetegn. En Runebrik!');
+    } else {
+      flash('🪨 Stenbruddet er undersøgt. Runebrikken er i din taske.');
+    }
+    return;
+  }
+  // Byggested ved bæver-hule
+  if(Math.hypot(player.x-860,player.y-520)<50){
+    if(!bæverByg){
+      bæverByg=true;
+      flash('🪵 Du sætter en pæl i jorden og laver en lille konstruktion. Det ligner lidt bæver-arbejde...');
+      setTimeout(()=>{
+        DYR.borgbæver.wx=860; DYR.borgbæver.wy=510; DYR.borgbæver.wt=1;
+        flash('🦫 Borgbæveren nærmer sig nysgerrigt...');
+      }, 2000);
+    } else {
+      flash('🪵 Konstruktionen er allerede rejst.');
+    }
+    return;
+  }
+  // Bænk ved bækken
+  if(Math.hypot(player.x-740,player.y-195)<45){
+    bænkSidder=true;
+    flash('Du sætter dig på bænken ved bækken. Det er roligt her. 🌊');
+    return;
+  }
   // Revne i Skovhjertet — exit
   if(Math.hypot(player.x-450, player.y-515)<60){
     stopSlettenAmbient();
@@ -4655,22 +4756,22 @@ const RUNESTEN = [
   {
     id:'rs_stjerne', x:380, y:160, rune:'ᛊ', folk:'Stjernepejlerne',
     emoji:'🌟', color:'#b0c4de',
-    tekst:'Her stod Stjernepejlerne og læste fremtiden i frost og stjerner. De ser hvad der kommer — aldrig hvad der er bag dem. Krystaluglens øjne er deres øjne. Den nærmer sig kun den der ikke venter på den.'
+    tekst:'Her stod Stjernepejlerne og læste fremtiden i frost og stjerner. De ser hvad der kommer — aldrig hvad der er bag dem. Krystaluglens øjne ser alt mod øst. Nærm dig fra vest — hold dig til venstre for den.'
   },
   {
     id:'rs_rod', x:700, y:480, rune:'ᚱ', folk:'Rodvæverne',
     emoji:'🌱', color:'#7dce13',
-    tekst:'Her plantede Rodvæverne de første rødder. De taler gennem jord og vibrationer. Borgbæveren bygger som de bygger — tålmodigt, lag for lag. Bankens rytme er deres sprog.'
+    tekst:'Her plantede Rodvæverne de første rødder. Borgbæveren bygger som de bygger — tålmodigt, lag for lag. Find dens hule mod øst. Byg noget nær den. Den vil komme for at se.'
   },
   {
     id:'rs_spire', x:260, y:340, rune:'ᛈ', folk:'Spireskaberne',
     emoji:'🌸', color:'#ff69b4',
-    tekst:'Spireskaberne helbreder og skaber nyt liv. De skyr alt truende. Blomsterhjorten trækker sig fra støj og hast — men blomsternes duft er en invitation den ikke kan modstå. Stå stille. Vent.'
+    tekst:'Spireskaberne helbreder og skaber nyt liv. Blomsterhjorten trækker sig fra støj og hast — men blomsternes duft er en invitation den ikke kan modstå. Find en blomst og stå stille. Vent. Den vil komme til dig.'
   },
   {
     id:'rs_bolge', x:830, y:300, rune:'ᛒ', folk:'Bølgebærerne',
     emoji:'🌊', color:'#4a90d9',
-    tekst:'Bølgebærerne behersker vejr og vand. De respekterer dem der sidder stille ved bredden — for kun de forstår at vand ikke haster. Stormodderen kommer til ro, aldrig til uro.'
+    tekst:'Bølgebærerne behersker vejr og vand. De respekterer dem der sidder stille ved bredden. Find bænken ved bækken mod nordøst. Sid stille. Lad vandet tale. Stormodderen kommer til ro — aldrig til uro.'
   },
   {
     id:'rs_morgen', x:150, y:750, rune:'ᛗ', folk:'Morgengriberne',
@@ -4680,17 +4781,17 @@ const RUNESTEN = [
   {
     id:'rs_rune', x:530, y:980, rune:'ᚢ', folk:'Runemagerne',
     emoji:'🪨', color:'#c8a850',
-    tekst:'Runemagerne bærer verdens minder i sten. Klippegrævlingen genkender tegn fra fortiden — vis den et tegn der er ældre end dig selv, og den vil komme nærmere for at læse det.'
+    tekst:'Runemagerne bærer verdens minder i sten. Klippegrævlingen genkender tegn fra fortiden. Find stenbruddet mod sydøst — der gemmer sig en Runebrik i blokkene. Vis den til grævlingen.'
   },
   {
     id:'rs_flamme', x:650, y:820, rune:'ᚠ', folk:'Flammepusterne',
     emoji:'🔥', color:'#e05020',
-    tekst:'Flammepusterne er ikke ildenes herrer — de er ildenes vogtere. De ved at ild tager hvad den vil. Ildegernen frygter ikke mennesket — den frygter hvad mennesket tænder. Sluk ilden. Stå stille.'
+    tekst:'Flammepusterne er ildenes vogtere. Ildegernen frygter hvad mennesket tænder. Der brænder en busk nær klipperne. Sluk den. Stå stille bagefter. Den vil komme frem.'
   },
   {
     id:'rs_vind', x:80, y:600, rune:'ᚹ', folk:'Vindvandrerne',
     emoji:'💨', color:'#e6c5be',
-    tekst:'Vindvandrerne drømmer i bevægelse. De respekterer mod frem for forsigtighed. Lynsvalen flyver ikke fra trusler — den flyver mod dem. Løb mod den, og den vil møde dig halvvejs.'
+    tekst:'Vindvandrerne drømmer i bevægelse. Lynsvalen flyver ikke fra trusler — den flyver mod dem. Hold kursen direkte mod den og bliv ved. Skift ikke retning. Den vil møde dig.'
   },
 ];
 
